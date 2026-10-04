@@ -1,5 +1,5 @@
 // AI Pairing tab: build a small JS project with an AI assistant that is sometimes subtly wrong.
-// Depends on globals from index.html: $, el, loadCM, RUN_TIMEOUT, darkMode, and WS from workspace.js (loaded first).
+// Depends on globals from index.html: $, el, loadCM, makeEditor, formatCode, RUN_TIMEOUT, darkMode, and WS from workspace.js (loaded first).
 (function(){
   const KEY="aipair-sessions-v1";
   const {apCombine,apJoin,runAp,stopRun,readSSE,lineDiff,mergeSnippet,mergeMembers}=WS;
@@ -82,7 +82,7 @@
     work.save();clearInterval(work.tick);
     stopRun();
     if(work.abort)work.abort.abort();
-    work.obs.disconnect();work.stopVoice();
+    work.stopVoice();
     work=null;
   }
 
@@ -152,10 +152,11 @@
     const timer=el("span","ap-timer","00:00");
     const run=el("button","","▶ Run tests (⌘/Ctrl+Enter)");
     const stop=el("button","","Stop");stop.hidden=true;
+    const fmtBtn=el("button","","Format");fmtBtn.title="Format your code with Prettier (Shift-Alt-F)";
     const reset=el("button","","Reset");
     const abandon=el("button","","Abandon");
     const finish=el("button","","Finish & get feedback");
-    top.append(back,el("h2","",sc.title),timer,run,stop,finish,reset,abandon);
+    top.append(back,el("h2","",sc.title),timer,run,stop,fmtBtn,finish,reset,abandon);
     wrap.appendChild(top);
 
     const grid=el("div","ap-grid");wrap.appendChild(grid);
@@ -225,12 +226,7 @@
     if(gen!==openGen)return; // user went back to the list while the editor was loading
     const docs={};
     sc.files.forEach(f=>{docs[f.name]=CodeMirror.Doc(code(f.name),"javascript")});
-    const theme=()=>darkMode()?"material-darker":"default";
-    const ed=CodeMirror(host,{value:docs[sc.files[0].name],mode:"javascript",lineNumbers:true,theme:theme(),indentUnit:2,tabSize:2,
-      indentWithTabs:false,autoCloseBrackets:true,matchBrackets:true,
-      extraKeys:{"Cmd-Enter":()=>doRun(),"Ctrl-Enter":()=>doRun(),Tab:cm=>cm.somethingSelected()?cm.indentSelection("add"):cm.replaceSelection("  ","end")}});
-    const obs=new MutationObserver(()=>ed.setOption("theme",theme()));
-    obs.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+    const ed=makeEditor(host,{doc:docs[sc.files[0].name],run:()=>doRun()});
 
     const prName=sc.pr?"pull request":sc.incident?"incident":null,reviewName=sc.pr?"review.md":null,designName=lld?"design.md":null;
     let open=prName||(lld&&!sess.coding?designName:sc.files[0].name);
@@ -324,7 +320,7 @@
       if(sess.elapsed%5===0)save();
     },1000);
     timer.textContent=fmt(sess.elapsed);
-    work={save,tick,obs,stopVoice:()=>{if(vi)vi.stop()}};
+    work={save,tick,stopVoice:()=>{if(vi)vi.stop()}};
 
     // ---- chat: same SSE protocol as the other tabs; the server strips any hidden flaw tag before it reaches us ----
     const bubble=(m,into)=>{const d=el("div","m"+(m.role==="user"?" u":""),m.content);if(m.role!=="user"){renderMd(d,m.content);addApply(d)}into.appendChild(d);return d};
@@ -505,7 +501,7 @@
       }catch(err){evalBox.textContent=err.message||"Request failed"}
       finally{evalBox.classList.remove("busy");finishing=false;finish.disabled=false}
     };
-    run.onclick=()=>doRun();
+    run.onclick=()=>doRun();fmtBtn.onclick=()=>formatCode(ed);
     stop.onclick=stopRun;
     back.onclick=showList;
     let armedA=0;

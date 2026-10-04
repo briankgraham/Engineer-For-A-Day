@@ -113,6 +113,9 @@ textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(
 #pcon{margin:0;padding:8px 14px;max-height:140px;overflow:auto;white-space:pre-wrap;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;border-bottom:1px solid var(--line)}
 #pdlg .CodeMirror-focused .CodeMirror-matchingbracket{color:inherit;background:rgba(88,166,255,.3)}
 .CodeMirror-hints{z-index:1000}
+.CodeMirror-activeline-background{background:rgba(127,127,127,.12)}
+.CodeMirror-dialog{background:var(--surface);color:var(--fg);border-bottom:1px solid var(--line);padding:4px 8px;font-size:13px}
+.CodeMirror-dialog input{width:16em;min-height:0;padding:2px 6px}
 #pcust{padding:8px 14px;border-bottom:1px solid var(--line)}
 #pcust summary{cursor:pointer;color:var(--muted)}
 #pcust .crow{display:flex;gap:6px;margin-top:6px}
@@ -364,7 +367,7 @@ button.busy::before{width:12px;height:12px;border-color:color-mix(in srgb,curren
 <div id="tab-jobs" hidden></div>
 <dialog id="sddlg"><div class="hd"><b id="sdt"></b><span><select class="mdl"></select> <button id="sdregen" hidden>Regenerate</button> <button id="sdx">Close</button></span></div><div id="sdb"></div></dialog>
 <dialog id="ldlg"><div class="hd"><b id="lt"></b><span><select class="mdl"></select> <button id="lregen" hidden>Regenerate</button> <button id="lx">Close</button></span></div><div id="lb"></div></dialog>
-<dialog id="pdlg"><div class="hd"><b id="pt"></b><span><select class="mdl"></select> <button id="pregen" hidden>Regenerate</button> <button id="px">Close</button></span></div><div id="pstmt"></div><div id="pbar"><button id="prun">▶ Run tests (⌘/Ctrl+Enter)</button><button id="pstop" hidden>Stop</button><button id="preset">Reset</button><button id="preview" data-tip="Ask AI for its thoughts on your code, whether or not the tests pass">🤖 Review with AI</button><span id="pstat"></span></div><div id="ped"></div><details id="pcust"><summary>Custom tests <span id="pccount"></span></summary><div id="pclist"></div><div class="cadd"><button id="pcnew">+ Add test</button><span id="pchint"></span></div></details><pre id="pcon"></pre><div id="pres"></div><div id="prev-out" hidden></div></dialog>
+<dialog id="pdlg"><div class="hd"><b id="pt"></b><span><select class="mdl"></select> <button id="pregen" hidden>Regenerate</button> <button id="px">Close</button></span></div><div id="pstmt"></div><div id="pbar"><button id="prun">▶ Run tests (⌘/Ctrl+Enter)</button><button id="pstop" hidden>Stop</button><button id="preset">Reset</button><button id="pfmt" data-tip="Format your code with Prettier (Shift-Alt-F)">Format</button><button id="preview" data-tip="Ask AI for its thoughts on your code, whether or not the tests pass">🤖 Review with AI</button><span id="pstat"></span></div><div id="ped"></div><details id="pcust"><summary>Custom tests <span id="pccount"></span></summary><div id="pclist"></div><div class="cadd"><button id="pcnew">+ Add test</button><span id="pchint"></span></div></details><pre id="pcon"></pre><div id="pres"></div><div id="prev-out" hidden></div></dialog>
 <dialog id="ndlg"><div class="hd"><b id="nt"></b><button id="nx">Close</button></div><div class="sb" style="flex-direction:column"><textarea id="nta" rows="7" placeholder="Approach, pitfalls, complexity…"></textarea><button id="nsave">Save note</button></div></dialog>
 <dialog id="dlg"><div class="hd"><b id="dt"></b><button id="dx">Close</button></div><div class="sb"><input type="search" id="dq" placeholder="Search companies…"><select id="ds"><option value="freq">Most frequent</option><option value="alpha">Alphabetical</option></select></div><ul id="dl"></ul><p id="dn" hidden>No matching companies.</p></dialog>
 <script>
@@ -911,20 +914,71 @@ const CDN="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/";
 const RUN_TIMEOUT=10000;
 const loadedLibs={};
 const loadCss=href=>new Promise((ok,no)=>{const l=document.createElement("link");l.rel="stylesheet";l.href=href;l.onload=ok;l.onerror=()=>no(new Error("Could not load "+href));document.head.appendChild(l)});
-const loadScript=src=>loadedLibs[src]||(loadedLibs[src]=new Promise((ok,no)=>{const t=document.createElement("script");t.src=src;t.onload=ok;t.onerror=()=>{delete loadedLibs[src];no(new Error("Could not load "+src))};document.head.appendChild(t)}));
+const loadScript=(src,integrity)=>loadedLibs[src]||(loadedLibs[src]=new Promise((ok,no)=>{const t=document.createElement("script");t.src=src;if(integrity){t.integrity=integrity;t.crossOrigin="anonymous"}t.onload=ok;t.onerror=()=>{delete loadedLibs[src];no(new Error("Could not load "+src))};document.head.appendChild(t)}));
 const darkMode=()=>document.documentElement.dataset.theme!=="dark"?false:true;
 function setTheme(t){
   document.documentElement.dataset.theme=t;
   try{localStorage.setItem("leetcode-theme",t)}catch(e){}
   $("thm").textContent=t==="dark"?"☀ Light":"🌙 Dark";
-  try{if(pEd)pEd.setOption("theme",darkMode()?"material-darker":"default")}catch(e){}
 }
 $("thm").onclick=()=>setTheme(darkMode()?"light":"dark");
 setTheme(document.documentElement.dataset.theme);
 async function loadCM(){
-  await Promise.all([loadCss(CDN+"codemirror.min.css"),loadCss(CDN+"theme/material-darker.min.css"),loadCss(CDN+"addon/hint/show-hint.min.css")]);
+  await Promise.all([loadCss(CDN+"codemirror.min.css"),loadCss(CDN+"theme/material-darker.min.css"),loadCss(CDN+"addon/hint/show-hint.min.css"),
+    loadCss(CDN+"addon/fold/foldgutter.min.css"),loadCss(CDN+"addon/dialog/dialog.min.css")]);
   await loadScript(CDN+"codemirror.min.js");
-  await Promise.all(["mode/javascript/javascript","addon/edit/closebrackets","addon/edit/matchbrackets","addon/hint/show-hint","addon/hint/javascript-hint"].map(m=>loadScript(`${CDN}${m}.min.js`)));
+  await Promise.all(["mode/javascript/javascript","addon/edit/closebrackets","addon/edit/matchbrackets","addon/hint/show-hint","addon/hint/javascript-hint",
+    "addon/comment/comment","addon/selection/active-line","addon/fold/foldcode","addon/fold/foldgutter","addon/fold/brace-fold",
+    "addon/dialog/dialog","addon/search/searchcursor","addon/search/search","addon/search/jump-to-line"].map(m=>loadScript(`${CDN}${m}.min.js`)));
+}
+
+// The one place the code editors are configured (Practice, Assessment, AI Pairing, Engineer for a Day): call loadCM() first.
+// opts.doc: a CodeMirror.Doc to open (default: an empty JavaScript doc). opts.value: text to open instead. opts.run: Cmd/Ctrl+Enter handler.
+function makeEditor(host,{doc,value,run}={}){
+  const keys={
+    Tab:cm=>cm.execCommand(cm.somethingSelected()?"indentMore":"insertSoftTab"),"Shift-Tab":"indentLess",
+    "Ctrl-Space":"autocomplete","Cmd-/":"toggleComment","Ctrl-/":"toggleComment","Shift-Alt-F":cm=>formatCode(cm)};
+  if(run)keys["Cmd-Enter"]=keys["Ctrl-Enter"]=run;
+  const theme=()=>darkMode()?"material-darker":"default";
+  const cm=CodeMirror(host,{value:doc||value||"",mode:"javascript",lineNumbers:true,theme:theme(),indentUnit:2,tabSize:2,indentWithTabs:false,
+    autoCloseBrackets:"()[]{}''\"\"``",matchBrackets:true,styleActiveLine:true,foldGutter:true,gutters:["CodeMirror-linenumbers","CodeMirror-foldgutter"],extraKeys:keys});
+  // Follow the light/dark toggle, and stop watching once the editor has been thrown away.
+  const obs=new MutationObserver(()=>{if(!cm.getWrapperElement().isConnected)obs.disconnect();else cm.setOption("theme",theme())});
+  obs.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  return cm;
+}
+
+// Prettier 2 standalone from cdnjs (the same origin as CodeMirror, and pinned with SRI). Loaded the first time someone asks to format.
+const PRETTIER_CDN="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/";
+let prettierLoad=null;
+const loadPrettier=()=>prettierLoad||(prettierLoad=Promise.all([
+  loadScript(PRETTIER_CDN+"standalone.js","sha512-6CmYrGjyq2oxBGJ2S+foHLVexl2EbevOSGYSkITDKg1BliTkQSRgWH1M1KuA8grdRpV4k7COBf/ZO0j2y4lf3g=="),
+  loadScript(PRETTIER_CDN+"parser-babel.js","sha512-MNHrbW8Uz16VtO3XPAHbhdwlvPNU7IbNeKEt3Z3PtbspwWtcUvx68GC9NYCeqnC2bNYMANg45W5o68pZsFWPRA==")]).catch(e=>{prettierLoad=null;throw e}));
+// Reformat the JavaScript in editor `cm` with Prettier. Keeps the cursor, scroll position and undo history, and says what happened in a note above the code.
+async function formatCode(cm){
+  const say=(msg,ms)=>cm.openNotification(msg,{duration:ms||2500});
+  const doc=cm.getDoc();
+  if(cm.getOption("readOnly"))return say("This file is read-only.");
+  if(doc.modeOption!=="javascript")return say("Format works on JavaScript files only.");
+  try{await loadPrettier()}catch(e){return say("Could not load the formatter from the CDN. It needs internet.",5000)}
+  const src=doc.getValue();
+  if(cm.getDoc()!==doc||cm.getOption("readOnly"))return;
+  let out;
+  try{out=prettier.formatWithCursor(src,{parser:"babel",plugins:prettierPlugins,tabWidth:2,printWidth:100,cursorOffset:doc.indexFromPos(doc.getCursor())})}
+  catch(e){
+    const at=e.loc&&e.loc.start;
+    if(at)doc.setCursor({line:at.line-1,ch:Math.max(0,at.column-1)});
+    return say("Could not format: "+String(e.message).split("\n")[0].replace(/\s*\(\d+:\d+\)$/,"")+(at?" (line "+at.line+")":""),6000);
+  }
+  if(out.formatted===src)return say("Already formatted.");
+  const top=cm.getScrollInfo();
+  cm.operation(()=>{
+    const last=doc.lastLine();
+    doc.replaceRange(out.formatted,{line:0,ch:0},{line:last,ch:doc.getLine(last).length});
+    doc.setCursor(doc.posFromIndex(out.cursorOffset));
+    cm.scrollTo(top.left,top.top);
+  });
+  say("Formatted.");
 }
 
 // Runs inside the worker, appended to the learner's code in one script so it can see their top-level
@@ -1203,11 +1257,9 @@ async function openPractice(slug){
     await loadCM();
     if(slug!==pSlug)return;
     if(!pEd){
-      pEd=CodeMirror($("ped"),{mode:"javascript",lineNumbers:true,indentUnit:2,tabSize:2,indentWithTabs:false,matchBrackets:true,autoCloseBrackets:"()[]{}''\"\"``",
-        extraKeys:{Tab:cm=>cm.somethingSelected()?cm.indentSelection("add"):cm.replaceSelection("  "),"Ctrl-Enter":runEditor,"Cmd-Enter":runEditor,"Ctrl-Space":"autocomplete"}});
+      pEd=makeEditor($("ped"),{run:runEditor});
       pEd.on("change",()=>{if(pDoc)writeDraft(pSlug,pEd.getValue())});
     }
-    pEd.setOption("theme",darkMode()?"material-darker":"default");
     pEd.setValue("");
     loadExercise(`/api/practice?slug=${encodeURIComponent(slug)}`);
   }catch(err){$("pstmt").replaceChildren(el("p","warn",(err.message||String(err))+" (the editor loads from a CDN, so it needs internet)"))}
@@ -1216,6 +1268,7 @@ $("pcnew").onclick=()=>{if(!pDoc)return;pCustom.push({input:"",expected:""});sav
 $("prun").onclick=runEditor;
 $("preview").onclick=reviewCode;
 $("pstop").onclick=()=>{if(pKill)pKill()};
+$("pfmt").onclick=()=>{if(pEd)formatCode(pEd)};
 $("preset").onclick=()=>{if(pEd&&pDoc&&confirm("Reset to the starter code? Your draft will be lost.")){pEd.setValue(pDoc.exercise.starter_code);writeDraft(pSlug,pEd.getValue())}};
 $("pregen").onclick=()=>{if(confirm("Regenerate this exercise and its tests? This uses API credits and replaces the starter code (your draft is kept until you Reset).")){pDoc=null;loadExercise("/api/practice/regenerate",{method:"POST",body:JSON.stringify({slug:pSlug})})}};
 $("px").onclick=()=>$("pdlg").close();

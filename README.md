@@ -250,6 +250,7 @@ The server uses only the Python standard library, and there's no `npm install`. 
 | [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`) | yes, for AI features (default backend) | walkthroughs, AI interviewers, coworkers, the pairing assistant and grading |
 | [`anthropic`](https://pypi.org/project/anthropic/) Python SDK | optional | only with `WALKTHROUGH_BACKEND=api` |
 | [CodeMirror 5.65.16](https://codemirror.net/5/) | yes, loaded in the browser | code editor in LeetCode Practice, Assessment, AI Pairing and Engineer for a Day. Loaded on demand from `cdnjs.cloudflare.com`, so these editors need an internet connection |
+| [Prettier 2.8.8](https://prettier.io/) (standalone) | optional, loaded in the browser | the **Format** button and Shift-Alt-F in the code editors. Loaded from `cdnjs.cloudflare.com` the first time you format, with an SRI hash |
 | [Node.js](https://nodejs.org/) | optional | only for `scripts/verify_aipair.js` and `scripts/verify_day.js` when writing scenarios |
 | Greenhouse, Lever, Ashby and Workday public job boards | optional | fetched only when you click **Refresh** in the Jobs tab |
 
