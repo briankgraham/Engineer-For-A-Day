@@ -4,4 +4,53 @@ var/jobs_cache/
 var/practice/
 var/walkthroughs/
 var/day_sessions
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs (scenario fixture logs are intentional)
+*.log
+logs/
+!day_scenarios/*/logs/
+!day_scenarios/*/logs/*.log
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Claude Code local state
+.claude/worktrees/
+.claude/settings.local.json
