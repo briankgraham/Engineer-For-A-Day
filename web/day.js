@@ -1,6 +1,6 @@
 // Engineer for a Day tab: a simulated workday on a fake team (Slack-style channels, a ticket, a PR, docs, prod logs and a repo),
 // with AI coworkers who react to what you do, a scripted timeline of events, and a manager's review at the end.
-// Depends on globals from index.html: $, el, loadCM, RUN_TIMEOUT, darkMode, renderMd, apiFetch, and WS from workspace.js.
+// Depends on globals from index.html: $, el, loadCM, makeEditor, formatCode, RUN_TIMEOUT, darkMode, renderMd, apiFetch, and WS from workspace.js.
 (function(){
   const KEY="day-sessions-v1";
   const {apCombine,apSuites,runAp,stopRun,readSSE,renderResults,lineDiff,mergeSnippet,mergeMembers}=WS;
@@ -147,7 +147,7 @@
     if(!work)return;
     work.save();clearInterval(work.tick);stopRun();
     work.aborts.forEach(a=>a.abort());
-    work.obs.disconnect();work.toasts.remove();
+    work.toasts.remove();
     work=null;
   }
 
@@ -373,10 +373,7 @@
     day.files.forEach(f=>{docs[f.name]=CodeMirror.Doc(sess.files[f.name]!=null?sess.files[f.name]:f.code,"javascript")});
     const testDoc=CodeMirror.Doc(day.tests.visible,"javascript"),mineDoc=CodeMirror.Doc(sess.custom,"javascript");
     const files=()=>Object.fromEntries(day.files.map(f=>[f.name,docs[f.name].getValue()]));
-    const theme=()=>darkMode()?"material-darker":"default";
     let ed=null,openFile=day.files[0].name;
-    const obs=new MutationObserver(()=>{if(ed)ed.setOption("theme",theme())});
-    obs.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
     let dead=false;
     const save=()=>dead||writeSession(day.id,{...sess,files:files(),custom:mineDoc.getValue()});
@@ -751,14 +748,13 @@
     let running=false;
     function codeView(){
       header(SERVICE,"Your working copy. Run executes the existing suite plus my-tests.js. Hidden checks run when you end the day."+(sess.ai?" The AI assistant is on the right.":""));
-      const box=el("div","dy-code"),tabs=el("div","dy-files"),host=el("div"),bar=el("div","dy-bar"),run=el("button","","▶ Run tests (⌘/Ctrl+Enter)"),stop=el("button","","Stop"),res=el("div","dy-res"),con=el("pre","dy-con");
-      stop.hidden=true;bar.append(run,stop);box.append(tabs,host,bar,res,con);
+      const box=el("div","dy-code"),tabs=el("div","dy-files"),host=el("div"),bar=el("div","dy-bar"),run=el("button","","▶ Run tests (⌘/Ctrl+Enter)"),stop=el("button","","Stop"),fmtBtn=el("button","","Format"),res=el("div","dy-res"),con=el("pre","dy-con");
+      stop.hidden=true;fmtBtn.title="Format your code with Prettier (Shift-Alt-F)";bar.append(run,stop,fmtBtn);box.append(tabs,host,bar,res,con);
       // With AI, the assistant sits beside the editor so you can talk to it without leaving the code.
       let ai=null;
       if(sess.ai){const wrap=el("div","dy-codewrap");wrap.appendChild(box);main.appendChild(wrap);ai=aiPanel(wrap)}
       else main.appendChild(box);
-      ed=CodeMirror(host,{value:docs[openFile]||mineDoc,mode:"javascript",lineNumbers:true,theme:theme(),indentUnit:2,tabSize:2,indentWithTabs:false,autoCloseBrackets:true,matchBrackets:true,
-        extraKeys:{"Cmd-Enter":()=>doRun(),"Ctrl-Enter":()=>doRun(),Tab:cm=>cm.somethingSelected()?cm.indentSelection("add"):cm.replaceSelection("  ","end")}});
+      ed=makeEditor(host,{doc:docs[openFile]||mineDoc,run:()=>doRun()});
       const btns={};
       const show=name=>{
         openFile=name;
@@ -781,7 +777,7 @@
         const total=r.names.length,passed=r.cases.filter(c=>c&&c.pass).length;
         note("ran the tests: "+passed+"/"+total+" passing"+(r.fatal?" (setup failed)":""));save();
       }
-      run.onclick=()=>doRun();stop.onclick=stopRun;
+      run.onclick=()=>doRun();stop.onclick=stopRun;fmtBtn.onclick=()=>formatCode(ed);
       // A CodeMirror Doc can only belong to one editor, so detach ours before this editor is thrown away.
       return {leave:()=>{ed.swapDoc(CodeMirror.Doc(""));ed=null},showFile:n=>{if(btns[n])show(n)},aiRender:ai&&ai.renderList,aiUpdate:ai&&ai.updateLive};
     }
@@ -960,7 +956,7 @@
       if(sess.t>=dayLen&&!sess.overNoted){sess.overNoted=true;note("the workday ended ("+ampmS(day.clock.end)+")");toast("It's "+ampmS(day.clock.end),"The workday is over. End the day to get your review.","handoff",true)}
       if(sess.elapsed%5===0)save();
     },1000);
-    work={save,tick,obs,toasts,aborts};
+    work={save,tick,toasts,aborts};
 
     back.onclick=showList;
     if(!sess.fired["t-welcome"])runTimeline();

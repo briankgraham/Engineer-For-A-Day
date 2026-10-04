@@ -1,5 +1,5 @@
 // Assessment tab: a timed, multi-problem test in the style of an online assessment (OA).
-// Depends on globals from index.html: $, el, DATA, COMP, SENIOR, DN, apiFetch, errMsg, loadCM, runTests, darkMode.
+// Depends on globals from index.html: $, el, DATA, COMP, SENIOR, DN, apiFetch, errMsg, loadCM, makeEditor, formatCode, runTests, darkMode.
 (function(){
   const SKEY="assess-session-v1",HKEY="assess-history-v1";
   const VISIBLE=2; // the first tests are shown in full (like sample cases); the rest are hidden and only reported as pass/fail
@@ -176,13 +176,12 @@
     const res=el("div","as-res");right.appendChild(res);
     const run=btn("▶ Run (sample tests)",()=>runCur(false));
     const sub=btn("Submit",()=>runCur(true),"primary");
+    const fmtBtn=btn("Format",()=>formatCode(ed));fmtBtn.title="Format your code with Prettier (Shift-Alt-F)";
     const st=el("span","st");
-    bar.append(run,sub,st);
+    bar.append(run,fmtBtn,sub,st);
 
     try{await loadCM()}catch(e){wrap.textContent="The editor loads from a CDN, so it needs internet. "+(e.message||"");return}
-    ed=CodeMirror(edBox,{mode:"javascript",lineNumbers:true,indentUnit:2,tabSize:2,indentWithTabs:false,matchBrackets:true,autoCloseBrackets:"()[]{}''\"\"``",
-      theme:darkMode()?"material-darker":"default",
-      extraKeys:{Tab:cm=>cm.somethingSelected()?cm.indentSelection("add"):cm.replaceSelection("  "),"Ctrl-Enter":()=>runCur(false),"Cmd-Enter":()=>runCur(false)}});
+    ed=makeEditor(edBox,{run:()=>runCur(false)});
     ed.on("change",()=>{if(S&&!finishing&&!loadingDoc){S.code[S.problems[cur].slug]=ed.getValue();save()}});
     let loadingDoc=false;
 
