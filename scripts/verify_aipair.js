@@ -7,6 +7,8 @@
 //   - every planted flaw in secret.json needs a mutant in mutants.json that at least one test catches
 //   - review scenarios ("kind": "review"): pr.md exists, the PR's own (visible) tests all pass on the starter,
 //     and every seeded issue in secret.json's "issues" also has a caught mutant
+//   - debug scenarios ("kind": "debug"): incident.md exists and the job's own (visible) tests all pass on the starter
+//     (CI is green), while the hidden tests fail on it
 //   - object design scenarios ("kind": "lld"): scenario.json has a "followup", followup_visible_tests.js and followup_tests.js
 //     exist, and the follow-up tests run with the rest (fail on the starter, pass on the solution). Flaws marked
 //     "design": true are judged by the evaluator only, so they must not have a mutant.
@@ -65,13 +67,14 @@ for (const id of ids) {
   const s = await run(starter, tests);
   console.log(`  starter:  ${s.total - s.failed.length}/${s.total} passing`);
   if (s.fatal) fail("starter: " + s.fatal); else if (!s.total || s.failed.length === 0) fail("starter should not pass every test");
-  const review = meta.kind === "review";
+  const review = meta.kind === "review", debug = meta.kind === "debug";
+  if (debug && (visible == null || !fs.existsSync(path.join(d, "incident.md")))) fail("debug scenarios need incident.md and visible_tests.js (the job's own tests)");
   if (review && (visible == null || !fs.existsSync(path.join(d, "pr.md")))) fail("review scenarios need pr.md and visible_tests.js (the PR's own tests)");
   if (visible != null) {
     const sv = await run(starter, visible);
     console.log(`  starter (visible only): ${sv.total - sv.failed.length}/${sv.total} passing`);
     if (sv.fatal || !sv.total) fail("visible tests must run on the starter: " + sv.fatal);
-    else if (review) { if (sv.failed.length) fail("review: the PR's own tests must all pass on the PR branch: " + sv.failed.map(c => c.name).join(" | ")) }
+    else if (review || debug) { if (sv.failed.length) fail((review ? "review: the PR's own tests must all pass on the PR branch: " : "debug: the visible tests must all pass on the starter (CI is green): ") + sv.failed.map(c => c.name).join(" | ")) }
     else if (sv.failed.length === 0) fail("visible tests must not all pass on the starter");
     else if (sv.failed.length === sv.total && s.failed.length < s.total) fail("a starter that passes some tests should pass some visible ones too (fix-the-bugs scenarios)");
     const sh = await run(solution, visible);

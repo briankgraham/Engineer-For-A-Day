@@ -107,7 +107,7 @@
       const card=el("div","ap-card");
       card.appendChild(el("h3","",sc.title));
       card.appendChild(el("p","",sc.blurb));
-      const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="lld"?["Object design"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
+      const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="debug"?["Debugging"]:sc.kind==="lld"?["Object design"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
       if(s){bits.push("in progress · "+fmt(s.elapsed||0));if(s.last)bits.push(s.last.passed+"/"+s.last.total+" tests passing");if(s.followup)bits.push("follow-up revealed")}
       card.appendChild(el("div","meta",bits.join(" · ")));
       const b=el("button","",s?"Resume":"Start");
@@ -162,7 +162,7 @@
     const main=el("div","ap-main"),side=el("div","ap-side");
     grid.append(main,side);
     side.appendChild(el("b","","AI assistant"));
-    side.appendChild(el("p","hint",(lld?"It sees the brief, your design.md, your current files and the test file. Ask it to review your design too. Treat its answers like a teammate's: verify them.":sc.pr?"It sees the PR, your current files, the PR's tests and your review.md. Treat its answers like a teammate's: verify them.":sc.visibleTests?"It sees your brief, your current files and the test file. Treat its answers like a teammate's: verify them.":"It sees your brief and current files, not the tests. Treat its answers like a teammate's: verify them.")));
+    side.appendChild(el("p","hint",(lld?"It sees the brief, your design.md, your current files and the test file. Ask it to review your design too. Treat its answers like a teammate's: verify them.":sc.incident?"It sees your brief, your current files and the test file, but not the incident page: paste in the logs or trace you want it to look at. Treat its answers like a teammate's: verify them.":sc.pr?"It sees the PR, your current files, the PR's tests and your review.md. Treat its answers like a teammate's: verify them.":sc.visibleTests?"It sees your brief, your current files and the test file. Treat its answers like a teammate's: verify them.":"It sees your brief and current files, not the tests. Treat its answers like a teammate's: verify them.")));
     const chatRoot=el("div","chat"),chatLog=el("div"),chatForm=el("form"),chatIn=el("textarea"),chatBtn=el("button","","Send");
     chatIn.rows=3;chatIn.placeholder="Ask the assistant… (Enter to send, Shift+Enter for a new line)";chatBtn.type="submit";
     // Dictation reuses voiceInput from sysdesign.js: it only fills the box; nothing is sent until Send.
@@ -212,8 +212,8 @@
     // Review scenarios: the PR page (description, diff, bot comment) is a rendered view shown in place of the editor.
     const prView=el("div","ap-pr");prView.hidden=true;
     main.append(tabs,prView,host,results,con);
-    if(sc.pr){
-      renderMd(prView,sc.pr);
+    if(sc.pr||sc.incident){
+      renderMd(prView,sc.pr||sc.incident);
       prView.querySelectorAll("p").forEach(p=>{const t=p.firstChild;if(t&&t.nodeType===3&&t.data.startsWith("> ")){t.data=t.data.slice(2);p.classList.add("quote")}});
       prView.querySelectorAll("pre").forEach(pre=>{
         const lines=pre.textContent.split("\n");if(!lines.some(l=>l.startsWith("@@")))return;
@@ -232,7 +232,7 @@
     const obs=new MutationObserver(()=>ed.setOption("theme",theme()));
     obs.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
-    const prName=sc.pr?"pull request":null,reviewName=sc.pr?"review.md":null,designName=lld?"design.md":null;
+    const prName=sc.pr?"pull request":sc.incident?"incident":null,reviewName=sc.pr?"review.md":null,designName=lld?"design.md":null;
     let open=prName||(lld&&!sess.coding?designName:sc.files[0].name);
     const tabBtns={};
     // Some scenarios show their test file: a read-only tab that is never saved, applied to or reset.
@@ -258,7 +258,7 @@
       tabs.appendChild(b);
     }
     if(prName){
-      const b=el("button","",prName+" 🔒");b.title="The PR you are reviewing: description, diff and the review bot's comment.";tabBtns[prName]=b;
+      const b=el("button","",prName+" 🔒");b.title=sc.incident?"The incident ticket: what is known, what was tried, the job log and the support ticket. The assistant cannot see it.":"The PR you are reviewing: description, diff and the review bot's comment.";tabBtns[prName]=b;
       b.onclick=()=>showTab(prName);
       tabs.appendChild(b);
     }

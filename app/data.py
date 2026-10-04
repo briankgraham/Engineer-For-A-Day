@@ -28,7 +28,7 @@ SD_PROBLEMS, SD_TOPICS, SD_FRAMEWORK = load_sd()
 
 
 def load_ap_scenarios():
-    """Public parts of the AI Pairing scenarios: meta, starter files, tests, (review scenarios) pr.md and (object design scenarios)
+    """Public parts of the AI Pairing scenarios: meta, starter files, tests, (review scenarios) pr.md, (debug scenarios) incident.md and (object design scenarios)
     the follow-up tests. Never reads secret.json or solution/."""
     out = []
     try:
@@ -54,6 +54,10 @@ def load_ap_scenarios():
             if sc.get("kind") == "review":
                 with open(os.path.join(d, "pr.md"), encoding="utf-8") as f:
                     pr = f.read()
+            incident = None
+            if sc.get("kind") == "debug":
+                with open(os.path.join(d, "incident.md"), encoding="utf-8") as f:
+                    incident = f.read()
             followup = {}
             if sc.get("kind") == "lld":
                 with open(os.path.join(d, "followup_visible_tests.js"), encoding="utf-8") as f:
@@ -69,7 +73,7 @@ def load_ap_scenarios():
         except (OSError, ValueError, KeyError) as e:
             print(f"aipair scenario {name} skipped: {e}", file=sys.stderr)
             continue
-        out.append({**sc, "id": name, "files": files, "tests": tests, **({"visibleTests": visible} if visible is not None else {}), **({"pr": pr} if pr is not None else {}), **followup})
+        out.append({**sc, "id": name, "files": files, "tests": tests, **({"visibleTests": visible} if visible is not None else {}), **({"pr": pr} if pr is not None else {}), **({"incident": incident} if incident is not None else {}), **followup})
     out.sort(key=lambda s: (s.get("order", 100), s["id"]))
     return out
 

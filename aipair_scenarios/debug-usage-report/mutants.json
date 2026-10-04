@@ -1,0 +1,13 @@
+{
+  "guard-masks-leak": [
+    { "file": "report.js", "from": "function summarize(events) {\n  const buckets = new Map();", "to": "const buckets = new Map();\nfunction summarize(events) {" },
+    { "file": "report.js", "from": "tenant.users[b.userId].name", "to": "(tenant.users[b.userId] || { name: \"unknown\" }).name" }
+  ],
+  "concurrency-red-herring": [
+    { "file": "report.js", "from": "function summarize(events) {\n  const buckets = new Map();", "to": "const buckets = new Map();\nfunction summarize(events) {" },
+    { "file": "nightly.js", "from": "const report = buildReport(tenant);", "to": "let report;\n      try { report = buildReport(tenant); } catch (e) { report = buildReport(tenant); }" }
+  ],
+  "float-error-blame": [
+    { "file": "report.js", "from": "const total = rows.reduce((n, r) => n + r.costCents, 0);", "to": "const total = Math.round(rows.reduce((n, r) => n + r.units, 0) * rate / 1000);" }
+  ]
+}
