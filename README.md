@@ -77,7 +77,7 @@ A guided path from the fundamentals to full designs, with topics, practice probl
 
 ## 🧩 LeetCode
 
-Algorithms still come up, so this tab covers them too. It has over 17,000 problem-company pairs across about 430 companies, with how often each company asked each problem in the last 30 days, 3 months, 6 months and earlier.
+Algorithms still come up, so this tab covers them too. It has tons of problem-company pairs across about 430 companies, with how often each company asked each problem in the last 30 days, 3 months, 6 months and earlier.
 
 **Browse, filter and track.** Search by title or topic, filter by difficulty and company, sort by how often it's asked, and tick problems off as you solve them. Problems that come up a lot in senior loops get a **Senior** badge with a note on why they're asked.
 
