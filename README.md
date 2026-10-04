@@ -1,13 +1,85 @@
-## Leetcode Company wise Problems Lists
+# Engineer for a Day
 
-- Curated lists of Leetcode questions grouped by company, updated as of 1 June 2025.
-- All company data lives in a single file, `data/companies.csv`: one row per (company, problem).
+**Your whole interview loop in one local app, so the real one feels like a rerun.**
 
-### Screenshots
+Interviews ask for more than reversing a linked list now. You'll be asked to design a system on a whiteboard, tell a story about the time you disagreed with your manager, pair with an AI that's confidently wrong, review someone's PR, and stay calm while production is on fire. This app lets you practice all of it before it counts.
 
-Run `python3 server.py` and open http://localhost:8000.
+It runs on your machine and keeps everything there. The AI parts use your existing `claude` login.
 
-**Browse, filter and track progress.** Search by title or topic, filter by difficulty and company, sort by frequency, and tick problems off as you solve them.
+```
+python3 server.py
+# open http://localhost:8000
+```
+
+That's all the setup. Pick a tab and start.
+
+---
+
+## What's in the box
+
+| Tab | What you're practicing |
+| --- | --- |
+| 🏢 **Engineer for a Day** | A full simulated workday: tickets, a PR, Slack, an incident, a handoff |
+| 🤝 **AI Pairing** | Building with an AI assistant that's sometimes quietly wrong |
+| 🏗️ **System Design Prep** | Fundamentals, timed mock interviews, and a whiteboard |
+| 🎤 **Behavioral** | STAR stories, plus an AI interviewer that asks follow-ups until it gets specifics |
+| 🧩 **LeetCode** | Company-tagged problems with walkthroughs and an in-browser editor |
+| ⏱️ **Assessment** | Timed online-assessment (OA) style tests with hidden test cases |
+| 💼 **Jobs** | Live openings from the companies you're prepping for |
+
+---
+
+## 🏢 Engineer for a Day
+
+This one gave the app its name. It's the closest thing to a work trial without the work trial.
+
+It's your first day on a fictional team. You get a small repo, Slack-style channels and DMs full of coworkers, a ticket to ship, a PR to review, docs, production logs, and an incident page that arrives around lunch. The clock runs from 9:00 AM to 5:30 PM in about 75 minutes, and it pauses when you switch away from the tab.
+
+Your coworkers are AI, and each has their own agenda. Some of them will tell you things that sound right and aren't. When you click **End day**, every test suite runs and a manager-style review scores how you debugged, the quality of your code and tests, how you reviewed the PR, how you communicated, and the calls you made about what mattered.
+
+Three days to choose from:
+
+- **ShipFast: orders & payments.** Ship discount codes, review a charge-retry PR, and work out why customers are being charged twice.
+- **Huddle: push notifications.** Build quiet hours, review an in-memory rate limiter, and track down duplicate pushes.
+- **Plotline: subscriptions & billing.** Handle mid-cycle upgrades, review a renewal batch job, and find out why people are charged after they cancel. (Hint: time zones are involved.)
+
+## 🤝 AI Pairing
+
+More and more interviews hand you an AI assistant and watch how you use it. Here you build small JavaScript projects with an assistant that is helpful most of the time, but some of its replies contain flaws planted on purpose. At the end you're graded on the code and on how well you worked with it: whether you caught its mistakes, checked its claims, and ran the tests.
+
+15 scenarios from Easy to Hard: an LRU cache with TTL, a token-bucket rate limiter, offline sync, an Express-style middleware router, a **PR review** round, an **elevator object-design** round where the requirements change partway through, and more.
+
+## 🏗️ System Design Prep
+
+A guided path from the fundamentals to full designs, with topics, practice problems and mock interviews.
+
+![System Design Prep tab](docs/media/system-design.jpg)
+
+**Mock interviews.** Pick a problem and a time limit, then work through it with a pacing timer for each step of the framework. Ask the AI interviewer clarifying questions, and keep your back-of-envelope math in a scratchpad.
+
+![Starting a mock interview, asking the AI interviewer a question, and taking notes](docs/media/mock-interview.gif)
+
+**Whiteboard.** Sketch the design with boxes, databases and arrows that stay attached when you move things. Export it as SVG or PNG, or ask the AI to critique it.
+
+![Sketching a rate limiter design on the whiteboard, then getting an AI evaluation](docs/media/whiteboard.gif)
+
+**Score yourself** on each step of the framework, then save the attempt to your history with your reflection and scratchpad.
+
+![Self-scoring a mock interview and saving the attempt](docs/media/mock-scoring.gif)
+
+## 🎤 Behavioral
+
+"Tell me about a time you disagreed with your manager." Better to have that story ready in advance.
+
+- **A question bank** tagged by competency (conflict, ambiguity, failure, influence, mentoring and more), by the companies known to ask each question, and by the Amazon Leadership Principle it probes. Competency chips show where you've practiced and where you have gaps.
+- **Practice one** picks a question that's due for review (or one you haven't tried), then times a 2 to 3 minute answer. Questions come back on a 3, 7 and 21 day spaced-repetition schedule, and each one has a notes field for the story you'd tell.
+- **Interview me with AI** runs a mock round for your target level, Senior or Staff. The interviewer asks follow-ups aimed at the weakest part of your answer: what *you* did rather than "we", how you measured the result, what you'd do differently. It won't let you dodge. **Finish and grade** scores your answer, quotes the lines that cost you points, and tells you whether the story reads at the level you're targeting.
+
+## 🧩 LeetCode
+
+Algorithms still come up, so this tab covers them too. It has over 17,000 problem-company pairs across about 430 companies, with how often each company asked each problem in the last 30 days, 3 months, 6 months and earlier.
+
+**Browse, filter and track.** Search by title or topic, filter by difficulty and company, sort by how often it's asked, and tick problems off as you solve them. Problems that come up a lot in senior loops get a **Senior** badge with a note on why they're asked.
 
 ![Filtering problems and marking one done](docs/media/filtering.gif)
 
@@ -19,35 +91,54 @@ Run `python3 server.py` and open http://localhost:8000.
 
 ![Learn walkthrough for LRU Cache](docs/media/learn-walkthrough.jpg)
 
-**Practice.** Write a solution in the browser and run it against the tests.
+**Practice.** Write your solution in the browser and run it against the tests.
 
 ![Running tests on the practice editor](docs/media/practice-run.gif)
 
 ![Practice editor with all tests passing](docs/media/practice.jpg)
 
-**System Design Prep.** A guided path from fundamentals to full designs, with topics, problems and mock interviews.
+## ⏱️ Assessment
 
-![System Design Prep tab](docs/media/system-design.jpg)
+Timed tests in the style of an online assessment. Choose Quick (1 Medium in 30 minutes), Standard (Easy, Medium, Medium in 60) or Tough (Medium, Medium, Hard in 90). As on the real platforms, you see a couple of sample cases and the rest of the tests are hidden.
 
-**Mock interview.** Pick a problem and a time limit, then work through it against a framework pacing timer. You can ask an AI interviewer clarifying questions and keep estimates in a scratchpad.
+## 💼 Jobs
 
-![Starting a mock interview, asking the AI interviewer a question, and taking notes](docs/media/mock-interview.gif)
+When you're ready to apply, this tab lists live US software openings from the companies in the tracker. Filter by keyword, company, state, seniority, remote, and how recently the job was posted. Click **Refresh** the first time you open it to pull fresh listings.
 
-During an interview, open the whiteboard to sketch the design: boxes, databases, ellipses and text, with arrows that connect shapes and follow them when you move them. Export as SVG or PNG, or ask the AI to evaluate the diagram.
+---
 
-![Sketching a rate limiter design on the whiteboard, then getting an AI evaluation](docs/media/whiteboard.gif)
+## A game plan, if you want one
 
-When you finish, score yourself on each framework step and save the attempt, with your reflection and scratchpad, to your history.
+1. **Week 1:** Do one Engineer for a Day to see where you stand. The review shows what to work on.
+2. **Every day:** Two LeetCode problems from your target company's 30-day list, plus one behavioral question.
+3. **Twice a week:** A timed system design mock on the whiteboard, and one AI Pairing scenario.
+4. **Before the onsite:** A Tough assessment, an AI behavioral round at your target level, and another workday.
 
-![Self-scoring a mock interview and saving the attempt](docs/media/mock-scoring.gif)
+Progress is saved in your browser. Use **Export progress** to back it up.
 
-**Behavioral.** A bank of common behavioral questions ("Tell me about a time you disagreed with your manager"), each tagged with the competencies it tests (conflict, ambiguity, failure, influence, mentoring and so on) and the companies known to ask it, with the Amazon Leadership Principle it probes. Filter by competency, company or review status. The competency chips show how many questions you've practiced for each, so gaps stand out. **Practice one** picks a due question first, then one you haven't practiced, with a timer for a 2 to 3 minute answer. A question you mark practiced comes back on the same 3, 7, 21 day schedule as LeetCode reviews. Each question has a note for the story you'd use. Progress is saved in your browser and included in **Export progress**.
+Good luck. 🚀
 
-**Interview me with AI** (on the Practice card, or **Interview** on any question) runs a mock behavioral round for your target level (Senior or Staff, picked at the top of the tab). The AI asks the question, then reads your answer and asks follow-ups about its weakest part: what *you* did rather than "we", how you measured the result, what the other side thought, what you'd do differently. It asks again if you dodge a question, and stays in character with no coaching until you finish. Type or dictate your answers. **Finish and grade** scores structure, ownership, scope for the level, results, reflection and communication, quoting the lines that cost you, says whether the story reads at your target level, and lists follow-ups to prepare. Each graded attempt is saved under **Past AI interviews** and counts as practicing the question.
+---
 
-**Jobs.** A tab of live US software openings from the companies in this tracker, filterable by keyword, company, state, seniority (internship through management), remote and how recently they were posted, with a link to each posting. Selecting the tab and filtering only read the local server's cache. The **Refresh** button is the only thing that contacts the public Greenhouse, Lever, Ashby and Workday job boards (through `server.py`, at most once every 5 minutes), so the first time you open it, click Refresh. Only companies on those systems are covered (about a third of the tracker); Google, Amazon, Meta, Microsoft and Apple run their own career sites, so the tab links to them instead. `python3 scripts/build_jobs_boards.py` rebuilds `data/jobs_boards.json`, the company-to-board mapping. Workday is one generic connector configured per company as `{"ats": "workday", "host", "tenant", "site"}`; add one with `python3 scripts/build_jobs_boards.py --workday "CrowdStrike" crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers`, or let the script probe for the tenant.
+## Under the hood
 
-### Layout
+<details>
+<summary><b>Setup and AI backends</b></summary>
+
+By default the server runs your logged-in `claude` CLI in headless mode, so you don't need an API key and usage counts against your Claude plan. To use the Anthropic API instead:
+
+```
+pip install anthropic
+export ANTHROPIC_API_KEY=...        # or put it in a git-ignored .env file
+WALKTHROUGH_BACKEND=api python3 server.py
+```
+
+Other environment variables: `PORT` (8000), `WALKTHROUGH_MODEL`, `WALKTHROUGH_PER_MINUTE` (10), `WALKTHROUGH_DAILY_CAP` (200), `CLAUDE_BIN` (claude). The server listens only on loopback.
+
+</details>
+
+<details>
+<summary><b>Project layout</b></summary>
 
 | Path | What |
 | --- | --- |
@@ -61,13 +152,16 @@ When you finish, score yourself on each framework step and save the attempt, wit
 | `docs/` | screenshots and TODO notes |
 | `var/` | git-ignored caches and logs: AI walkthroughs and practice exercises, job listings, AI Pairing and Engineer for a Day sessions |
 
-### `data/companies.csv`
+</details>
+
+<details>
+<summary><b>LeetCode data and rebuilding</b></summary>
+
+All company data lives in `data/companies.csv` (updated as of 1 June 2025), one row per (company, problem).
 
 Columns: `Company, Difficulty, Title, Link, Topics, Freq30d, Freq3m, Freq6m, FreqOlder, FreqAll`
 
-The `Freq*` columns are how often the company asked the problem in each recency window: the past 30 days, 3 months, 6 months, more than 6 months ago, and all time. A blank means it wasn't asked in that window. Use the window that matches how long you have before your interview.
-
-### Rebuilding
+The `Freq*` columns are how often the company asked the problem in each window: the past 30 days, 3 months, 6 months, more than 6 months ago, and all time. A blank means it wasn't asked in that window. Use the window that matches how long you have before your interview.
 
 `data/GLOBAL.csv` (problems ranked across all companies) and the data embedded in `web/index.html` are generated from `data/companies.csv`:
 
@@ -76,11 +170,21 @@ python3 scripts/build_global.py                  # rank by all-time frequency
 python3 scripts/build_global.py --window 30d     # or 3m, 6m, older
 ```
 
-The same script also embeds `data/senior_favs.json`, a hand-curated list of problems that come up a lot in senior loops, with why each is asked and a typical follow-up. These problems get a **Senior** badge (hover it for the note), and the **Senior favs** checkbox shows only them. To change the list, edit the JSON and rerun the script. It stops with an error if a slug isn't in the data.
+The same script embeds `data/senior_favs.json`, a hand-curated list of problems that come up a lot in senior loops, with why each is asked and a typical follow-up. These get the **Senior** badge (hover it for the note), and the **Senior favs** checkbox shows only them. To change the list, edit the JSON and rerun the script. It stops with an error if a slug isn't in the data.
 
-### AI Pairing tab
+</details>
 
-Build a small JavaScript project with an AI coding assistant that is sometimes subtly wrong on purpose, then get graded on how you worked with it. Needs `python3 server.py` (the AI uses your `claude` login, same as the other tabs).
+<details>
+<summary><b>Jobs data sources</b></summary>
+
+Selecting the tab and filtering only read the local server's cache. The **Refresh** button is the only thing that contacts the public Greenhouse, Lever, Ashby and Workday job boards (through `server.py`, at most once every 5 minutes). Only companies on those systems are covered (about a third of the tracker). Google, Amazon, Meta, Microsoft and Apple run their own career sites, so the tab links to them instead.
+
+`python3 scripts/build_jobs_boards.py` rebuilds `data/jobs_boards.json`, the company-to-board mapping. Workday is one generic connector configured per company as `{"ats": "workday", "host", "tenant", "site"}`. Add one with `python3 scripts/build_jobs_boards.py --workday "CrowdStrike" crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers`, or let the script probe for the tenant.
+
+</details>
+
+<details>
+<summary><b>Writing an AI Pairing scenario</b></summary>
 
 Each scenario is a folder in `aipair_scenarios/<id>/`:
 
@@ -106,11 +210,12 @@ node scripts/verify_aipair.js              # all scenarios, or pass ids
 
 It runs the real test harness (visible and hidden tests together) and requires that the starter does not pass everything (and, in visible-tests mode, passes some visible tests and fails others), the solution passes every test, and every planted flaw has a mutant that at least one test catches. Review scenarios instead require the PR's own visible tests to all pass on the starter (CI is green), and every seeded issue needs a caught mutant too. Object design scenarios need the follow-up files, run the follow-up tests with the rest, and skip the mutant check for design flaws.
 
-### Engineer for a Day tab
+</details>
 
-A simulated workday on a fake team (`web/day.js`, `/api/day/*` in `app/routes/day.py` + `app/features/day.py`). You get a small repo, Slack-style channels and DMs, a ticket, a PR to review, docs, production logs and an end-of-day handoff. A scripted timeline runs on a compressed clock (9:00 AM to 5:30 PM in about 75 minutes, paused while the tab is hidden), and AI coworkers reply in each thread. Each coworker has a hidden agenda, and some say subtly wrong things (planted flaws, as in AI Pairing). **End day** runs every test suite in the browser, then a manager-style review scores debugging, code quality, testing, review, communication, prioritization and judgment, and grades each task. The test harness, runner and Apply helpers are shared with AI Pairing through `web/workspace.js`.
+<details>
+<summary><b>Writing an Engineer for a Day scenario</b></summary>
 
-Two days so far: `shipfast-orders` (orders & payments: discount codes, double charges, a charge-retry PR, an outbox RFC) and `huddle-notifications` (push notifications: quiet hours, duplicate pushes from whole-event queue redelivery, an in-memory rate limiter PR, a per-follower fan-out RFC).
+The tab lives in `web/day.js` and `/api/day/*` (`app/routes/day.py` + `app/features/day.py`). The test harness, runner and Apply helpers are shared with AI Pairing through `web/workspace.js`. Coworkers' planted flaws work like the ones in AI Pairing.
 
 Each day is a folder in `day_scenarios/<id>/`:
 
@@ -131,5 +236,9 @@ node scripts/verify_day.js                 # all days, or pass ids
 ```
 
 For testing, `?dayspeed=20` in the URL runs the clock 20x faster.
+
+</details>
+
+## Credits
 
 - System Design Notes: https://github.com/liquidslr/system-design-notes
