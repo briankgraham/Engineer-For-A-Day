@@ -3,3 +3,4 @@ var/aipair_sessions/
 var/jobs_cache/
 var/practice/
 var/walkthroughs/
+var/day_sessions
