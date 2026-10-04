@@ -1,0 +1,22 @@
+{
+  "order": 16,
+  "kind": "debug",
+  "title": "Debug a failing nightly job",
+  "blurb": "An incident ticket with a stack trace and a job log. The tests are green. Find the real cause with evidence before you change anything.",
+  "difficulty": "Medium",
+  "minutes": 35,
+  "brief": "You own the nightly usage-report job. Since Tuesday it only works for the first tenant, and support has a ticket about a total that is off by a cent. The incident page (read-only tab) has the ticket, what has been tried, the job log with stack traces and the support ticket. The job's own tests are in a read-only tab and all pass. Work out why the job fails and why the totals disagree, then fix both in the code. The assistant does not see the incident page, so paste in whatever you want its help with. Hidden tests that encode the requirements below run when you finish.",
+  "requirements": [
+    "rates.js is correct. Leave it alone.",
+    "buildReport(tenant) returns { tenant, rows, total }. Each row is { userId, name, units, costCents }: the user's units summed across all their events, and the cost in whole cents (units * rate / 1000, rounded to the nearest cent), at the tenant plan's rate.",
+    "Rows are sorted by costCents highest first, ties by name. total is the sum of the rows' costCents. An unknown plan throws RangeError.",
+    "A report depends only on the tenant passed in: building other tenants first, in any order, never changes it. Two tenants may use the same user ids, and their usage must never be mixed.",
+    "Building the same tenant twice gives equal reports, and buildReport never modifies the tenant it is given. A tenant with no events gives { tenant, rows: [], total: 0 }.",
+    "runNightly(tenants, log) returns the reports in tenant order, logging `report ok ...` for each. A tenant that throws is logged as an error and skipped, and does not affect the tenants after it."
+  ],
+  "files": [
+    "report.js",
+    "rates.js",
+    "nightly.js"
+  ]
+}
