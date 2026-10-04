@@ -1,0 +1,11 @@
+{
+ "day": "shipfast-orders",
+ "flaws": [
+  {
+   "id": "orderid-dedupe",
+   "persona": "marco",
+   "thread": "pr:87",
+   "reply": "Ha, the 0-3 thing was kinda intentional tbh: 1 first try plus 3 retries. Though the PR description says \"3 tries\" so I can reword that. Making it generic feels like scope creep for today, we can pull it out in a follow-up \ud83d\ude4f And the setTimeout is only 100-400ms, so there's nothing worth cancelling, the request just finishes.\n\nOn double charges: no, retries are safe. Paystream already dedupes charges on orderId (it's in the metadata we send), so the same order can't be charged twice even if we hit it again after a timeout.\n\n"
+  }
+ ]
+}

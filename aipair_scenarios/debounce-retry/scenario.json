@@ -1,0 +1,24 @@
+{
+  "order": 5,
+  "title": "Debounce and retry helpers",
+  "blurb": "Two small utilities that are easy to get subtly wrong: a debounce with leading/trailing edges and a retry with backoff.",
+  "difficulty": "Medium",
+  "minutes": 45,
+  "brief": "Your team wants two dependency-free helpers: debounce (for search boxes and resize handlers) and retry (for flaky network calls). Both take an injectable timers object, { setTimeout, clearTimeout }, so the hidden tests can control time. If timers is omitted, use the real global functions. Implement debounce in debounce.js and retry in retry.js.",
+  "requirements": [
+    "debounce(fn, waitMs, { leading = false, trailing = true, timers } = {}) returns a debounced function. fn must be a function, otherwise throw TypeError. waitMs must be a finite number >= 0, otherwise throw RangeError. leading and trailing may not both be false (RangeError).",
+    "Trailing (the default): fn is called once, waitMs after the most recent call, with the arguments and this of that most recent call. Every call restarts the wait.",
+    "Leading: the first call of a burst calls fn immediately with that call's arguments. A burst ends once waitMs passes with no calls.",
+    "With leading and trailing both true, fn also gets a trailing call, but only if the debounced function was called again during the burst. A single call must call fn exactly once.",
+    "The debounced function returns the result of the most recent call to fn (undefined before the first).",
+    "debounced.cancel() drops any pending call and ends the burst, so the next call starts a new burst (and fires the leading edge again).",
+    "debounced.flush() runs a pending trailing call now, with its latest arguments, and returns fn's result. If nothing is pending it does nothing and returns the last result. After a flush the pending timer must not fire again.",
+    "debounced.pending() is true while a trailing call is scheduled.",
+    "retry(task, { attempts = 3, baseMs = 100, factor = 2, maxMs = Infinity, shouldRetry = () => true, timers } = {}, callback) runs task(cb) right away. task reports with cb(err, value). task and callback must be functions (TypeError). attempts must be a positive integer, baseMs a finite number >= 0, factor a number >= 1 and maxMs a number >= 0 (Infinity is allowed), otherwise RangeError.",
+    "If cb receives no error, call callback(null, value) once and stop. attempts is the total number of tries, so attempts: 1 never retries.",
+    "If cb receives an error and there are tries left and shouldRetry(err, n) is true, where n is the 1-based number of the try that just failed, run task again after min(maxMs, baseMs * factor ** (n - 1)) ms. Otherwise call callback(err) at once with that last error and do not wait.",
+    "task may call cb more than once. Only the first call for each try counts.",
+    "retry returns { cancel() }. cancel() clears any pending wait, and after it callback is never called, even if an in-flight task calls cb later. Cancelling after the callback has run does nothing."
+  ],
+  "files": ["debounce.js", "retry.js"]
+}

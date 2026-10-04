@@ -1,0 +1,8 @@
+{
+  "nearest-stop-first": [{ "file": "elevator.js", "from": "    if (!this.ahead(this.sweep)) this.sweep = this.sweep === \"up\" ? \"down\" : \"up\";\n", "to": "    const next = this.stops().reduce((a, f) => (Math.abs(f - this.floor) < Math.abs(a - this.floor) ? f : a));\n    this.sweep = next > this.floor ? \"up\" : \"down\";\n" }],
+  "hall-call-any-direction": [{ "file": "elevator.js", "from": "c.floor === this.floor && (c.dir === this.sweep || turn)", "to": "c.floor === this.floor" }],
+  "on-the-way-ignores-call-dir": [{ "file": "dispatcher.js", "from": "(c.dir === dir && (dir === \"up\" ? floor >= c.floor : floor <= c.floor))", "to": "(c.dir === \"up\" ? floor >= c.floor : floor <= c.floor)" }],
+  "no-dedupe": [{ "file": "dispatcher.js", "from": "    if (owner) return owner.id;\n", "to": "" }],
+  "retired-still-eligible": [{ "file": "dispatcher.js", "from": "const live = this.cars.filter(c => c.inService);", "to": "const live = this.cars;" }],
+  "retire-drops-calls": [{ "file": "dispatcher.js", "from": "car.retire().forEach(c => this.call(c.floor, c.dir));", "to": "car.retire();" }]
+}

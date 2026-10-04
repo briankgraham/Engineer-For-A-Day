@@ -1,0 +1,21 @@
+{
+  "order": 7,
+  "title": "Async task pool",
+  "difficulty": "Hard",
+  "minutes": 50,
+  "blurb": "Run async work with a concurrency limit: ordered results, fail-fast or settle mode, and cancellation.",
+  "brief": "Your team keeps hand-rolling the same loop: call an async function for every item in a list, but only a few at a time (uploads, API calls, file reads). Write it once, properly. Implement mapLimit in pool.js. The helpers in results.js are already done. Async code is where plausible-looking answers go wrong: timing, ordering and failure paths all matter, and the tests check each of them. There is no real clock here: tests settle each call by hand, so behavior must depend only on when your promises settle. Read your requirements closely and check what the assistant gives you.",
+  "requirements": [
+    "mapLimit(items, limit, fn, { settle = false, signal } = {}). limit must be a positive integer (numbers only), otherwise throw RangeError. fn must be a function, otherwise throw TypeError. Both are thrown synchronously, not returned as a rejected promise.",
+    "items is any iterable; read it once, up front. Returns a promise for an array with one result per item, in input order, no matter which calls finish first. Empty input resolves to [].",
+    "fn(item, index) may return a plain value or a promise. At most limit calls are ever in flight, and the next item starts as soon as any call finishes (a sliding window, not fixed batches).",
+    "A synchronous throw from fn counts as a rejection of that call.",
+    "Fail-fast (settle false): on the first rejection, reject with that error and start no more calls. Calls already running are left alone; their later results or errors are ignored.",
+    "Settle mode (settle true): never rejects because of fn. Every item runs, and each result is fulfilled(value) or rejected(reason) from results.js, in input order.",
+    "signal is an AbortSignal-like object (aborted, reason, addEventListener, removeEventListener). If it is already aborted, reject with signal.reason without calling fn (even for empty input). If it aborts mid-run, start no more calls and reject with signal.reason (also in settle mode). Remove your abort listener once the promise settles, however it settles."
+  ],
+  "files": [
+    "pool.js",
+    "results.js"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "split-lines-first": [{ "file": "csv.js", "fromFile": "mutants/split-lines.js" }],
+  "trim-fields": [{ "file": "csv.js", "from": "      row.push(field);\n", "to": "      row.push(field.trim());\n" }],
+  "skip-blank-lines": [{ "file": "csv.js", "from": "    rows.push(row);\n    if (i < n) {", "to": "    if (!(row.length === 1 && row[0] === \"\")) rows.push(row);\n    if (i < n) {" }],
+  "escaped-quote-toggle": [{ "file": "csv.js", "from": "              field += '\"';\n              i += 2;", "to": "              i += 2;" }],
+  "lf-only-terminator": [{ "file": "csv.js", "from": "const isEol = i => text[i] === \"\\n\" || (text[i] === \"\\r\" && text[i + 1] === \"\\n\");", "to": "const isEol = i => text[i] === \"\\n\";" }],
+  "number-coercion": [{ "file": "csv.js", "from": "    rows.push(row);\n    if (i < n) {", "to": "    rows.push(row.map(v => (v !== \"\" && !isNaN(v) ? Number(v) : v)));\n    if (i < n) {" }]
+}

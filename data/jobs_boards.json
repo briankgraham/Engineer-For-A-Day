@@ -1,0 +1,674 @@
+{
+ "Adobe": {
+  "ats": "workday",
+  "host": "adobe.wd5.myworkdayjobs.com",
+  "tenant": "adobe",
+  "site": "external_experienced",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Affirm": {
+  "ats": "greenhouse",
+  "token": "affirm"
+ },
+ "Agoda": {
+  "ats": "greenhouse",
+  "token": "agoda"
+ },
+ "Airbnb": {
+  "ats": "greenhouse",
+  "token": "airbnb"
+ },
+ "Airwallex": {
+  "ats": "ashby",
+  "token": "airwallex"
+ },
+ "Akuna Capital": {
+  "ats": "greenhouse",
+  "token": "akunacapital"
+ },
+ "Apollo.io": {
+  "ats": "greenhouse",
+  "token": "apolloio"
+ },
+ "AQR Capital Management": {
+  "ats": "greenhouse",
+  "token": "aqr"
+ },
+ "Asana": {
+  "ats": "greenhouse",
+  "token": "asana"
+ },
+ "Attentive": {
+  "ats": "greenhouse",
+  "token": "attentive"
+ },
+ "Autodesk": {
+  "ats": "workday",
+  "host": "autodesk.wd1.myworkdayjobs.com",
+  "tenant": "autodesk",
+  "site": "Ext",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Axon": {
+  "ats": "greenhouse",
+  "token": "axon"
+ },
+ "Baidu": {
+  "ats": "greenhouse",
+  "token": "baidu"
+ },
+ "BitGo": {
+  "ats": "greenhouse",
+  "token": "bitgo"
+ },
+ "BlackRock": {
+  "ats": "workday",
+  "host": "blackrock.wd1.myworkdayjobs.com",
+  "tenant": "blackrock",
+  "site": "BlackRock_Professional",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Box": {
+  "ats": "greenhouse",
+  "token": "boxinc"
+ },
+ "Braze": {
+  "ats": "greenhouse",
+  "token": "braze"
+ },
+ "Canonical": {
+  "ats": "greenhouse",
+  "token": "canonical"
+ },
+ "Capital One": {
+  "ats": "workday",
+  "host": "capitalone.wd12.myworkdayjobs.com",
+  "tenant": "capitalone",
+  "site": "Capital_One",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Careem": {
+  "ats": "greenhouse",
+  "token": "careem"
+ },
+ "Chime": {
+  "ats": "greenhouse",
+  "token": "chime"
+ },
+ "Circle": {
+  "ats": "ashby",
+  "token": "circle"
+ },
+ "Cisco": {
+  "ats": "workday",
+  "host": "cisco.wd5.myworkdayjobs.com",
+  "tenant": "cisco",
+  "site": "Cisco_Careers",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Cloudflare": {
+  "ats": "greenhouse",
+  "token": "cloudflare"
+ },
+ "Coinbase": {
+  "ats": "greenhouse",
+  "token": "coinbase"
+ },
+ "Commvault": {
+  "ats": "greenhouse",
+  "token": "commvault"
+ },
+ "Confluent": {
+  "ats": "ashby",
+  "token": "confluent"
+ },
+ "Coupang": {
+  "ats": "greenhouse",
+  "token": "coupang"
+ },
+ "Coursera": {
+  "ats": "greenhouse",
+  "token": "coursera"
+ },
+ "CRED": {
+  "ats": "lever",
+  "token": "cred"
+ },
+ "CrowdStrike": {
+  "ats": "workday",
+  "host": "crowdstrike.wd5.myworkdayjobs.com",
+  "tenant": "crowdstrike",
+  "site": "crowdstrikecareers",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Databricks": {
+  "ats": "greenhouse",
+  "token": "databricks"
+ },
+ "Datadog": {
+  "ats": "greenhouse",
+  "token": "datadog"
+ },
+ "Deliveroo": {
+  "ats": "greenhouse",
+  "token": "deliveroo"
+ },
+ "DevRev": {
+  "ats": "greenhouse",
+  "token": "devrev"
+ },
+ "DoorDash": {
+  "ats": "greenhouse",
+  "token": "doordashusa"
+ },
+ "Dropbox": {
+  "ats": "greenhouse",
+  "token": "dropbox"
+ },
+ "Druva": {
+  "ats": "greenhouse",
+  "token": "druva"
+ },
+ "Duolingo": {
+  "ats": "greenhouse",
+  "token": "duolingo"
+ },
+ "EarnIn": {
+  "ats": "greenhouse",
+  "token": "earnin"
+ },
+ "Faire": {
+  "ats": "greenhouse",
+  "token": "faire"
+ },
+ "Flexport": {
+  "ats": "greenhouse",
+  "token": "flexport"
+ },
+ "fourkites": {
+  "ats": "greenhouse",
+  "token": "fourkites"
+ },
+ "FreshWorks": {
+  "ats": "lever",
+  "token": "freshworks"
+ },
+ "GoDaddy": {
+  "ats": "greenhouse",
+  "token": "godaddy"
+ },
+ "Groupon": {
+  "ats": "greenhouse",
+  "token": "groupon"
+ },
+ "Groww": {
+  "ats": "greenhouse",
+  "token": "groww"
+ },
+ "GSA Capital": {
+  "ats": "greenhouse",
+  "token": "gsacapital"
+ },
+ "Gusto": {
+  "ats": "greenhouse",
+  "token": "gusto"
+ },
+ "Harness": {
+  "ats": "greenhouse",
+  "token": "harnessinc"
+ },
+ "Highspot": {
+  "ats": "lever",
+  "token": "highspot"
+ },
+ "Hive": {
+  "ats": "greenhouse",
+  "token": "hive"
+ },
+ "Houzz": {
+  "ats": "lever",
+  "token": "houzz"
+ },
+ "HP": {
+  "ats": "workday",
+  "host": "hp.wd5.myworkdayjobs.com",
+  "tenant": "hp",
+  "site": "ExternalCareerSite",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Hubspot": {
+  "ats": "greenhouse",
+  "token": "hubspot"
+ },
+ "IMC": {
+  "ats": "greenhouse",
+  "token": "imc"
+ },
+ "Indeed": {
+  "ats": "greenhouse",
+  "token": "indeed"
+ },
+ "InMobi": {
+  "ats": "greenhouse",
+  "token": "inmobi"
+ },
+ "Instacart": {
+  "ats": "greenhouse",
+  "token": "instacart"
+ },
+ "Jane Street": {
+  "ats": "greenhouse",
+  "token": "janestreet"
+ },
+ "Jump Trading": {
+  "ats": "greenhouse",
+  "token": "jumptrading"
+ },
+ "Karat": {
+  "ats": "greenhouse",
+  "token": "karat"
+ },
+ "KLA": {
+  "ats": "workday",
+  "host": "kla.wd1.myworkdayjobs.com",
+  "tenant": "kla",
+  "site": "Search",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Liftoff": {
+  "ats": "greenhouse",
+  "token": "liftoff"
+ },
+ "LinkedIn": {
+  "ats": "greenhouse",
+  "token": "linkedin"
+ },
+ "Lyft": {
+  "ats": "greenhouse",
+  "token": "lyft"
+ },
+ "Mapbox": {
+  "ats": "ashby",
+  "token": "mapbox"
+ },
+ "Mastercard": {
+  "ats": "workday",
+  "host": "mastercard.wd1.myworkdayjobs.com",
+  "tenant": "mastercard",
+  "site": "CorporateCareers",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Meesho": {
+  "ats": "lever",
+  "token": "meesho"
+ },
+ "Mercari": {
+  "ats": "greenhouse",
+  "token": "mercari"
+ },
+ "Mindtickle": {
+  "ats": "lever",
+  "token": "mindtickle"
+ },
+ "Mitsogo": {
+  "ats": "greenhouse",
+  "token": "mitsogoinc"
+ },
+ "Mixpanel": {
+  "ats": "greenhouse",
+  "token": "mixpanel"
+ },
+ "Moloco": {
+  "ats": "greenhouse",
+  "token": "moloco"
+ },
+ "MongoDB": {
+  "ats": "greenhouse",
+  "token": "mongodb"
+ },
+ "Navi": {
+  "ats": "ashby",
+  "token": "navi"
+ },
+ "NetEase": {
+  "ats": "ashby",
+  "token": "netease"
+ },
+ "Netskope": {
+  "ats": "greenhouse",
+  "token": "netskope"
+ },
+ "Nextdoor": {
+  "ats": "greenhouse",
+  "token": "nextdoor"
+ },
+ "Niantic": {
+  "ats": "ashby",
+  "token": "niantic"
+ },
+ "Nielsen": {
+  "ats": "lever",
+  "token": "nielsen"
+ },
+ "Nuro": {
+  "ats": "greenhouse",
+  "token": "nuro"
+ },
+ "Nvidia": {
+  "ats": "workday",
+  "host": "nvidia.wd5.myworkdayjobs.com",
+  "tenant": "nvidia",
+  "site": "NVIDIAExternalCareerSite",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Okta": {
+  "ats": "greenhouse",
+  "token": "okta"
+ },
+ "OKX": {
+  "ats": "greenhouse",
+  "token": "okx"
+ },
+ "OpenAI": {
+  "ats": "ashby",
+  "token": "openai"
+ },
+ "Optiver": {
+  "ats": "greenhouse",
+  "token": "optiver"
+ },
+ "Otter.ai": {
+  "ats": "greenhouse",
+  "token": "otterai"
+ },
+ "Patreon": {
+  "ats": "ashby",
+  "token": "patreon"
+ },
+ "PayPal": {
+  "ats": "workday",
+  "host": "paypal.wd1.myworkdayjobs.com",
+  "tenant": "paypal",
+  "site": "jobs",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "PayPay": {
+  "ats": "greenhouse",
+  "token": "paypay"
+ },
+ "Paytm": {
+  "ats": "lever",
+  "token": "paytm"
+ },
+ "Peloton": {
+  "ats": "greenhouse",
+  "token": "peloton"
+ },
+ "Pinterest": {
+  "ats": "greenhouse",
+  "token": "pinterest"
+ },
+ "Pocket Gems": {
+  "ats": "greenhouse",
+  "token": "pocketgems"
+ },
+ "Point72": {
+  "ats": "greenhouse",
+  "token": "point72"
+ },
+ "Poshmark": {
+  "ats": "greenhouse",
+  "token": "poshmark"
+ },
+ "PubMatic": {
+  "ats": "greenhouse",
+  "token": "pubmatic"
+ },
+ "Pure Storage": {
+  "ats": "greenhouse",
+  "token": "purestorage"
+ },
+ "Qualtrics": {
+  "ats": "greenhouse",
+  "token": "qualtrics"
+ },
+ "Quora": {
+  "ats": "ashby",
+  "token": "quora"
+ },
+ "Reddit": {
+  "ats": "greenhouse",
+  "token": "reddit"
+ },
+ "Riot Games": {
+  "ats": "greenhouse",
+  "token": "riotgames"
+ },
+ "Ripple": {
+  "ats": "greenhouse",
+  "token": "ripple"
+ },
+ "Robinhood": {
+  "ats": "greenhouse",
+  "token": "robinhood"
+ },
+ "Roblox": {
+  "ats": "greenhouse",
+  "token": "roblox"
+ },
+ "Roku": {
+  "ats": "greenhouse",
+  "token": "roku"
+ },
+ "Rubrik": {
+  "ats": "greenhouse",
+  "token": "rubrik"
+ },
+ "Samsara": {
+  "ats": "greenhouse",
+  "token": "samsara"
+ },
+ "Scale AI": {
+  "ats": "greenhouse",
+  "token": "scaleai"
+ },
+ "Sentry": {
+  "ats": "ashby",
+  "token": "sentry"
+ },
+ "Sigmoid": {
+  "ats": "greenhouse",
+  "token": "sigmoid"
+ },
+ "Slice": {
+  "ats": "greenhouse",
+  "token": "slice"
+ },
+ "Smartsheet": {
+  "ats": "greenhouse",
+  "token": "smartsheet"
+ },
+ "Snowflake": {
+  "ats": "ashby",
+  "token": "snowflake"
+ },
+ "SoFi": {
+  "ats": "greenhouse",
+  "token": "sofi"
+ },
+ "Spotify": {
+  "ats": "lever",
+  "token": "spotify"
+ },
+ "Squarepoint Capital": {
+  "ats": "greenhouse",
+  "token": "squarepointcapital"
+ },
+ "Squarespace": {
+  "ats": "greenhouse",
+  "token": "squarespace"
+ },
+ "StackAdapt": {
+  "ats": "greenhouse",
+  "token": "stackadapt"
+ },
+ "Stackline": {
+  "ats": "greenhouse",
+  "token": "stackline"
+ },
+ "Stripe": {
+  "ats": "greenhouse",
+  "token": "stripe"
+ },
+ "Sumo Logic": {
+  "ats": "greenhouse",
+  "token": "sumologic"
+ },
+ "Tanium": {
+  "ats": "greenhouse",
+  "token": "tanium"
+ },
+ "Target": {
+  "ats": "workday",
+  "host": "target.wd5.myworkdayjobs.com",
+  "tenant": "target",
+  "site": "targetcareers",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Tekion": {
+  "ats": "ashby",
+  "token": "tekion"
+ },
+ "The Trade Desk": {
+  "ats": "greenhouse",
+  "token": "thetradedesk"
+ },
+ "ThoughtWorks": {
+  "ats": "greenhouse",
+  "token": "thoughtworks"
+ },
+ "Toast": {
+  "ats": "greenhouse",
+  "token": "toast"
+ },
+ "Toptal": {
+  "ats": "lever",
+  "token": "toptal"
+ },
+ "Tower Research Capital": {
+  "ats": "greenhouse",
+  "token": "towerresearchcapital"
+ },
+ "Tripadvisor": {
+  "ats": "greenhouse",
+  "token": "tripadvisor"
+ },
+ "Turing": {
+  "ats": "greenhouse",
+  "token": "turing"
+ },
+ "Turvo": {
+  "ats": "lever",
+  "token": "turvo"
+ },
+ "Twilio": {
+  "ats": "greenhouse",
+  "token": "twilio"
+ },
+ "Twitch": {
+  "ats": "greenhouse",
+  "token": "twitch"
+ },
+ "UiPath": {
+  "ats": "ashby",
+  "token": "uipath"
+ },
+ "Upstart": {
+  "ats": "greenhouse",
+  "token": "upstart"
+ },
+ "Veeva Systems": {
+  "ats": "lever",
+  "token": "veeva"
+ },
+ "Verkada": {
+  "ats": "greenhouse",
+  "token": "verkada"
+ },
+ "Visa": {
+  "ats": "workday",
+  "host": "visa.wd5.myworkdayjobs.com",
+  "tenant": "visa",
+  "site": "Visa",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Waymo": {
+  "ats": "greenhouse",
+  "token": "waymo"
+ },
+ "Wealthfront": {
+  "ats": "lever",
+  "token": "wealthfront"
+ },
+ "WeRide": {
+  "ats": "lever",
+  "token": "weride"
+ },
+ "Workday": {
+  "ats": "workday",
+  "host": "workday.wd5.myworkdayjobs.com",
+  "tenant": "workday",
+  "site": "Workday",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "WorldQuant": {
+  "ats": "greenhouse",
+  "token": "worldquant"
+ },
+ "Zillow": {
+  "ats": "workday",
+  "host": "zillow.wd5.myworkdayjobs.com",
+  "tenant": "zillow",
+  "site": "Zillow_Group_External",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "ZipRecruiter": {
+  "ats": "greenhouse",
+  "token": "ziprecruiter"
+ },
+ "Zoom": {
+  "ats": "workday",
+  "host": "zoom.wd5.myworkdayjobs.com",
+  "tenant": "zoom",
+  "site": "zoom",
+  "manual": true,
+  "search": "software engineer"
+ },
+ "Zoox": {
+  "ats": "lever",
+  "token": "zoox"
+ },
+ "ZScaler": {
+  "ats": "greenhouse",
+  "token": "zscaler"
+ },
+ "Zynga": {
+  "ats": "greenhouse",
+  "token": "zyngacareers"
+ }
+}

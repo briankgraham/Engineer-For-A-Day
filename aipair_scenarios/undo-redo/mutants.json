@@ -1,0 +1,20 @@
+{
+  "redo-not-cleared": [
+    { "file": "editor.js", "from": "    this.redoStack.length = 0;\n", "to": "" }
+  ],
+  "cursor-not-restored": [
+    { "file": "editor.js", "from": "this.pos = step.before.cursor;", "to": "this.pos = this.doc.text.length;" }
+  ],
+  "coalesce-across-move": [
+    { "file": "editor.js", "from": "    this.pos = pos;\n    this.typing = false;", "to": "    this.pos = pos;" }
+  ],
+  "noop-entries": [
+    { "file": "editor.js", "from": "    if (before.text === after.text) return; // nothing changed: nothing to undo\n", "to": "" }
+  ],
+  "cap-drops-newest": [
+    { "file": "editor.js", "from": "    this.undoStack.push(step);\n    this.redoStack.length = 0;", "to": "    if (this.undoStack.length >= this.maxHistory) return;\n    this.undoStack.push(step);\n    this.redoStack.length = 0;" }
+  ],
+  "key-lowercase": [
+    { "file": "keymap.js", "from": "    editor.type(key);\n    return true;\n  }\n  switch", "to": "    editor.type(lower);\n    return true;\n  }\n  switch" }
+  ]
+}

@@ -1,0 +1,5 @@
+# Local runtime data
+var/aipair_sessions/
+var/jobs_cache/
+var/practice/
+var/walkthroughs/

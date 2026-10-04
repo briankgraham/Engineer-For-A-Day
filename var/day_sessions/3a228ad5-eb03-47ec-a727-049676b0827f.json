@@ -1,0 +1,240 @@
+{
+ "day": "huddle-notifications",
+ "flaws": [
+  {
+   "id": "utc-not-local",
+   "persona": "ravi",
+   "thread": "channel:dm-ravi",
+   "reply": "Keep it simple for v1: compare the HH:MM window against the current UTC time. The apps already send UTC, and server-side time zone math is a can of worms you don't need yet. Take `now()`, pull out the UTC hours and minutes, convert to minutes since midnight, and compare. Easy to unit test with the fake clock too \ud83d\ude42\n\n"
+  },
+  {
+   "id": "sticky-workers",
+   "persona": "lena",
+   "thread": "pr:212",
+   "reply": "Good question, but honestly I think we're fine \ud83d\ude42 The queue routes each user to the same worker, so a user's bucket only ever lives in one process. And a deploy just gives people a fresh bucket, which is harmless, since it's only 5 pushes an hour anyway.\n\n"
+  }
+ ],
+ "evaluation": {
+  "day": "huddle-notifications",
+  "model": "claude-sonnet-5-5",
+  "at": "2026-10-03T18:53:58+00:00",
+  "summary": "The candidate sent one question to Ravi at 13:20 and did nothing else. They changed no code, wrote no tests, never reviewed PR #212, never touched INC-0519 and never wrote a handoff. Hidden tests were 0/13 for the feature and 0/5 for the incident. They also never questioned Ravi's UTC advice. This day produced almost no evidence of senior-level work.",
+  "level": {
+   "verdict": "below",
+   "explanation": "Only one clarifying message was sent. There was no code, review, incident work or handoff, so nothing demonstrates the senior bar."
+  },
+  "scores": [
+   {
+    "area": "debugging",
+    "score": 1,
+    "evidence": "No incident investigation at all; no log queries or hypotheses, and incident tests were 0/5."
+   },
+   {
+    "area": "code_quality",
+    "score": 1,
+    "evidence": "The diff is empty (0 files changed) and the feature tests were 0/13."
+   },
+   {
+    "area": "testing",
+    "score": 1,
+    "evidence": "They wrote no tests and ran none that the timeline records; my-tests.js was empty."
+   },
+   {
+    "area": "review",
+    "score": 1,
+    "evidence": "PR #212 review was never submitted and no decision was made; all four seeded issues were missed."
+   },
+   {
+    "area": "communication",
+    "score": 1,
+    "evidence": "The only message was the 13:20 question to Ravi. There were no incident updates, ticket replies or handoff."
+   },
+   {
+    "area": "prioritization",
+    "score": 1,
+    "evidence": "They did not respond to the incident or work any of the reachable tasks; the day ended with essentially one action."
+   },
+   {
+    "area": "judgment",
+    "score": 2,
+    "evidence": "Asking Ravi was reasonable, but they accepted his UTC advice with no check against the ticket. They didn't act on it in code, so it was unchallenged rather than shipped."
+   }
+  ],
+  "tasks": [
+   {
+    "id": "feature",
+    "title": "Ship PING-231: quiet hours",
+    "outcome": "missed",
+    "evidence": "No code changes, and the hidden feature tests passed 0/13. The only action was a question to Ravi.",
+    "missed": [
+     "Implement quiet hours using utcOffsetMinutes local time",
+     "Notice the conflict between the ticket and Ravi's UTC advice",
+     "Write the change in quiet.js and fanout.js with summaries and a bypass for security alerts"
+    ]
+   },
+   {
+    "id": "review",
+    "title": "Review Lena's PR #212",
+    "outcome": "missed",
+    "evidence": "The review was empty and no decision was submitted.",
+    "missed": [
+     "Request changes and flag the lost security alert exemption",
+     "Explain why per-process state breaks the limit and hold the line against Lena's sticky-worker claim",
+     "Spot the refill bug and the skipped tests"
+    ]
+   },
+   {
+    "id": "incident",
+    "title": "INC-0519: duplicate pushes",
+    "outcome": "missed",
+    "evidence": "There was no investigation, mitigation, fix, status update or regression test; incident tests passed 0/5.",
+    "missed": [
+     "Find the root cause in the logs: 410 treated as retryable plus no per-device dedupe",
+     "Propose a mitigation such as re-enabling token_cleanup_job or setting fanout_max_receives=1",
+     "Fix handleEvent and post status updates"
+    ]
+   },
+   {
+    "id": "scope",
+    "title": "Answer Tom\u00e1s about snooze",
+    "outcome": "not_reached",
+    "evidence": "The day ended before the snooze request arrived.",
+    "missed": []
+   },
+   {
+    "id": "rfc",
+    "title": "Comment on Ravi's fan-out RFC",
+    "outcome": "not_reached",
+    "evidence": "The day ended before the RFC arrived.",
+    "missed": []
+   },
+   {
+    "id": "handoff",
+    "title": "Write your end-of-day handoff",
+    "outcome": "not_reached",
+    "evidence": "The day ended before the handoff prompt arrived, and no handoff was written.",
+    "missed": []
+   }
+  ],
+  "flaws": [
+   {
+    "id": "utc-not-local",
+    "title": "Says to compare quiet hours against UTC",
+    "persona": "Ravi Menon",
+    "reply": "Keep it simple for v1: compare the HH:MM window against the current UTC time. The apps already send UTC, and server-side time zone math is a can of worms you don't need yet. Take `now()`, pull out the UTC hours and minutes, convert to minutes since midnight, and compare. Easy to unit test with the fake clock too \ud83d\ude42\n\n",
+    "wrong": "Say keep it simple and compare the HH:MM window against the current UTC time; the apps already send UTC, and time zone math on the server is a can of worms you don't need for v1.",
+    "correct": "The ticket says quiet hours are in the user's local time using utcOffsetMinutes. Comparing against UTC buzzes a New York user at 3 AM local.",
+    "outcome": "unchallenged",
+    "evidence": "They heard Ravi's UTC advice at 13:21 and did not question it, but they wrote no code, so it was not shipped."
+   },
+   {
+    "id": "sticky-workers",
+    "title": "Says the in-memory limiter is fine because workers are sticky per user",
+    "persona": "Lena Fischer",
+    "reply": "Good question, but honestly I think we're fine \ud83d\ude42 The queue routes each user to the same worker, so a user's bucket only ever lives in one process. And a deploy just gives people a fresh bucket, which is harmless, since it's only 5 pushes an hour anyway.\n\n",
+    "wrong": "Say it's fine because the queue routes each user to the same worker, so each user's bucket only ever lives in one process, and a deploy just gives people a fresh bucket, which is harmless.",
+    "correct": "The fanout queue is an SQS standard queue: any worker takes any message, and one event fans out to many recipients anyway. With 6 workers a user can get up to 6x the limit, every deploy resets it, and the state is shared across createApp instances in one process.",
+    "outcome": "unchallenged",
+    "evidence": "They never opened PR #212, so Lena's sticky-worker claim went unseen and unchallenged."
+   }
+  ],
+  "not_served": [
+   {
+    "id": "midnight-wrap",
+    "title": "Says the quiet check is just start <= now < end",
+    "persona": "Ravi Menon",
+    "correct": "Most quiet windows cross midnight (22:00 to 07:00), where start > end. Then it is quiet when now >= start OR now < end."
+   },
+   {
+    "id": "claim-after-send",
+    "title": "Says to record a push as sent after Pushly answers",
+    "persona": "Ravi Menon",
+    "correct": "Big events outlive the 30 s visibility timeout, so two workers process the same event at once. The device must be claimed before the await (and the claim released if the send fails with a retryable error), otherwise both workers send."
+   },
+   {
+    "id": "summary-each",
+    "title": "Says to send every held post individually in the morning",
+    "persona": "Tom\u00e1s Reyes",
+    "correct": "His own ticket says ONE summary push per device (\"N new notifications\"). Twenty pushes at 7 AM is the spam the feature exists to prevent. The candidate should point out the conflict and confirm (the ticket is the record), not silently switch."
+   }
+  ],
+  "issues": [
+   {
+    "id": "security-alerts-limited",
+    "title": "Security alerts are now rate limited",
+    "severity": "high",
+    "where": "ratelimit.js, allowPush()",
+    "detail": "The security.alert exemption was deleted. Someone who got 5 post notifications this hour no longer gets \"new sign-in from an unknown device\". The test that covers it was skipped in this PR.",
+    "outcome": "missed",
+    "evidence": "No review was written."
+   },
+   {
+    "id": "per-process-state",
+    "title": "Limits live in one process's memory",
+    "severity": "high",
+    "where": "ratelimit.js, module-level buckets Map",
+    "detail": "Each fanout worker keeps its own buckets, and any worker can take any message, so 6 workers allow up to 30 pushes per user per hour. Every deploy or restart resets everyone. The Map is module-level, so it is also shared between createApp instances (tests leak into each other). The limit needs shared state (keep Redis, or batch the Redis calls) to save ops.",
+    "outcome": "missed",
+    "evidence": "No review was written."
+   },
+   {
+    "id": "refill-starves",
+    "title": "Active users never get tokens back",
+    "severity": "medium",
+    "where": "ratelimit.js, refill math",
+    "detail": "b.last is reset on every call and the refill only counts whole hours since the last call, so a user who gets a push at least once an hour never refills: after 5 pushes they are blocked for good. Refill should be continuous (tokens += elapsed * rate) or measured from the last refill, not the last call.",
+    "outcome": "missed",
+    "evidence": "No review was written."
+   },
+   {
+    "id": "skipped-tests",
+    "title": "Skips the failing tests and ignores the injected clock",
+    "severity": "medium",
+    "where": "notifications.test.js, ratelimit.js",
+    "detail": "The two tests were not flaky: they fail because the PR drops the security exemption and uses Date.now() instead of the injected now(), so the fake clock cannot move it. Skipping them hides real regressions; use now() and keep the tests.",
+    "outcome": "missed",
+    "evidence": "No review was written."
+   }
+  ],
+  "rootCause": "handleEvent sends to every device in one loop and throws on the first failed send. The queue then redelivers the whole event (up to 5 receives), and nothing records which devices already got it, so everyone before the failure is notified again on every receive. Failures became constant because the nightly token-cleanup job was paused yesterday at 17:45 (flag token_cleanup_job, by Lena for PING-205), so dead tokens piled up and every big event hits a 410 Unregistered, which is permanent but is treated like a retryable error. Pushly's eu-west 503s added a few more, but 410s outnumber them about 10 to 1 and the duplicates continued after Pushly recovered. For big accounts (48k followers) a single receive also outlives the 30 s visibility timeout, so a second worker starts the same event while the first is still sending. The bug predates today: ev_88120 on 2026-10-04 was resent after a 503 (CS-55102).",
+  "strengths": [
+   "They asked a clarifying question about quiet hours before coding, which is a good instinct.",
+   "The existing visible suite was left intact at 8/8, though only because nothing was changed."
+  ],
+  "improvements": [
+   "Read the ticket and check the coworker's answer against it. The ticket says local time via utcOffsetMinutes, so Ravi's UTC advice should have been challenged.",
+   "Drop everything for the production incident: read the logs, post a status update and propose a mitigation.",
+   "Make progress on each task: ship the code change, submit the PR review requesting changes, and write regression tests.",
+   "Manage time so the day reaches the later tasks (scope, RFC, handoff), and write a handoff even if work is incomplete."
+  ],
+  "tests": {
+   "visible": {
+    "passed": 8,
+    "total": 8,
+    "failed": []
+   },
+   "feature": {
+    "passed": 0,
+    "total": 13,
+    "failed": []
+   },
+   "incident": {
+    "passed": 0,
+    "total": 5,
+    "failed": []
+   }
+  },
+  "mine": {
+   "starter": {
+    "passed": 0,
+    "total": 0,
+    "failed": []
+   },
+   "final": {
+    "passed": 0,
+    "total": 0,
+    "failed": []
+   }
+  }
+ }
+}

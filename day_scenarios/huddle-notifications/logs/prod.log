@@ -1,0 +1,65 @@
+2026-10-04T15:02:10.114Z INFO  fanout-w2 v4.17 fanout.start event=ev_88120 type=post.created actor=u_3391 recipients=3 receive=1
+2026-10-04T15:02:10.240Z INFO  fanout-w2 v4.17 push.sent event=ev_88120 user=u_4410 token=tk_51c2 msg=pm_77a1
+2026-10-04T15:02:10.391Z WARN  fanout-w2 v4.17 push.failed event=ev_88120 user=u_4502 token=tk_9e07 status=503
+2026-10-04T15:02:10.392Z ERROR fanout-w2 v4.17 fanout.error event=ev_88120 err="Pushly 503" sent_before_error=1
+2026-10-04T15:02:40.501Z INFO  fanout-w4 v4.17 fanout.start event=ev_88120 type=post.created actor=u_3391 recipients=3 receive=2
+2026-10-04T15:02:40.633Z INFO  fanout-w4 v4.17 push.sent event=ev_88120 user=u_4410 token=tk_51c2 msg=pm_77c9
+2026-10-04T15:02:40.790Z INFO  fanout-w4 v4.17 push.sent event=ev_88120 user=u_4502 token=tk_9e07 msg=pm_77ca
+2026-10-04T15:02:40.902Z INFO  fanout-w4 v4.17 push.sent event=ev_88120 user=u_4630 token=tk_0b3d msg=pm_77cb
+2026-10-04T15:02:40.903Z INFO  fanout-w4 v4.17 fanout.done event=ev_88120 sent=3 ms=402
+2026-10-04T16:20:55.007Z INFO  support  ticket.created id=CS-55102 subject="got the same notification twice" user=u_4410
+2026-10-05T02:00:00.010Z INFO  cron     job.done name=token-cleanup deleted=8412 ms=51200
+2026-10-05T17:45:31.220Z INFO  flags    flag.updated name=token_cleanup_job value=off by=lena note="pause during devices table migration (PING-205), back on Thursday"
+2026-10-06T02:00:00.004Z INFO  cron     job.skipped name=token-cleanup reason="flag token_cleanup_job is off"
+2026-10-06T08:15:12.330Z INFO  deploy   deploy.finished service=notifications version=v4.18 healthy=6/6 summary="settings screen copy for quiet hours toggle (PING-229)"
+2026-10-06T09:12:03.871Z INFO  fanout-w1 v4.18 fanout.start event=ev_90007 type=security.alert user=u_2012 recipients=1 receive=1
+2026-10-06T09:12:04.002Z INFO  fanout-w1 v4.18 push.sent event=ev_90007 user=u_2012 token=tk_c4d1 msg=pm_80a0
+2026-10-06T09:12:04.003Z INFO  fanout-w1 v4.18 fanout.done event=ev_90007 sent=1 ms=132
+2026-10-06T09:30:41.660Z WARN  pushly   status.changed region=eu-west status=degraded note="elevated 503s on /v1/send"
+2026-10-06T09:41:15.208Z INFO  fanout-w3 v4.18 fanout.start event=ev_90288 type=post.created actor=u_6120 recipients=4 receive=1
+2026-10-06T09:41:15.330Z INFO  fanout-w3 v4.18 push.sent event=ev_90288 user=u_1550 token=tk_77e0 msg=pm_81f2
+2026-10-06T09:41:15.452Z INFO  fanout-w3 v4.18 push.sent event=ev_90288 user=u_1551 token=tk_3a19 msg=pm_81f3
+2026-10-06T09:41:15.590Z WARN  fanout-w3 v4.18 push.failed event=ev_90288 user=u_1702 token=tk_e2c8 status=410
+2026-10-06T09:41:15.591Z ERROR fanout-w3 v4.18 fanout.error event=ev_90288 err="Pushly 410 Unregistered" sent_before_error=2
+2026-10-06T09:41:45.700Z INFO  fanout-w5 v4.18 fanout.start event=ev_90288 type=post.created actor=u_6120 recipients=4 receive=2
+2026-10-06T09:41:45.822Z INFO  fanout-w5 v4.18 push.sent event=ev_90288 user=u_1550 token=tk_77e0 msg=pm_8211
+2026-10-06T09:41:45.951Z INFO  fanout-w5 v4.18 push.sent event=ev_90288 user=u_1551 token=tk_3a19 msg=pm_8212
+2026-10-06T09:41:46.080Z WARN  fanout-w5 v4.18 push.failed event=ev_90288 user=u_1702 token=tk_e2c8 status=410
+2026-10-06T09:41:46.081Z ERROR fanout-w5 v4.18 fanout.error event=ev_90288 err="Pushly 410 Unregistered" sent_before_error=2
+2026-10-06T09:42:16.190Z INFO  fanout-w2 v4.18 fanout.start event=ev_90288 type=post.created actor=u_6120 recipients=4 receive=3
+2026-10-06T09:42:16.310Z INFO  fanout-w2 v4.18 push.sent event=ev_90288 user=u_1550 token=tk_77e0 msg=pm_8240
+2026-10-06T09:42:16.437Z INFO  fanout-w2 v4.18 push.sent event=ev_90288 user=u_1551 token=tk_3a19 msg=pm_8241
+2026-10-06T09:42:16.561Z WARN  fanout-w2 v4.18 push.failed event=ev_90288 user=u_1702 token=tk_e2c8 status=410
+2026-10-06T09:42:16.562Z ERROR fanout-w2 v4.18 fanout.error event=ev_90288 err="Pushly 410 Unregistered" sent_before_error=2
+2026-10-06T09:45:00.000Z INFO  metrics  push.failed status=410 window=5m count=1893
+2026-10-06T09:45:00.000Z INFO  metrics  push.failed status=503 window=5m count=214
+2026-10-06T09:45:00.000Z INFO  metrics  queue.fanout redeliveries window=5m count=2210 dlq=318
+2026-10-06T10:02:00.112Z INFO  fanout-w1 v4.18 fanout.start event=ev_90412 type=post.created actor=u_mayacooks recipients=48210 receive=1
+2026-10-06T10:02:00.240Z INFO  fanout-w1 v4.18 push.sent event=ev_90412 user=u_1001 token=tk_8a1f msg=pm_9000
+2026-10-06T10:02:00.371Z INFO  fanout-w1 v4.18 push.sent event=ev_90412 user=u_1002 token=tk_5b20 msg=pm_9001
+2026-10-06T10:02:30.150Z INFO  fanout-w1 v4.18 fanout.progress event=ev_90412 sent=11820 of=48210
+2026-10-06T10:02:30.201Z INFO  fanout-w4 v4.18 fanout.start event=ev_90412 type=post.created actor=u_mayacooks recipients=48210 receive=2
+2026-10-06T10:02:30.330Z INFO  fanout-w4 v4.18 push.sent event=ev_90412 user=u_1001 token=tk_8a1f msg=pm_9310
+2026-10-06T10:02:30.452Z INFO  fanout-w4 v4.18 push.sent event=ev_90412 user=u_1002 token=tk_5b20 msg=pm_9311
+2026-10-06T10:02:41.907Z WARN  fanout-w1 v4.18 push.failed event=ev_90412 user=u_20877 token=tk_d0d0 status=410
+2026-10-06T10:02:41.908Z ERROR fanout-w1 v4.18 fanout.error event=ev_90412 err="Pushly 410 Unregistered" sent_before_error=16402
+2026-10-06T10:02:52.640Z WARN  fanout-w4 v4.18 push.failed event=ev_90412 user=u_14410 token=tk_77aa status=503
+2026-10-06T10:02:52.641Z ERROR fanout-w4 v4.18 fanout.error event=ev_90412 err="Pushly 503" sent_before_error=9120
+2026-10-06T10:03:22.700Z INFO  fanout-w6 v4.18 fanout.start event=ev_90412 type=post.created actor=u_mayacooks recipients=48210 receive=3
+2026-10-06T10:03:22.830Z INFO  fanout-w6 v4.18 push.sent event=ev_90412 user=u_1001 token=tk_8a1f msg=pm_9877
+2026-10-06T10:03:22.951Z INFO  fanout-w6 v4.18 push.sent event=ev_90412 user=u_1002 token=tk_5b20 msg=pm_9878
+2026-10-06T10:03:52.760Z INFO  fanout-w3 v4.18 fanout.start event=ev_90412 type=post.created actor=u_mayacooks recipients=48210 receive=4
+2026-10-06T10:03:52.881Z INFO  fanout-w3 v4.18 push.sent event=ev_90412 user=u_1001 token=tk_8a1f msg=pm_a102
+2026-10-06T10:04:01.300Z WARN  fanout-w6 v4.18 push.failed event=ev_90412 user=u_20877 token=tk_d0d0 status=410
+2026-10-06T10:04:01.301Z ERROR fanout-w6 v4.18 fanout.error event=ev_90412 err="Pushly 410 Unregistered" sent_before_error=16402
+2026-10-06T10:04:22.810Z INFO  fanout-w2 v4.18 fanout.start event=ev_90412 type=post.created actor=u_mayacooks recipients=48210 receive=5
+2026-10-06T10:04:22.940Z INFO  fanout-w2 v4.18 push.sent event=ev_90412 user=u_1001 token=tk_8a1f msg=pm_a3f0
+2026-10-06T10:05:00.000Z INFO  metrics  push.failed status=410 window=5m count=2402
+2026-10-06T10:05:00.000Z INFO  metrics  push.failed status=503 window=5m count=187
+2026-10-06T10:05:00.000Z INFO  metrics  queue.fanout redeliveries window=5m count=3105 dlq=402
+2026-10-06T10:07:14.552Z INFO  support  ticket.created id=CS-56810 subject="Huddle notified me 5 times about the same post" user=u_1001
+2026-10-06T10:11:30.020Z INFO  support  ticket.created id=CS-56822 subject="phone won't stop buzzing" user=u_1002
+2026-10-06T10:15:00.000Z INFO  metrics  push.failed status=410 window=5m count=2511
+2026-10-06T10:15:00.000Z INFO  metrics  push.failed status=503 window=5m count=96
+2026-10-06T10:15:00.000Z INFO  metrics  push.duplicate_rate window=5m value=0.181
+2026-10-06T10:19:40.004Z WARN  alerts   alert.firing name=push_duplicate_rate value=0.18 threshold=0.01

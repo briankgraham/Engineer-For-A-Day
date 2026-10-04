@@ -1,0 +1,14 @@
+{
+  "tax-before-discount": [
+    { "file": "pricing.js", "from": "Math.round((discounted * taxBps) / 10000)", "to": "Math.round((subtotalCents * taxBps) / 10000)" }
+  ],
+  "percent-coupons-sum": [
+    { "file": "pricing.js", "from": "percent = Math.max(percent, c.value)", "to": "percent += c.value" }
+  ],
+  "reserve-partial-mutation": [
+    { "file": "inventory.js", "fromFile": "mutants/inventory-partial.js" }
+  ],
+  "tax-floor": [
+    { "file": "pricing.js", "from": "Math.round((discounted * taxBps) / 10000)", "to": "Math.floor((discounted * taxBps) / 10000)" }
+  ]
+}

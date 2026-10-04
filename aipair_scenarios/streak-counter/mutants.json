@@ -1,0 +1,11 @@
+{
+  "off-by-one-grace": [
+    { "file": "streak.js", "from": "gap - 1 <= graceDays", "to": "gap <= graceDays" }
+  ],
+  "duplicate-days-counted": [
+    { "file": "streak.js", "from": "[...new Set(activityDates.map(dayNumber))]", "to": "activityDates.map(dayNumber)" }
+  ],
+  "stale-streak-not-reset": [
+    { "file": "streak.js", "from": "todayNum - days[days.length - 1] > graceDays", "to": "false" }
+  ]
+}

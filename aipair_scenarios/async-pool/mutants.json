@@ -1,0 +1,7 @@
+{
+  "pool-batches": [{ "file": "pool.js", "fromFile": "mutants/pool-batches.js" }],
+  "results-completion-order": [{ "file": "pool.js", "from": "results[i] = settle ? fulfilled(val) : val;", "to": "results[done - 1] = settle ? fulfilled(val) : val;" }],
+  "error-keeps-starting": [{ "file": "pool.js", "from": "else return stop(val);", "to": "else { stop(val); stopped = false; launch(); return; }" }],
+  "sync-throw-escapes": [{ "file": "pool.js", "from": "try { p = fn(list[i], i); } catch (e) { settleOne(i, false, e); continue; }", "to": "p = fn(list[i], i);" }],
+  "abort-already-aborted": [{ "file": "pool.js", "from": "      if (signal.aborted) return stop(signal.reason);\n", "to": "" }]
+}

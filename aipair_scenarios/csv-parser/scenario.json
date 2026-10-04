@@ -1,0 +1,21 @@
+{
+  "order": 4,
+  "title": "CSV parser",
+  "blurb": "Parse CSV with quoted fields, embedded newlines, escaped quotes and a header mode, with precise errors.",
+  "difficulty": "Medium",
+  "minutes": 45,
+  "brief": "The team needs a small CSV parser with no dependencies. CSV looks simple, but quoting, newlines and blank lines are where hand-rolled parsers go wrong. Implement parseCSV in csv.js. Hidden tests check the exact behavior below, including the error messages.",
+  "requirements": [
+    "parseCSV(text, { delimiter = ',', header = false } = {}). text must be a string, otherwise throw TypeError. delimiter must be a single character other than a double quote, \\r or \\n, otherwise throw RangeError.",
+    "Without header, return an array of records, each an array of strings. Every value is a string: never convert to numbers or booleans.",
+    "A record ends at \\n or \\r\\n. A single terminator at the very end of the input does not create an extra record. An empty string gives []. A blank line elsewhere is a record with one empty string, [\"\"], so \"\\n\" parses as [[\"\"]] and \"a\\n\\nb\" as [[\"a\"],[\"\"],[\"b\"]].",
+    "Fields are never trimmed. Whitespace inside or around a field is kept exactly.",
+    "Empty fields are allowed: \"a,,c\" has three fields, and a trailing delimiter produces a final empty field.",
+    "A field that starts with a double quote is a quoted field. Inside it the delimiter, \\n and \\r\\n are ordinary data (kept exactly as written), and two double quotes in a row mean one literal double quote. The closing quote must be followed by a delimiter, a record end or the end of the input, otherwise throw an Error whose message contains 'Unexpected character after closing quote' and 'line N', where N is the 1-based line of that quote.",
+    "A double quote in the middle of an unquoted field is kept as a literal character.",
+    "A quoted field that never closes throws an Error whose message contains 'Unterminated quoted field' and 'line N', where N is the 1-based line on which that field started.",
+    "A leading byte order mark (\\uFEFF) is ignored.",
+    "With header: true, the first record holds the field names and the result is an array of objects, one per remaining record. A record with fewer fields than the header gets '' for the missing ones. A record with more throws an Error containing 'Row N', where N is the 1-based number of the data row (the header is not counted). Duplicate names in the header throw an Error containing 'Duplicate header'. Header-only or empty input gives []."
+  ],
+  "files": ["csv.js"]
+}

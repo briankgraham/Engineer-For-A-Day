@@ -1,0 +1,22 @@
+{
+  "paginate-before-filter": [
+    { "file": "handlers.js", "from": "        items = items.filter(t => t.status === query.status);\n", "to": "" },
+    { "file": "handlers.js", "from": "return ok({ items: items.slice(start, start + limit), page, limit, total, totalPages: Math.ceil(total / limit) });", "to": "const pageItems = items.slice(start, start + limit).filter(t => query.status === undefined || t.status === query.status);\n      return ok({ items: pageItems, page, limit, total, totalPages: Math.ceil(total / limit) });" }
+  ],
+  "page-offset": [
+    { "file": "handlers.js", "from": "const start = (page - 1) * limit;", "to": "const start = page * limit;" }
+  ],
+  "get-shows-deleted": [
+    { "file": "handlers.js", "from": "if (!task || task.deletedAt !== undefined) return fail(404, \"not found\");\n      return ok(task);\n    },\n\n    listTasks", "to": "if (!task) return fail(404, \"not found\");\n      return ok(task);\n    },\n\n    listTasks" }
+  ],
+  "limit-clamped": [
+    { "file": "handlers.js", "from": "const limit = query.limit === undefined ? 10 : Number(query.limit);", "to": "const limit = query.limit === undefined ? 10 : Math.min(50, Number(query.limit) || 10);" },
+    { "file": "handlers.js", "from": "      if (!Number.isInteger(limit) || limit < 1 || limit > 50) return fail(400, \"bad limit\");\n", "to": "" }
+  ],
+  "deleted-at-date-now": [
+    { "file": "handlers.js", "from": "task.deletedAt = store.now();", "to": "task.deletedAt = Date.now();" }
+  ],
+  "include-deleted-truthy": [
+    { "file": "handlers.js", "from": "query.includeDeleted !== \"true\"", "to": "!query.includeDeleted" }
+  ]
+}

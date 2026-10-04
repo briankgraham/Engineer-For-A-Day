@@ -1,0 +1,14 @@
+{
+  "discount-after-tax": [
+    { "file": "pricing.js", "from": "const tax = Math.round((taxable * TAX_BPS) / 10000);", "to": "const tax = Math.round((subtotal * TAX_BPS) / 10000);" }
+  ],
+  "round-percent": [
+    { "file": "pricing.js", "from": "Math.floor((subtotal * code.value) / 100)", "to": "Math.round((subtotal * code.value) / 100)" }
+  ],
+  "cache-promise-forever": [
+    { "file": "payments.js", "from": "      store.idempotency.delete(idempotencyKey);\n      order.status = \"pending\";\n", "to": "" }
+  ],
+  "freeship-pre-discount": [
+    { "file": "pricing.js", "from": "taxable >= FREE_SHIPPING_FROM", "to": "subtotal >= FREE_SHIPPING_FROM" }
+  ]
+}

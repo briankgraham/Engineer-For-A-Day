@@ -1,0 +1,11 @@
+{
+  "float-tip": [
+    { "file": "bill.js", "from": "Math.round((subtotal * tipPercent) / 100)", "to": "(subtotal * tipPercent) / 100" }
+  ],
+  "tip-after-tax": [
+    { "file": "bill.js", "from": "Math.round((subtotal * tipPercent) / 100)", "to": "Math.round(((subtotal + taxCents) * tipPercent) / 100)" }
+  ],
+  "remainder-dropped": [
+    { "file": "split.js", "from": "base + (i < extra ? 1 : 0)", "to": "base" }
+  ]
+}

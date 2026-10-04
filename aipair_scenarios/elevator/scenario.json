@@ -1,0 +1,33 @@
+{
+  "order": 15,
+  "kind": "lld",
+  "title": "Design an elevator system",
+  "blurb": "Object design round: design the classes for a bank of elevators, build them, then absorb a new requirement halfway through.",
+  "difficulty": "Hard",
+  "minutes": 60,
+  "brief": "Design and build the control system for a bank of elevators. This is an object-oriented design round: the interviewer grades how you split the responsibilities (the cars, dispatching, the building) as much as whether it works. Start in design.md: the classes, what each one owns, and the interfaces between them. The code files unlock once your design has some substance. Then build it behind the createBuilding API below. A new requirement arrives partway through, as it would in a real interview, and a design with clear responsibilities absorbs it in one place. step() is the clock, so everything is deterministic.",
+  "requirements": [
+    "createBuilding({ floors, cars }) in building.js: floors is an integer of at least 2 (numbered 0 to floors - 1) and cars an integer of at least 1 (ids 0 to cars - 1), otherwise throw RangeError. Every car starts at floor 0, idle, with its doors closed.",
+    "status() returns one plain object per car in id order: { id, floor, dir, doors }. dir is \"up\" or \"down\" while the car has stops left, otherwise \"idle\". doors is \"open\" or \"closed\". Changing the returned objects never changes the building.",
+    "press(carId, floor) is a button inside a car and adds a stop for that car. call(floor, dir) is a hall button (\"up\" or \"down\"): it gives the call to one car and returns that car's id. A bad car id, floor or direction throws RangeError, and so do \"up\" on the top floor and \"down\" on floor 0.",
+    "step() is one tick. In each tick every car does exactly one thing, the first that applies: if its doors are open, they close; else if it has a stop to serve at its floor, its doors open and those stops are done; else if it has stops, it moves one floor; else it stays put.",
+    "Cars sweep (LOOK): a moving car keeps its direction while it has any stop further that way, then turns around. It never turns early for a closer stop behind it. An idle car that gets a stop heads toward it.",
+    "A car serves an in-car stop whenever it is at that floor. It serves a hall call only when going in the call's direction, or when it has nothing left ahead (it turns around to take it). So a car going down passes an \"up\" call and comes back for it.",
+    "A stop for the floor where the car already stands with its doors open is served at once: nothing is added, and the doors still close on the next tick.",
+    "Dispatch: call(floor, dir) goes to the nearest car that is idle or already heading toward the call (its status dir equals the call's direction, and the floor is at or ahead of the car). Ties go to the lowest id. If no car qualifies, the nearest car takes it.",
+    "A hall call that is already waiting (same floor and direction) is never given out twice: call() returns the car that already has it.",
+    "Only createBuilding and its methods are fixed. Split the code across building.js, elevator.js and dispatcher.js however your design says."
+  ],
+  "followup": {
+    "title": "Maintenance mode",
+    "brief": "Facilities needs to take cars out of service for maintenance while the building keeps running. Add it without breaking anything that works today.",
+    "requirements": [
+      "setOutOfService(carId) takes a car out of service. It drops its in-car stops and stays at its current floor: open doors close on the next tick, and it never moves or opens again while out. A car that is already out is left as it is.",
+      "Its hall calls go to the other cars at once, oldest first, by the normal dispatch rule. A car that is out of service is never given a call.",
+      "setInService(carId) puts the car back, idle at its floor and able to take calls again.",
+      "When no car is in service, call() returns null and the call waits (calling the same floor and direction again does not add a second one). Waiting calls, including any a retired car had with nowhere to go, are given out as soon as a car comes back.",
+      "press() on a car that is out of service is ignored. status() objects gain inService (true or false) for every car. Bad car ids throw RangeError."
+    ]
+  },
+  "files": ["building.js", "elevator.js", "dispatcher.js"]
+}

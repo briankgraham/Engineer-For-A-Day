@@ -1,0 +1,26 @@
+{
+  "inclusive-overlap-fix": [
+    { "file": "bookings.js", "from": "s < b.end && b.start < e", "to": "s <= b.end && b.start <= e" }
+  ],
+  "cancel-looks-fine": [
+    { "file": "bookings.js", "from": "if (i === -1) return false;", "to": "" }
+  ],
+  "sort-returns-copy": [
+    { "file": "bookings.js", "from": "[...(byRoom.get(room) || [])].sort((a, b) => a.start - b.start).map(b => ({ ...b }))", "to": "(byRoom.get(room) || []).sort((a, b) => a.start - b.start)" }
+  ],
+  "zero-length-ok": [
+    { "file": "bookings.js", "from": "if (e <= s)", "to": "if (e < s)" }
+  ],
+  "covering-booking-missed": [
+    { "file": "bookings.js", "from": "s < b.end && b.start < e", "to": "(s >= b.start && s < b.end) || (e > b.start && e <= b.end)" }
+  ],
+  "zero-length-accepted": [
+    { "file": "bookings.js", "from": "if (e <= s)", "to": "if (e < s)" }
+  ],
+  "cancel-unknown-removes-last": [
+    { "file": "bookings.js", "from": "if (i === -1) return false;", "to": "" }
+  ],
+  "list-leaks-internal-state": [
+    { "file": "bookings.js", "from": "[...(byRoom.get(room) || [])].sort((a, b) => a.start - b.start).map(b => ({ ...b }))", "to": "(byRoom.get(room) || []).sort((a, b) => a.start - b.start)" }
+  ]
+}

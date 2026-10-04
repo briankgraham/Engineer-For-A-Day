@@ -1,0 +1,14 @@
+{
+  "refresh-offset": [
+    { "file": "subscriptions.js", "from": "return tz.startOfLocalDay(customer.timeZone, date.y, date.m, date.d);", "to": "return Date.UTC(date.y, date.m - 1, date.d) - customer.utcOffsetMinutes * 60000;" }
+  ],
+  "prorate-by-ms": [
+    { "file": "upgrades.js", "from": "Math.floor((price(sub.plan, sub.interval) * unusedDays) / periodDays)", "to": "Math.floor((price(sub.plan, sub.interval) * (sub.periodEnd - now())) / (sub.periodEnd - sub.periodStart))" }
+  ],
+  "prorate-round": [
+    { "file": "upgrades.js", "from": "Math.floor((price(sub.plan, sub.interval) * unusedDays) / periodDays)", "to": "Math.round((price(sub.plan, sub.interval) * unusedDays) / periodDays)" }
+  ],
+  "keep-anchor": [
+    { "file": "upgrades.js", "from": "const endDate = tz.addMonths(today, INTERVAL_MONTHS[interval], today.d);\n    const periodStart = boundary(customer, today)", "to": "const endDate = tz.addMonths(sub.periodStartDate, INTERVAL_MONTHS[interval], sub.anchorDay);\n    const periodStart = boundary(customer, sub.periodStartDate)" }
+  ]
+}

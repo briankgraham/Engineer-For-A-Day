@@ -1,0 +1,24 @@
+{
+  "order": 12,
+  "title": "Streak counter with a grace day",
+  "blurb": "A short warm-up: count a login/activity streak from a list of dates, with a grace day so missing one day doesn't reset it.",
+  "difficulty": "Easy",
+  "minutes": 25,
+  "brief": "You have a habit-tracking app. days.js already works. Write currentStreak in streak.js so it counts how many days in a row the person has been active, as of a given \"today\", allowing a configurable number of grace days to be skipped without breaking the streak. The visible test file (a read-only tab) shows the expected behavior; some of its tests fail right now. A few extra edge cases you cannot see run when you finish.",
+  "requirements": [
+    "days.js works: dayNumber(dateStr) turns a \"YYYY-MM-DD\" string into a comparable integer day number, throwing RangeError on a bad format. Leave it alone.",
+    "currentStreak(activityDates, { graceDays = 0, today }) in streak.js: activityDates is an array of \"YYYY-MM-DD\" strings, in any order, possibly with repeats. today is a \"YYYY-MM-DD\" string.",
+    "The same date appearing more than once in activityDates counts as a single active day.",
+    "Two active days with no gap between them (consecutive calendar days) always continue the streak, regardless of graceDays.",
+    "graceDays is the number of consecutive calendar days that may be skipped between two active days without breaking the streak. A gap of graceDays + 1 or more breaks it.",
+    "The streak is stale (0) as of today if the most recent active day is more than graceDays days before today, even if the run of days before that was long.",
+    "graceDays must be a non-negative integer, otherwise RangeError.",
+    "An activity date after today throws RangeError.",
+    "Returns the count of distinct active days in the current run. Grace days themselves are not counted, only real active days.",
+    "An empty activityDates list gives a streak of 0."
+  ],
+  "files": [
+    "days.js",
+    "streak.js"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "order": 6,
+  "title": "Fix the checkout",
+  "blurb": "A half-built checkout with a test file you can read: some tests pass, some fail on bugs, some on missing code. Use the tests to find your way.",
+  "difficulty": "Medium",
+  "minutes": 40,
+  "brief": "You inherit a small checkout module. cart.js works, but pricing.js has bugs and inventory.js is unfinished. The visible test file (a read-only tab) shows the expected behavior, and some of its tests fail right now. Make them pass, using the tests to understand what is wanted. A few extra edge cases you cannot see run when you finish, so make sure you implement the requirements, not just the visible tests. All money is whole integer cents.",
+  "requirements": [
+    "cart.js already works (add, remove, lines, subtotalCents). Leave it unless you find a real problem.",
+    "quote(cart, { coupons = [], taxBps = 0 }) in pricing.js returns { subtotalCents, discountCents, taxCents, totalCents }. taxBps is tax in basis points (1000 = 10%).",
+    "A coupon is { type: \"percent\", value } (an integer 0 to 100) or { type: \"fixed\", value } (cents). Any other type throws RangeError.",
+    "Percent coupons do not stack: only the largest one applies, rounded to the nearest cent with halves rounding up. Fixed coupons do stack, and apply after the percent coupon.",
+    "The discount can never exceed the subtotal, so the amount before tax is never negative.",
+    "Tax is charged on the discounted amount, not the subtotal: taxCents = round-half-up(discounted * taxBps / 10000), and totalCents = discounted + taxCents.",
+    "In inventory.js, available(sku) returns units on hand (0 for an unknown sku). This already works.",
+    "reserve(orderId, lines), with lines like [{ sku, qty }]: qty must be an integer of at least 1, otherwise RangeError. It is all-or-nothing: if any sku lacks stock, throw an Error whose message contains \"insufficient\" and change nothing. Lines for the same sku add up before the check. Reserving an orderId that is already reserved throws an Error.",
+    "release(orderId) puts the reserved units back and returns the reserved lines. An unknown orderId returns []."
+  ],
+  "files": [
+    "cart.js",
+    "pricing.js",
+    "inventory.js"
+  ]
+}

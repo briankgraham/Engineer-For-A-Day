@@ -1,0 +1,22 @@
+{
+  "order": 11,
+  "title": "Tip and split the bill",
+  "blurb": "A short warm-up: add a tip to a bill calculator and split the total between friends, down to the last cent.",
+  "difficulty": "Easy",
+  "minutes": 25,
+  "brief": "You have a tiny bill calculator. items.js and the tax part of bill.js already work. Add an optional tip to computeBill, then write splitEvenly in split.js so a bill can be shared between people. The visible test file (a read-only tab) shows the expected behavior; some of its tests fail right now. A few extra edge cases you cannot see run when you finish. All money is whole integer cents.",
+  "requirements": [
+    "items.js works: subtotalCents(items) for items like { name, priceCents, qty }. Leave it alone.",
+    "computeBill(items, { taxBps = 0, tipPercent = 0 }) returns { subtotalCents, taxCents, tipCents, totalCents }. taxBps is tax in basis points (1000 = 10%).",
+    "Tax is round-half-up(subtotal * taxBps / 10000). This already works.",
+    "The tip is charged on the subtotal before tax: tipCents = round-half-up(subtotal * tipPercent / 100). totalCents = subtotal + tax + tip.",
+    "tipPercent must be an integer from 0 to 100, otherwise RangeError.",
+    "splitEvenly(totalCents, people) returns an array of length people whose entries add up to exactly totalCents. No two shares differ by more than 1 cent, and the extra cents go to the first people in the list (so 100 split 3 ways is [34, 33, 33]).",
+    "people must be an integer of at least 1, and totalCents a non-negative integer, otherwise RangeError."
+  ],
+  "files": [
+    "items.js",
+    "bill.js",
+    "split.js"
+  ]
+}

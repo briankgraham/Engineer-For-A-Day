@@ -1,0 +1,9 @@
+{
+  "debounce-first-args": [{ "file": "debounce.js", "from": "    pendingArgs = args;\n    pendingThis = this;\n    hasPending = true;", "to": "    if (!hasPending) {\n      pendingArgs = args;\n      pendingThis = this;\n    }\n    hasPending = true;" }],
+  "leading-trailing-double": [{ "file": "debounce.js", "from": "    if (startingBurst && leading) {\n      hasPending = false;\n      pendingArgs = null;", "to": "    if (startingBurst && leading) {\n      hasPending = true;\n      pendingArgs = args;\n      pendingThis = this;" }],
+  "cancel-keeps-burst": [{ "file": "debounce.js", "from": "    timer = null;\n    hasPending = false;\n    pendingArgs = null;\n  };", "to": "    hasPending = false;\n    pendingArgs = null;\n  };" }],
+  "retry-delay-exponent": [{ "file": "retry.js", "from": "factor ** (n - 1)", "to": "factor ** n" }],
+  "retry-attempts-off-by-one": [{ "file": "retry.js", "from": "if (n < attempts && shouldRetry(err, n))", "to": "if (n <= attempts && shouldRetry(err, n))" }],
+  "retry-cancel-late": [{ "file": "retry.js", "from": "    cancel() {\n      done = true;\n", "to": "    cancel() {\n" }],
+  "retry-double-callback": [{ "file": "retry.js", "from": "      if (done || answered) return;\n      answered = true;", "to": "      if (done) return;" }]
+}

@@ -1,0 +1,14 @@
+{
+  "utc-not-local": [
+    { "file": "quiet.js", "from": "const m = Math.floor(at / 60000) + user.utcOffsetMinutes;", "to": "const m = Math.floor(at / 60000);" }
+  ],
+  "midnight-wrap": [
+    { "file": "quiet.js", "from": "return start < end ? start <= t && t < end : t >= start || t < end;", "to": "return start <= t && t < end;" }
+  ],
+  "claim-after-send": [
+    { "file": "fanout.js", "from": "        claimed.add(key); // before the await, so another worker holding the same event skips this device\n        try {\n          const { messageId } = await push.send({ token, ...msg });\n", "to": "        try {\n          const { messageId } = await push.send({ token, ...msg });\n          claimed.add(key);\n" }
+  ],
+  "summary-each": [
+    { "file": "quiet.js", "from": "      for (const token of user.devices) {\n        await push.send({ token, ...msg });", "to": "      for (const token of user.devices) for (let i = 0; i < n; i++) {\n        await push.send({ token, ...msg });" }
+  ]
+}

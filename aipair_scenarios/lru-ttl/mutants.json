@@ -1,0 +1,7 @@
+{
+  "purge-before-evict": [{ "file": "cache.js", "from": "      this._purge();\n", "to": "" }],
+  "has-uses-get": [{ "file": "cache.js", "from": "return this._live(key) !== undefined;\n  }\n\n  delete", "to": "return this.get(key) !== undefined;\n  }\n\n  delete" }],
+  "expiry-boundary": [{ "file": "cache.js", "from": "e.expiresAt <= this.now()", "to": "e.expiresAt < this.now()" }],
+  "falsy-values": [{ "file": "cache.js", "from": "if (!e) {\n      this.counter.inc(\"misses\");", "to": "if (!e || !e.value) {\n      this.counter.inc(\"misses\");" }],
+  "map-set-order": [{ "file": "cache.js", "from": "    this.map.delete(key);\n    this.map.set(key, { value", "to": "    this.map.set(key, { value" }]
+}

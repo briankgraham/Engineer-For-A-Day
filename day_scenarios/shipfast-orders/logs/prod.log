@@ -1,0 +1,68 @@
+2026-10-05T16:11:58.104Z INFO  api-3f1a v2.30 order.created order=ord_7302 user=u_5521 total=6210 ua=Mozilla/5.0
+2026-10-05T16:12:03.877Z INFO  api-3f1a v2.30 charge.start order=ord_7302 amount=6210 key=k_77d1 ua=Mozilla/5.0
+2026-10-05T16:12:04.410Z INFO  api-9b02 v2.30 charge.start order=ord_7302 amount=6210 key=k_77d1 ua=Mozilla/5.0
+2026-10-05T16:12:05.220Z INFO  api-3f1a v2.30 charge.ok order=ord_7302 charge=ch_3Kx81 key=k_77d1 gateway_ms=1343
+2026-10-05T16:12:05.731Z INFO  api-9b02 v2.30 charge.ok order=ord_7302 charge=ch_3Kx84 key=k_77d1 gateway_ms=1321
+2026-10-05T16:12:06.002Z INFO  api-3f1a v2.30 http POST /checkout 200 ms=2125
+2026-10-05T16:12:06.540Z INFO  api-9b02 v2.30 http POST /checkout 200 ms=2130
+2026-10-05T16:40:12.950Z INFO  support  ticket.created id=CS-20931 subject="charged twice for my order" order=ord_7302
+2026-10-06T08:00:01.003Z INFO  api-3f1a v2.30 service.start build=4410
+2026-10-06T09:12:44.871Z INFO  api-3f1a v2.30 order.created order=ord_8790 user=u_1043 total=2799 ua=ShipfastiOS/5.1
+2026-10-06T09:12:47.130Z INFO  api-3f1a v2.30 charge.start order=ord_8790 amount=2799 key=k_1a0c ua=ShipfastiOS/5.1
+2026-10-06T09:12:47.902Z INFO  api-3f1a v2.30 charge.ok order=ord_8790 charge=ch_3L011 key=k_1a0c gateway_ms=772
+2026-10-06T09:12:48.311Z INFO  api-3f1a v2.30 webhook.received id=evt_744 type=charge.succeeded charge=ch_3L011
+2026-10-06T09:12:48.390Z INFO  api-3f1a v2.30 stock.update sku=TEE-WHT-M on_hand=41
+2026-10-06T09:12:48.395Z INFO  api-3f1a v2.30 order.paid order=ord_8790 event=evt_744
+2026-10-06T09:41:20.552Z WARN  api-9b02 v2.30 gateway.slow p95_ms=1840 window=5m
+2026-10-06T09:58:02.118Z INFO  deploy   deploy.start service=orders-api version=v2.31 by=ci
+2026-10-06T09:58:02.119Z INFO  deploy   deploy.changes version=v2.31 summary="Order confirmation email copy and footer links (SHIP-139)" files=templates/email/order_confirmed.mjml
+2026-10-06T10:02:31.660Z INFO  deploy   deploy.finished service=orders-api version=v2.31 healthy=4/4
+2026-10-06T10:03:10.004Z INFO  flags    flag.updated name=ios_checkout_auto_retry value=on rollout=50% by=mobile-team note="ShipfastiOS 5.2: retry checkout after 1.5s client timeout"
+2026-10-06T10:04:55.310Z WARN  api-7c9f v2.31 gateway.slow p95_ms=2310 window=5m
+2026-10-06T10:05:10.902Z INFO  api-7c9f v2.31 order.created order=ord_8812 user=u_2210 total=4487 ua=ShipfastiOS/5.2
+2026-10-06T10:05:12.341Z INFO  api-7c9f v2.31 charge.start order=ord_8812 amount=4487 key=k_9f2a ua=ShipfastiOS/5.2 retry=0
+2026-10-06T10:05:13.846Z INFO  api-2d44 v2.31 charge.start order=ord_8812 amount=4487 key=k_9f2a ua=ShipfastiOS/5.2 retry=1
+2026-10-06T10:05:14.655Z INFO  api-7c9f v2.31 charge.ok order=ord_8812 charge=ch_3L0A2 key=k_9f2a gateway_ms=2314
+2026-10-06T10:05:15.921Z INFO  api-2d44 v2.31 charge.ok order=ord_8812 charge=ch_3L0A9 key=k_9f2a gateway_ms=2075
+2026-10-06T10:05:15.930Z INFO  api-2d44 v2.31 http POST /checkout 200 ms=2084
+2026-10-06T10:05:15.933Z WARN  api-7c9f v2.31 http POST /checkout client_closed ms=3592
+2026-10-06T10:05:16.480Z INFO  api-7c9f v2.31 webhook.received id=evt_771 type=charge.succeeded charge=ch_3L0A2
+2026-10-06T10:05:16.551Z INFO  api-7c9f v2.31 stock.update sku=MUG-BLK on_hand=1
+2026-10-06T10:05:16.552Z INFO  api-7c9f v2.31 order.paid order=ord_8812 event=evt_771
+2026-10-06T10:05:21.570Z WARN  api-7c9f v2.31 http POST /webhooks/paystream 200 ms=5090 note="email-service slow"
+2026-10-06T10:05:21.902Z INFO  api-2d44 v2.31 webhook.received id=evt_771 type=charge.succeeded charge=ch_3L0A2
+2026-10-06T10:05:21.960Z INFO  api-2d44 v2.31 stock.update sku=MUG-BLK on_hand=-1
+2026-10-06T10:05:21.961Z INFO  api-2d44 v2.31 order.paid order=ord_8812 event=evt_771
+2026-10-06T10:05:22.010Z INFO  api-2d44 v2.31 webhook.received id=evt_772 type=charge.succeeded charge=ch_3L0A9
+2026-10-06T10:05:22.044Z INFO  api-2d44 v2.31 stock.update sku=MUG-BLK on_hand=-3
+2026-10-06T10:05:22.045Z INFO  api-2d44 v2.31 order.paid order=ord_8812 event=evt_772
+2026-10-06T10:07:40.118Z INFO  api-2d44 v2.31 order.created order=ord_8820 user=u_0098 total=1299 ua=Mozilla/5.0
+2026-10-06T10:07:41.770Z INFO  api-2d44 v2.31 charge.start order=ord_8820 amount=1299 key=k_c3e0 ua=Mozilla/5.0 retry=0
+2026-10-06T10:07:43.901Z INFO  api-2d44 v2.31 charge.ok order=ord_8820 charge=ch_3L0B1 key=k_c3e0 gateway_ms=2131
+2026-10-06T10:07:44.230Z INFO  api-2d44 v2.31 webhook.received id=evt_779 type=charge.succeeded charge=ch_3L0B1
+2026-10-06T10:07:44.288Z INFO  api-2d44 v2.31 stock.update sku=CARD-GIFT on_hand=212
+2026-10-06T10:07:44.290Z INFO  api-2d44 v2.31 order.paid order=ord_8820 event=evt_779
+2026-10-06T10:11:02.645Z INFO  api-7c9f v2.31 order.created order=ord_8826 user=u_7731 total=8748 ua=ShipfastiOS/5.2
+2026-10-06T10:11:04.002Z INFO  api-7c9f v2.31 charge.start order=ord_8826 amount=8748 key=k_02bd ua=ShipfastiOS/5.2 retry=0
+2026-10-06T10:11:05.509Z INFO  api-9b02 v2.31 charge.start order=ord_8826 amount=8748 key=k_02bd ua=ShipfastiOS/5.2 retry=1
+2026-10-06T10:11:06.240Z INFO  api-7c9f v2.31 charge.ok order=ord_8826 charge=ch_3L0C4 key=k_02bd gateway_ms=2238
+2026-10-06T10:11:07.610Z INFO  api-9b02 v2.31 charge.ok order=ord_8826 charge=ch_3L0C7 key=k_02bd gateway_ms=2101
+2026-10-06T10:11:12.880Z INFO  api-9b02 v2.31 webhook.received id=evt_783 type=charge.succeeded charge=ch_3L0C4
+2026-10-06T10:11:12.940Z INFO  api-9b02 v2.31 stock.update sku=LAMP-01 on_hand=6
+2026-10-06T10:11:12.941Z INFO  api-9b02 v2.31 order.paid order=ord_8826 event=evt_783
+2026-10-06T10:11:13.020Z INFO  api-9b02 v2.31 webhook.received id=evt_784 type=charge.succeeded charge=ch_3L0C7
+2026-10-06T10:11:13.071Z INFO  api-9b02 v2.31 stock.update sku=LAMP-01 on_hand=4
+2026-10-06T10:11:13.072Z INFO  api-9b02 v2.31 order.paid order=ord_8826 event=evt_784
+2026-10-06T10:14:30.000Z WARN  api-7c9f v2.31 gateway.slow p95_ms=2480 window=5m
+2026-10-06T10:18:51.004Z INFO  api-7c9f v2.31 order.created order=ord_8841 user=u_3392 total=3599 ua=ShipfastiOS/5.1
+2026-10-06T10:18:52.330Z INFO  api-7c9f v2.31 charge.start order=ord_8841 amount=3599 key=k_5e19 ua=ShipfastiOS/5.1 retry=0
+2026-10-06T10:18:54.702Z INFO  api-7c9f v2.31 charge.ok order=ord_8841 charge=ch_3L0D0 key=k_5e19 gateway_ms=2369
+2026-10-06T10:18:55.001Z INFO  api-7c9f v2.31 webhook.received id=evt_790 type=charge.succeeded charge=ch_3L0D0
+2026-10-06T10:18:55.050Z INFO  api-7c9f v2.31 stock.update sku=BAG-TOTE on_hand=17
+2026-10-06T10:18:55.051Z INFO  api-7c9f v2.31 order.paid order=ord_8841 event=evt_790
+2026-10-06T10:22:17.400Z INFO  support  ticket.created id=CS-21017 subject="Double charge on order ord_8812" order=ord_8812
+2026-10-06T10:23:05.912Z INFO  support  ticket.created id=CS-21019 subject="two charges for one lamp??" order=ord_8826
+2026-10-06T10:24:40.300Z INFO  metrics  alert.fired name=checkout_duplicate_charges value=37 threshold=5 window=20m
+2026-10-06T10:24:40.301Z INFO  metrics  alert.fired name=stock_negative skus=MUG-BLK,LAMP-01,TEE-BLK-L window=20m
+2026-10-06T10:26:02.770Z INFO  metrics  breakdown name=checkout_duplicate_charges by=ua ShipfastiOS/5.2=35 Mozilla/5.0=2 ShipfastiOS/5.1=0
+2026-10-06T10:27:15.000Z INFO  pager    page.sent sev=2 service=orders-api to=dana.whitfield,you title="Customers charged twice at checkout"

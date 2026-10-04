@@ -1,0 +1,22 @@
+{
+  "order": 14,
+  "kind": "review",
+  "title": "Review a PR: room bookings",
+  "blurb": "A teammate's PR is green and the review bot says LGTM. Find what's actually wrong, write it up, then fix it before it merges.",
+  "difficulty": "Medium",
+  "minutes": 40,
+  "brief": "You are the required reviewer on PR #214 (the pull request tab): it adds clash detection, cancel, and sorted lists to a meeting-room booking module. CI is green and the review bot approved it. Review it against the ticket's requirements below. Write your findings in review.md (what is wrong, where, why it matters, and how serious it is), then fix what you found in bookings.js so it is safe to merge. The PR's own tests are in a read-only tab; hidden tests that encode the requirements run when you finish.",
+  "requirements": [
+    "time.js is already on main and works: toMinutes(\"HH:MM\") gives minutes after midnight and throws RangeError on a bad format. Leave it alone.",
+    "book(room, start, end, who) returns a new numeric id, or null if the booking clashes with an existing booking in the same room. Bookings in different rooms never clash.",
+    "Two bookings clash when they share any minute: one starting inside, ending inside, sitting inside or covering another all clash. Back-to-back bookings (09:00-10:00 then 10:00-11:00) do not.",
+    "end must be strictly after start, otherwise book throws RangeError. A zero-length booking is not allowed.",
+    "list(room) returns the room's bookings earliest first, as copies: changing the returned array or its objects never changes the stored bookings. An unknown room gives [].",
+    "cancel(room, id) removes that booking and returns true. If that room has no booking with that id, it returns false and changes nothing. A cancelled slot can be booked again.",
+    "review.md lists each problem you found with where it is, why it matters and a severity. Flagging a real bug counts even if you run out of time to fix it."
+  ],
+  "files": [
+    "bookings.js",
+    "time.js"
+  ]
+}

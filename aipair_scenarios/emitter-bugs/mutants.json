@@ -1,0 +1,11 @@
+{
+  "for-of-live": [{ "file": "emitter.js", "from": "const snapshot = list.slice();", "to": "const snapshot = list;" }],
+  "off-filter-removes-all": [{ "file": "emitter.js", "from": "        this._splice(event, list, i);\n        break;", "to": "        this._splice(event, list, i);" }],
+  "swallow-errors": [{ "file": "emitter.js", "from": "        if (!failed) {\n          failed = true;\n          firstError = e;\n        }", "to": "        console.error(e);" }],
+  "once-remove-after": [
+    { "file": "emitter.js", "from": "      if (entry.once) {\n        if (entry.fired) continue;\n        entry.fired = true;\n        this._remove(event, entry);\n      }\n", "to": "" },
+    { "file": "emitter.js", "from": "        entry.listener(...args);\n      } catch", "to": "        entry.listener(...args);\n        if (entry.once) this._remove(event, entry);\n      } catch" }
+  ],
+  "empty-array-harmless": [{ "file": "emitter.js", "from": "    if (list.length === 0) this.events.delete(event);\n", "to": "" }],
+  "throw-raw-payload": [{ "file": "emitter.js", "from": "throw err instanceof Error ? err : new Error(\"Unhandled 'error' event: \" + String(err));", "to": "throw err;" }]
+}

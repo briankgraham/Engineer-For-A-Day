@@ -1,0 +1,24 @@
+{
+  "order": 10,
+  "title": "Make a todo app work offline",
+  "blurb": "Queue changes while offline, replay them safely on reconnect, and merge the server's state without losing local edits.",
+  "difficulty": "Hard",
+  "minutes": 60,
+  "brief": "A todo app keeps a local list and sends each change to a server. It works, but only online: with no network, add/toggle/remove reject and the change is lost. Make it offline-first. Every change should apply locally at once, wait in a queue, and be sent when the network is back, safely (the connection can drop after the server already applied an op) and in a way that respects other clients' changes. The server (remote.js) is a fake you can read: it dedupes by opId and settles conflicts last-writer-wins. The visible test file (a read-only tab) shows the existing behavior, which passes and must keep passing, and the core of the new behavior, which fails for now. Extra edge cases you cannot see run when you finish. The work is in app.js; todo.js and remote.js already work.",
+  "requirements": [
+    "add(title), toggle(id) and remove(id) apply to the local list immediately, put an op in a queue, then try to sync. They resolve (add with the new id) whether or not the network is up; they never reject because of the network. An unknown id still rejects.",
+    "app.pending() returns the number of queued ops that have not been acknowledged yet.",
+    "sync() sends the queued ops one at a time, oldest first, then pulls the server state and merges it into the local list. It resolves { ok, pending }: { ok: true, pending: 0 } when the queue was emptied and the pull worked.",
+    "If a send fails, sync stops right there: the failed op and every op after it stay in the queue, in order, and the result is { ok: false, pending } with no pull. A failed pull is also { ok: false }. A later sync retries from the failed op.",
+    "A retried op is sent with the same opId it had the first time (the server dedupes on it). A connection that drops after the server applied an op must not cause a duplicate or an error later.",
+    "An op's `at` is the time of the edit (the injected now() when the user made the change), not the time it is sent. That is what makes last-writer-wins fair to edits made offline.",
+    "Only one sync runs at a time, and no op is ever sent twice at once. A sync() called while another is running resolves after a further full sync that starts when the running one ends, so changes made meanwhile are included.",
+    "Merging the pulled state: a removed item (deleted: true) is dropped locally, a live item is written locally, and an item that still has queued ops is left alone, because the local version is newer than the server's until it has been sent.",
+    "Every existing test must keep passing."
+  ],
+  "files": [
+    "todo.js",
+    "remote.js",
+    "app.js"
+  ]
+}

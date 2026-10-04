@@ -1,0 +1,37 @@
+{
+  "double-next": [
+    {
+      "file": "router.js",
+      "from": "        let called = false;\n        const next = nextErr => {\n          if (called) return;\n          called = true;\n",
+      "to": "        let called = false;\n        const next = nextErr => {\n"
+    }
+  ],
+  "async-error-swallowed": [
+    {
+      "file": "router.js",
+      "from": "          if (ret && typeof ret.then === \"function\") {\n            ret.then(() => {\n              if (res.sent) resolve();\n            }, next);\n          } else if (res.sent) {\n            resolve();\n          }",
+      "to": "          if (res.sent) resolve();"
+    }
+  ],
+  "error-handler-order": [
+    {
+      "file": "router.js",
+      "from": "          if (nextErr !== undefined) err = nextErr;\n          else if (isErrorLayer) err = null;",
+      "to": "          if (nextErr !== undefined) { err = nextErr; i = 0; }\n          else if (isErrorLayer) err = null;"
+    }
+  ],
+  "next-after-sent": [
+    {
+      "file": "router.js",
+      "from": "      const step = () => {\n        if (res.sent) return resolve();\n",
+      "to": "      const step = () => {\n"
+    }
+  ],
+  "no-default-response": [
+    {
+      "file": "router.js",
+      "from": "        if (i >= stack.length) {\n          if (err) res.status(500).send({ error: String((err && err.message) || err) });\n          else res.status(404).send({ error: \"not found\" });\n          return resolve();\n        }\n",
+      "to": "        if (i >= stack.length) {\n          return resolve();\n        }\n"
+    }
+  ]
+}

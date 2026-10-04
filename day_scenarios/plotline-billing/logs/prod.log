@@ -1,0 +1,62 @@
+2026-01-09T15:12:40.221Z INFO  billing-7c1e v5.2 customer.created cust=cus_1388 tz=America/New_York offset=-300
+2026-06-11T14:20:02.904Z INFO  billing-5d90 v5.5 customer.created cust=cus_1201 tz=America/New_York offset=-240
+2026-06-11T14:21:17.330Z INFO  billing-5d90 v5.5 subscription.created sub=sub_4412 cust=cus_1201 plan=team interval=month anchor=2
+2026-07-26T09:41:55.018Z INFO  billing-2a1f v5.5 customer.created cust=cus_2290 tz=Europe/Berlin offset=120
+2026-10-02T04:00:01.207Z INFO  billing-7c1e v5.7 renewal.charged sub=sub_4412 cust=cus_1201 tz=America/New_York offset=-240 period_start=2026-10-02T04:00:00.000Z invoice=inv_86140 invoice_date=2026-10-02 amount=4900
+2026-10-02T05:00:01.511Z INFO  billing-7c1e v5.7 renewal.charged sub=sub_4502 cust=cus_1388 tz=America/New_York offset=-300 period_start=2026-10-02T05:00:00.000Z invoice=inv_86302 invoice_date=2026-10-02 amount=4900
+2026-10-21T13:22:40.660Z INFO  billing-2a1f v5.7 subscription.cancel_scheduled sub=sub_4412 cancel_on=2026-11-02
+2026-10-22T19:05:12.093Z INFO  billing-5d90 v5.7 subscription.cancel_scheduled sub=sub_3108 cancel_on=2026-10-26
+2026-10-25T22:00:00.412Z INFO  cron     job.start name=renewals host=billing-7c1e schedule="0 * * * *"
+2026-10-25T22:00:01.004Z INFO  billing-7c1e v5.7 renewal.charged sub=sub_3108 cust=cus_2290 tz=Europe/Berlin offset=120 period_start=2026-10-25T22:00:00.000Z invoice=inv_88120 invoice_date=2026-10-25 amount=1200
+2026-10-25T22:00:01.311Z INFO  billing-7c1e v5.7 renewal.charged sub=sub_3117 cust=cus_2302 tz=Europe/Berlin offset=120 period_start=2026-10-25T22:00:00.000Z invoice=inv_88121 invoice_date=2026-10-25 amount=4900
+2026-10-25T22:00:02.020Z INFO  billing-7c1e v5.7 renewals.run renewed=41 canceled=0 failed=0
+2026-10-25T23:00:00.398Z INFO  cron     job.start name=renewals host=billing-7c1e schedule="0 * * * *"
+2026-10-25T23:00:00.902Z INFO  billing-7c1e v5.7 subscription.canceled sub=sub_3108 cancel_on=2026-10-26
+2026-10-25T23:00:01.233Z INFO  billing-7c1e v5.7 renewal.charged sub=sub_3140 cust=cus_2371 tz=Europe/Berlin offset=60 period_start=2026-10-25T23:00:00.000Z invoice=inv_88160 invoice_date=2026-10-26 amount=1200
+2026-10-25T23:00:01.870Z INFO  billing-7c1e v5.7 renewals.run renewed=4 canceled=23 failed=0
+2026-10-26T08:14:22.505Z INFO  support  ticket.created id=CS-41877 subject="Charged after I cancelled" sub=sub_3108 cust=cus_2290
+2026-10-26T09:02:51.117Z INFO  support  ticket.closed id=CS-41877 resolution="user error: cancellation took effect after the renewal" refunded=no
+2026-10-28T14:30:11.002Z INFO  deploy   deploy.finished service=billing version=v5.8 summary="Invoice PDF footer and VAT id field (BILL-80)" healthy=3/3
+2026-10-30T15:10:04.774Z INFO  deploy   change id=CHG-2207 summary="Move renewals job from the billing crontab to Chronos" by=sam.brennan
+2026-10-30T16:00:00.402Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-10-30T16:00:01.150Z INFO  billing-2a1f v5.8 renewals.run renewed=12 canceled=1 failed=0
+2026-11-01T04:00:00.377Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-01T04:00:01.093Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4398 cust=cus_1175 tz=America/New_York offset=-240 period_start=2026-11-01T04:00:00.000Z invoice=inv_89870 invoice_date=2026-11-01 amount=1200
+2026-11-01T04:00:02.811Z WARN  billing-2a1f v5.8 tollgate.rate_limited status=429 retry_after_ms=900 in_flight=100
+2026-11-01T04:00:04.640Z INFO  billing-2a1f v5.8 renewals.run renewed=1062 canceled=0 failed=0
+2026-11-01T15:00:00.390Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-01T15:00:00.981Z INFO  billing-5d90 v5.8 renewal.charged sub=sub_5120 cust=cus_3044 tz=Asia/Tokyo offset=540 period_start=2026-11-01T15:00:00.000Z invoice=inv_90102 invoice_date=2026-11-02 amount=4900
+2026-11-01T15:00:01.402Z INFO  billing-5d90 v5.8 renewals.run renewed=88 canceled=2 failed=0
+2026-11-02T04:00:00.388Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T04:00:01.120Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4412 cust=cus_1201 tz=America/New_York offset=-240 period_start=2026-11-02T04:00:00.000Z invoice=inv_90311 invoice_date=2026-11-01 amount=4900
+2026-11-02T04:00:01.402Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4415 cust=cus_1207 tz=America/New_York offset=-240 period_start=2026-11-02T04:00:00.000Z invoice=inv_90312 invoice_date=2026-11-01 amount=1200
+2026-11-02T04:00:01.733Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4431 cust=cus_1240 tz=America/Toronto offset=-240 period_start=2026-11-02T04:00:00.000Z invoice=inv_90315 invoice_date=2026-11-01 amount=4900
+2026-11-02T04:00:02.954Z WARN  billing-2a1f v5.8 tollgate.rate_limited status=429 retry_after_ms=800 in_flight=100
+2026-11-02T04:00:04.900Z INFO  billing-2a1f v5.8 renewals.run renewed=1184 canceled=0 failed=3
+2026-11-02T05:00:00.401Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T05:00:00.950Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4502 cust=cus_1388 tz=America/New_York offset=-300 period_start=2026-11-02T05:00:00.000Z invoice=inv_91502 invoice_date=2026-11-02 amount=4900
+2026-11-02T05:00:01.020Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_4418 cust=cus_1211 tz=America/Chicago offset=-300 period_start=2026-11-02T05:00:00.000Z invoice=inv_91503 invoice_date=2026-11-01 amount=4900
+2026-11-02T05:00:01.300Z INFO  billing-2a1f v5.8 subscription.canceled sub=sub_4412 cancel_on=2026-11-02
+2026-11-02T05:00:01.310Z INFO  billing-2a1f v5.8 subscription.canceled sub=sub_4415 cancel_on=2026-11-02
+2026-11-02T05:00:01.322Z INFO  billing-2a1f v5.8 subscription.canceled sub=sub_4431 cancel_on=2026-11-02
+2026-11-02T05:00:03.006Z INFO  billing-2a1f v5.8 renewals.run renewed=96 canceled=150 failed=0
+2026-11-02T06:00:00.395Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T06:00:00.870Z INFO  billing-5d90 v5.8 subscription.canceled sub=sub_4418 cancel_on=2026-11-02
+2026-11-02T06:00:01.640Z INFO  billing-5d90 v5.8 renewals.run renewed=31 canceled=47 failed=0
+2026-11-02T07:00:00.402Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T07:00:01.115Z INFO  billing-5d90 v5.8 renewal.charged sub=sub_4467 cust=cus_1302 tz=America/Los_Angeles offset=-420 period_start=2026-11-02T07:00:00.000Z invoice=inv_91740 invoice_date=2026-11-01 amount=1200
+2026-11-02T07:00:01.980Z INFO  billing-5d90 v5.8 renewals.run renewed=207 canceled=0 failed=1
+2026-11-02T08:00:00.388Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T08:00:00.731Z INFO  billing-5d90 v5.8 subscription.canceled sub=sub_4467 cancel_on=2026-11-02
+2026-11-02T08:00:01.402Z INFO  billing-5d90 v5.8 renewals.run renewed=9 canceled=21 failed=0
+2026-11-02T11:48:09.300Z INFO  support  ticket.created id=CS-42310 subject="Cancelled in October, charged again today?" sub=sub_4412 cust=cus_1201
+2026-11-02T12:02:44.871Z INFO  support  ticket.created id=CS-42318 subject="Invoice says Nov 1 but I renew on the 2nd" sub=sub_4431 cust=cus_1240
+2026-11-02T12:15:30.004Z INFO  support  ticket.created id=CS-42331 subject="I cancelled and still got billed $49" sub=sub_4418 cust=cus_1211
+2026-11-02T13:10:05.552Z WARN  finance  recon.flag check=renewed_then_canceled date=2026-11-02 count=212 zones="America/New_York:131,America/Chicago:44,America/Toronto:19,America/Los_Angeles:18" sample=sub_4412,sub_4415,sub_4418
+2026-11-02T13:10:05.560Z WARN  finance  recon.flag check=invoice_date_not_renewal_date since=2026-10-25 count=1904
+2026-11-02T14:00:00.391Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T14:00:01.020Z INFO  billing-2a1f v5.8 renewals.run renewed=3 canceled=0 failed=0
+2026-11-02T15:00:00.399Z INFO  chronos  job.start name=renewals schedule="0 * * * *" tz=UTC
+2026-11-02T15:00:00.902Z INFO  billing-2a1f v5.8 renewal.charged sub=sub_5188 cust=cus_3101 tz=Asia/Tokyo offset=540 period_start=2026-11-02T15:00:00.000Z invoice=inv_92011 invoice_date=2026-11-03 amount=1200
+2026-11-02T15:00:01.330Z INFO  billing-2a1f v5.8 renewals.run renewed=74 canceled=1 failed=0
+2026-11-02T15:14:47.000Z INFO  support  ticket.stats open=143 tag=charged_after_cancel since=2026-11-02T11:00:00Z

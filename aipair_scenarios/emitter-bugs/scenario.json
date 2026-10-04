@@ -1,0 +1,22 @@
+{
+  "order": 3,
+  "title": "Fix the event emitter",
+  "blurb": "A small EventEmitter that looks fine but misbehaves in edge cases. Find the bugs and fix them.",
+  "difficulty": "Medium",
+  "minutes": 35,
+  "brief": "This EventEmitter shipped and is causing odd bugs: listeners that never fire, listeners that fire twice, errors that vanish. The hidden tests encode the behavior below. Find every bug in emitter.js and fix it. Run the tests to see how many pass, and use the assistant to help you reason about the code, but check its fixes before trusting them.",
+  "requirements": [
+    "on(event, listener) registers a listener and returns the emitter. A listener that is not a function throws TypeError.",
+    "emit(event, ...args) calls the listeners in registration order, passing args. It returns true if the event had at least one listener, otherwise false.",
+    "Registering the same function twice calls it twice per emit.",
+    "emit works on a snapshot of the listeners taken when it starts. A listener added during an emit is not called by that emit. A listener removed during an emit, even by an earlier listener, is still called by that emit. Removing a listener must never cause another listener to be skipped.",
+    "once(event, listener) calls the listener at most once. It is removed before it is called, so an emit of the same event from inside the listener does not call it again. It also fires at most once if a nested emit already fired it.",
+    "off(event, listener) removes the most recently added registration of that function, and only one. It does nothing if the function is not registered. off(event, fn) must also work for a function that was registered with once(event, fn).",
+    "If a listener throws, the remaining listeners still run. After all of them have run, the first error thrown is rethrown and later errors are dropped.",
+    "emit('error', err) with no 'error' listeners throws err if it is an Error, otherwise throws a new Error whose message contains String(err). With an 'error' listener it behaves like any other event.",
+    "listenerCount(event) returns the number of registrations.",
+    "eventNames() lists only events that currently have at least one listener.",
+    "removeAllListeners([event]) removes the listeners of one event, or of all events when called with no argument, and returns the emitter."
+  ],
+  "files": ["emitter.js"]
+}

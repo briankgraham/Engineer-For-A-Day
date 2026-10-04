@@ -1,0 +1,20 @@
+{
+  "retry-new-opid": [
+    { "file": "app.js", "from": "await this.remote.send(this.queue[0]);", "to": "await this.remote.send({ ...this.queue[0], opId: \"retry\" + this.remote.received.length });" }
+  ],
+  "concurrent-flush": [
+    { "file": "app.js", "from": "  sync() {\n    if (!this.current) {", "to": "  sync() {\n    return this._run();\n    if (!this.current) {" }
+  ],
+  "pending-overwritten": [
+    { "file": "app.js", "from": "      if (pending.has(r.id)) continue;\n", "to": "" }
+  ],
+  "tombstones-ignored": [
+    { "file": "app.js", "from": "if (r.deleted) this.list.drop(r.id);", "to": "if (r.deleted) continue;" }
+  ],
+  "stamp-at-send": [
+    { "file": "app.js", "from": "await this.remote.send(this.queue[0]);", "to": "await this.remote.send({ ...this.queue[0], at: this.now() });" }
+  ],
+  "skip-failed": [
+    { "file": "app.js", "from": "      } catch (e) {\n        return { ok: false, pending: this.queue.length };\n      }\n      this.queue.shift();", "to": "      } catch (e) {\n        this.queue.shift();\n        continue;\n      }\n      this.queue.shift();" }
+  ]
+}

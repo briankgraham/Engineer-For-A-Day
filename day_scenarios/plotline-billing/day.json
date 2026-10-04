@@ -1,0 +1,81 @@
+{
+  "order": 3,
+  "title": "Plotline: subscriptions & billing",
+  "company": "Plotline",
+  "blurb": "Your first full day on the billing team at a project-management SaaS, the Monday after the clocks went back. An upgrade feature to ship, a cron PR to review, a ledger RFC to read, and customers are about to ask why they were charged after cancelling.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": { "start": "09:00", "end": "17:30" },
+  "service": "billing",
+  "testFile": "billing.test.js",
+  "incident": { "name": "INC-0627", "page": "t-page" },
+  "newHire": "The candidate joined Plotline's billing team (subscriptions, renewals and invoices for Plotline, a project-management SaaS sold on monthly and annual plans) as a senior engineer this week, and today, Monday November 2, is their first full day of real work. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Noor.",
+  "personas": [
+    { "id": "noor", "name": "Noor Haddad", "role": "Senior Engineer · your onboarding buddy", "color": "#7c5cff" },
+    { "id": "kenji", "name": "Kenji Watanabe", "role": "Software Engineer", "color": "#1f9d74" },
+    { "id": "alicia", "name": "Alicia Moreno", "role": "Product Manager", "color": "#e0752d" },
+    { "id": "sam", "name": "Sam Brennan", "role": "SRE · Incident Commander", "color": "#d6455d" }
+  ],
+  "channels": [
+    { "id": "team", "name": "#billing-team", "members": ["noor", "kenji", "alicia"], "responder": "noor" },
+    { "id": "incident", "name": "#inc-0627-charged-after-cancel", "members": ["sam", "noor"], "responder": "sam", "locked": true },
+    { "id": "dm-noor", "name": "Noor Haddad", "dm": true, "members": ["noor"], "responder": "noor" },
+    { "id": "dm-alicia", "name": "Alicia Moreno", "dm": true, "members": ["alicia"], "responder": "alicia" },
+    { "id": "dm-kenji", "name": "Kenji Watanabe", "dm": true, "members": ["kenji"], "responder": "kenji" }
+  ],
+  "tickets": [
+    {
+      "id": "BILL-88",
+      "title": "Upgrade mid-cycle (monthly to annual)",
+      "reporter": "alicia",
+      "status": "To do · assigned to you",
+      "body": "The \"Go annual, get 2 months free\" campaign launches Friday. Today a monthly customer who wants to go annual has to cancel and wait for their month to run out. They should be able to upgrade straight away, with credit for the days they already paid for. Example: a team monthly subscription from Oct 15 to Nov 15 (31 days) upgraded to team annual at 3 PM on Nov 2 has 13 unused days, so the credit is floor(4900 × 13 / 31) = $20.54 and the charge is $490.00 − $20.54 = $469.46.",
+      "requirements": [
+        "upgrade(subId, { plan, interval }) moves an active subscription to a bigger plan (starter → team) and/or a longer interval (month → year), and returns the upgrade invoice (a copy). A smaller plan, a shorter interval, or the same plan and interval throws NOT_AN_UPGRADE. An unknown plan or interval throws RangeError.",
+        "The upgrade takes effect today: the new period starts at local midnight today in the customer's time zone and ends on the same date one month or one year later. Today's date becomes the subscription's anchorDay.",
+        "Credit for the unused part of the current period = old price × unused days ÷ days in the current period, rounded down to the cent. Days are the customer's calendar days, and today counts as unused.",
+        "The customer is charged the new price minus the credit, right away. The invoice has kind \"upgrade\", amountCents (what was charged), creditCents, and date (the customer's local date today). chargeInvoice in invoices.js does the charging and the invoice.",
+        "Errors carry a code: unknown subscription → SUB_NOT_FOUND, not active (canceled or past_due) → SUB_NOT_ACTIVE. If the charge is declined, nothing changes.",
+        "Upgrading removes a scheduled cancellation.",
+        "After an upgrade, the renewal job renews the subscription at the end of the new period, at the new price."
+      ]
+    }
+  ],
+  "prs": [
+    { "id": "341", "title": "Run renewals once a day at 02:30 ET instead of hourly", "author": "kenji", "file": "prs/pr-341.md", "locked": true, "revisions": [{ "rev": 2, "file": "prs/pr-341-v2.md" }] }
+  ],
+  "docs": [
+    { "id": "billing-notes", "title": "Billing: periods, time zones, Chronos and Tollgate", "author": "noor", "file": "docs/billing-notes.md" },
+    { "id": "rfc-ledger", "title": "RFC: Billing ledger on an event log", "author": "noor", "file": "docs/rfc-ledger.md", "locked": true, "comments": true }
+  ],
+  "logs": { "file": "logs/prod.log", "locked": true, "example": "sub_4412 or /renewal\\.charged.*offset=-240/" },
+  "files": ["app.js", "customers.js", "subscriptions.js", "renewals.js", "invoices.js", "upgrades.js", "plans.js", "tz.js", "jobs.js", "store.js"],
+  "tasks": [
+    { "id": "feature", "title": "Ship BILL-88: upgrades mid-cycle", "item": "ticket:BILL-88", "unlock": "start" },
+    { "id": "review", "title": "Review Kenji's PR #341", "item": "pr:341", "unlock": "t-pr" },
+    { "id": "incident", "title": "INC-0627: charged after cancelling", "item": "channel:incident", "unlock": "t-page" },
+    { "id": "scope", "title": "Answer Alicia about the sales asks", "item": "ticket:BILL-88", "unlock": "t-scope" },
+    { "id": "rereview", "title": "Re-review PR #341 after Kenji's update", "item": "pr:341", "unlock": "t-pr-v2" },
+    { "id": "rfc", "title": "Comment on Noor's ledger RFC", "item": "doc:rfc-ledger", "unlock": "t-rfc" },
+    { "id": "handoff", "title": "Write your end-of-day handoff", "item": "handoff", "unlock": "t-eod" }
+  ],
+  "timeline": [
+    { "id": "t-welcome", "at": "09:00", "do": { "type": "message", "channel": "team", "from": "noor", "text": "Welcome to billing! 🎉 Your first ticket is **BILL-88** (upgrades mid-cycle): it's in Tickets, and Alicia owns it. The repo is under Code, and `billing.test.js` is what CI runs. Everything in here is about money and dates, so ask early and often, I mean it." } },
+    { "id": "t-alicia-hello", "at": "09:05", "do": { "type": "message", "channel": "dm-alicia", "from": "alicia", "text": "Hi and welcome! 👋 BILL-88 is my big one: the \"Go annual\" campaign email goes out **Friday morning** and the upgrade button has to work by then. Ping me if anything in the ticket is fuzzy." } },
+    { "id": "t-pr", "at": "09:25", "do": { "type": "message", "channel": "team", "from": "kenji", "text": "Could someone review **PR #341**? 🙌 It moves renewals from hourly to one daily batch at 02:30 ET: finance wants one run per day for the revenue report, and we keep bumping into Tollgate's rate limit at the top of the hour. The bot approved it already, would love to merge today.", "unlock": ["pr:341"] } },
+    { "id": "t-page", "at": "10:20", "do": { "type": "page", "channel": "incident", "from": "sam", "text": "🚨 **SEV-2 · INC-0627**: support has 140+ tickets since this morning from customers who **cancelled and were still charged for November**. Finance's overnight check flagged **212 subscriptions renewed and then cancelled an hour later**, and customers are also asking why their invoices say **Nov 1** when they renew on the 2nd. You're secondary on-call, so please take point on investigating. Prod logs are under Logs. I'm IC: tell me what you find and what you want to do.", "unlock": ["channel:incident", "logs"] } },
+    { "id": "t-rollback", "at": "10:24", "do": { "type": "message", "channel": "incident", "from": "sam", "text": "Context: on Friday (Oct 30) we moved the renewal job from the billing servers' crontab to Chronos, and this was its first weekend there. I'd like to move it back to the crontab. Objections? I'll start in ~10 min unless you tell me otherwise." } },
+    { "id": "t-rollback-go", "at": "10:35", "unless": "posted:incident", "do": { "type": "message", "channel": "incident", "from": "sam", "text": "No objections, so I'm moving renewals back to the crontab now. Will report when it's done." } },
+    { "id": "t-rollback-done", "at": "10:50", "after": "t-rollback-go", "do": { "type": "message", "channel": "incident", "from": "sam", "text": "Renewals are back on the crontab as of 10:47. But finance re-ran their check across October: the **same pattern for Europe/Berlin customers on Oct 26**, four days before the Chronos move. So it wasn't Chronos. The next big batch is tonight from 23:00 our time. What else could it be? I need a hypothesis and a plan before then." } },
+    { "id": "t-noor-busy", "at": "10:28", "do": { "type": "message", "channel": "dm-noor", "from": "noor", "text": "Saw the page 😬 I'm stuck in an architecture review until ~11:30 but I'm reading Slack. The billing notes in Docs explain how periods and time zones are supposed to work." } },
+    { "id": "t-nudge", "do": { "type": "nudge", "channel": "incident", "from": "sam", "after": "t-page", "until": "incident_resolved", "quietMinutes": 6, "texts": ["Status update? Support needs something to tell customers who were charged.", "Finance is asking: how many customers, how much money, and will it happen again tonight?", "Still with us? Even 'still investigating, next update in 15' helps."] } },
+    { "id": "t-resolved", "when": "incident_resolved", "do": { "type": "message", "channel": "incident", "from": "sam", "text": "Thanks. I'm marking INC-0627 resolved. Please post a short summary here for the postmortem: customer impact, root cause, what is fixed or mitigated, and the follow-ups with owners." } },
+    { "id": "t-kenji-ping", "at": "11:40", "unless": "pr_reviewed:341", "do": { "type": "message", "channel": "dm-kenji", "from": "kenji", "text": "Hey, any chance you could look at #341 before lunch? Finance would love the daily batch starting tonight 🙏" } },
+    { "id": "t-pr-v2", "when": "pr_feedback:341", "delay": 30, "unless": "pr_approved:341", "do": { "type": "followup", "thread": "pr:341", "from": "kenji", "revise": { "pr": "341", "rev": 2 }, "text": "Pushed an update (commit 2, \"Address review\"): the schedule is in UTC now (07:30), and a missed day catches up because the job renews everything that ends before the next run. Could you take another look? Would love to merge before EOD 🙌" } },
+    { "id": "t-pr-merged", "when": "pr_approved:341", "delay": 5, "do": { "type": "message", "channel": "dm-kenji", "from": "kenji", "text": "Thanks for the approve! Merging #341 now, so the first daily batch runs tonight 🚀" } },
+    { "id": "t-scope", "at": "13:30", "when": "incident_resolved", "do": { "type": "message", "channel": "dm-alicia", "from": "alicia", "text": "Thanks for handling the incident! Quick one: sales wants two more things for **Friday**: annual customers can switch back to **monthly with a refund** for the unused months, and **per-seat pricing** for the Acme deal (40 seats on team). Doable? Please answer on BILL-88 so sales sees it." } },
+    { "id": "t-rfc", "at": "14:30", "do": { "type": "message", "channel": "team", "from": "noor", "text": "I wrote up the billing ledger RFC (Docs → *RFC: Billing ledger on an event log*). Today is a pretty good argument for it 😅 Please leave a comment before Thursday's review, new eyes catch the most.", "unlock": ["doc:rfc-ledger"] } },
+    { "id": "t-alicia-check", "at": "15:45", "do": { "type": "message", "channel": "dm-alicia", "from": "alicia", "text": "How's BILL-88 looking for Friday? Anything I should warn marketing about?" } },
+    { "id": "t-eod", "at": "17:00", "do": { "type": "message", "channel": "team", "from": "noor", "text": "Heading out soon. Before you log off, please write a short **handoff** (Handoff in the sidebar): what you finished, what's still open, and anything someone needs to pick up tomorrow. Big first day 👏", "unlock": ["handoff"] } }
+  ]
+}

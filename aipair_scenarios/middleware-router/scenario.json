@@ -1,0 +1,21 @@
+{
+  "order": 13,
+  "title": "Middleware router",
+  "blurb": "Build an Express-style middleware chain: route matching, error handlers, and the ways next() quietly breaks.",
+  "difficulty": "Hard",
+  "minutes": 55,
+  "brief": "Your team wants a small Express-style router without pulling in Express: global middleware, per-path handlers, and error handlers, all run in the order they were registered. The happy path is easy; the real work is next() misused, an async handler whose rejection goes nowhere, and getting the fallback responses right when nothing else does. response.js is a fake response object for tests and already works. Implement Router in router.js. Read your requirements closely — control flow and async timing are exactly where a confident-sounding wrong answer slips through.",
+  "requirements": [
+    "new Router(). router.use(fn) registers fn to run on every request, any method or path. router.get(path, ...fns) and router.post(path, ...fns) register one or more handlers that only run when req.method and req.path match exactly. Every registration, of any kind, is kept in one stack in the order it was added.",
+    "A layer is a normal handler (req, res, next) unless it declares four parameters, (err, req, res, next) — that makes it an error handler. While no error is pending, error handlers are skipped and layers are matched by method/path as above. Once an error is pending, only error handlers run, walking forward from the layer that raised it. An error handler registered earlier in the stack is never reached for that error, even though it would otherwise be next in line.",
+    "next(err) sets the pending error and moves on. Calling next() with no argument from inside an error handler clears the error and resumes normal routing from there; calling it with no argument anywhere else just moves on without touching the error.",
+    "A layer's own next only has an effect once. If the same layer calls it again — synchronously, or later from a callback — the second call does nothing: no layer runs an extra time, and no stray default response goes out after the real one already did.",
+    "A layer that throws synchronously, or returns a promise that rejects, is treated exactly like it called next(err) with that error. Handlers are not required to catch their own async failures and call next(err) themselves.",
+    "Once a response has been sent (res.send or res.json called), the chain is done: no later layer runs, and a next() call that arrives afterward, from a slow handler, is ignored.",
+    "handle(req, res) returns a promise that resolves once a response has gone out. If the stack runs out with no error pending and nothing sent, it sends res.status(404).send({ error: \"not found\" }) itself. If it runs out with an error still pending and unhandled, it sends res.status(500).send({ error: <the error's message> })."
+  ],
+  "files": [
+    "response.js",
+    "router.js"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "order": 1,
+  "title": "Shipfast: orders & payments",
+  "company": "Shipfast",
+  "blurb": "Your first full day on the orders team. There is a feature to ship, a PR to review, an RFC to read, and something is about to go wrong in production.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": { "start": "09:00", "end": "17:30" },
+  "service": "orders-api",
+  "testFile": "orders-service.test.js",
+  "incident": { "name": "INC-0412", "page": "t-page" },
+  "newHire": "The candidate joined the Shipfast orders team as a senior engineer this week, and today is their first full day of real work. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Priya.",
+  "personas": [
+    { "id": "priya", "name": "Priya Raman", "role": "Senior Engineer · your onboarding buddy", "color": "#7c5cff" },
+    { "id": "marco", "name": "Marco Silva", "role": "Software Engineer", "color": "#1f9d74" },
+    { "id": "jen", "name": "Jen Okafor", "role": "Product Manager", "color": "#e0752d" },
+    { "id": "dana", "name": "Dana Whitfield", "role": "SRE · Incident Commander", "color": "#d6455d" }
+  ],
+  "channels": [
+    { "id": "team", "name": "#orders-team", "members": ["priya", "marco", "jen"], "responder": "priya" },
+    { "id": "incident", "name": "#inc-0412-double-charges", "members": ["dana", "priya"], "responder": "dana", "locked": true },
+    { "id": "dm-priya", "name": "Priya Raman", "dm": true, "members": ["priya"], "responder": "priya" },
+    { "id": "dm-jen", "name": "Jen Okafor", "dm": true, "members": ["jen"], "responder": "jen" },
+    { "id": "dm-marco", "name": "Marco Silva", "dm": true, "members": ["marco"], "responder": "marco" }
+  ],
+  "tickets": [
+    {
+      "id": "SHIP-142",
+      "title": "Discount codes at checkout",
+      "reporter": "jen",
+      "status": "To do · assigned to you",
+      "body": "Marketing's Friday promo email goes out with codes, so customers need to be able to enter a discount code on an order before paying.",
+      "requirements": [
+        "defineCode({ code, type, value, expiresAt }) adds a code. type is \"percent\" (value is a whole number from 1 to 100) or \"fixed\" (value is a whole number of cents, at least 1). Anything else throws RangeError. expiresAt is a timestamp in ms, or null for a code that never expires.",
+        "applyCode(orderId, code) puts a code on a pending order and returns the updated order (a copy). Codes are case-insensitive. order.code holds the code in upper case.",
+        "One code per order: applying another code replaces the one already there. removeCode(orderId) takes it off and restores the original totals.",
+        "The discount comes off the item subtotal before tax: tax is 8% of the discounted subtotal. Percent discounts round down to the cent. A fixed code never takes the items below $0.",
+        "Free shipping ($50+) looks at the discounted item subtotal, not the original one.",
+        "Errors carry a code: unknown code → UNKNOWN_CODE, expired (now ≥ expiresAt) → EXPIRED_CODE, order already charged → ORDER_NOT_PENDING. A failed applyCode changes nothing.",
+        "checkout charges the discounted total."
+      ]
+    }
+  ],
+  "prs": [
+    { "id": "87", "title": "Retry Paystream charges on timeout", "author": "marco", "file": "prs/pr-87.md", "locked": true, "revisions": [{ "rev": 2, "file": "prs/pr-87-v2.md" }] }
+  ],
+  "docs": [
+    { "id": "paystream-notes", "title": "Paystream integration notes", "author": "priya", "file": "docs/paystream-notes.md" },
+    { "id": "rfc-outbox", "title": "RFC: Transactional outbox for payment events", "author": "priya", "file": "docs/rfc-outbox.md", "locked": true, "comments": true }
+  ],
+  "logs": { "file": "logs/prod.log", "locked": true, "example": "ord_8812 or /charge\\.(start|ok)/" },
+  "files": ["app.js", "orders.js", "pricing.js", "discounts.js", "payments.js", "webhooks.js", "inventory.js", "store.js"],
+  "tasks": [
+    { "id": "feature", "title": "Ship SHIP-142: discount codes", "item": "ticket:SHIP-142", "unlock": "start" },
+    { "id": "review", "title": "Review Marco's PR #87", "item": "pr:87", "unlock": "t-pr" },
+    { "id": "incident", "title": "INC-0412: customers charged twice", "item": "channel:incident", "unlock": "t-page" },
+    { "id": "scope", "title": "Answer Jen about the promo scope", "item": "ticket:SHIP-142", "unlock": "t-scope" },
+    { "id": "rereview", "title": "Re-review PR #87 after Marco's update", "item": "pr:87", "unlock": "t-pr-v2" },
+    { "id": "rfc", "title": "Comment on Priya's outbox RFC", "item": "doc:rfc-outbox", "unlock": "t-rfc" },
+    { "id": "handoff", "title": "Write your end-of-day handoff", "item": "handoff", "unlock": "t-eod" }
+  ],
+  "timeline": [
+    { "id": "t-welcome", "at": "09:00", "do": { "type": "message", "channel": "team", "from": "priya", "text": "Welcome aboard! 🎉 Your first ticket is **SHIP-142** (discount codes): it's in Tickets, and Jen owns it. The repo is under Code, and the tests in `orders-service.test.js` are what CI runs. Ask me anything, no question is too small on day one." } },
+    { "id": "t-jen-hello", "at": "09:04", "do": { "type": "message", "channel": "dm-jen", "from": "jen", "text": "Hi! Super glad you're here. SHIP-142 is the big one for me this week: the promo email with the codes goes out **Friday morning**. Shout if anything in the ticket is unclear 🙂" } },
+    { "id": "t-pr", "at": "09:25", "do": { "type": "message", "channel": "team", "from": "marco", "text": "Hey, could you review **PR #87** when you get a sec? It's a small one: it retries Paystream charges on timeout. The bot already approved, and I'd love to merge it today 🙏", "unlock": ["pr:87"] } },
+    { "id": "t-page", "at": "10:27", "do": { "type": "page", "channel": "incident", "from": "dana", "text": "🚨 **SEV-2 · INC-0412**: support is reporting customers **charged twice** at checkout, and the `checkout_duplicate_charges` alert fired (37 in 20 min). The `stock_negative` alert is firing too. You're secondary on-call today, so please take point on investigating. Prod logs are under Logs. I'm IC: tell me what you find and what you want to do.", "unlock": ["channel:incident", "logs"] } },
+    { "id": "t-rollback", "at": "10:31", "do": { "type": "message", "channel": "incident", "from": "dana", "text": "FYI v2.31 finished deploying at 10:02, right before this started. I'm inclined to just roll back to v2.30. Any objection? I'll do it in ~10 min unless you tell me otherwise." } },
+    { "id": "t-rollback-go", "at": "10:42", "unless": "posted:incident", "do": { "type": "message", "channel": "incident", "from": "dana", "text": "No objections, so I'm rolling orders-api back to v2.30 now. Will report when it's done." } },
+    { "id": "t-rollback-done", "at": "10:55", "after": "t-rollback-go", "do": { "type": "message", "channel": "incident", "from": "dana", "text": "Rollback to v2.30 finished at 10:51. Duplicate charges are **still coming in at about the same rate**, so it wasn't the deploy. What else could it be? I need a hypothesis from you." } },
+    { "id": "t-priya-busy", "at": "10:34", "do": { "type": "message", "channel": "dm-priya", "from": "priya", "text": "Saw the page. I'm stuck in quarterly planning until ~11:30 but I'm reading Slack, so ping me if you get stuck. The Paystream notes in Docs are worth a look." } },
+    { "id": "t-nudge", "do": { "type": "nudge", "channel": "incident", "from": "dana", "after": "t-page", "until": "incident_resolved", "quietMinutes": 6, "texts": ["Status update? Support is asking what to tell customers.", "Need an update for the status page: what do we know, and what's the next step?", "Still with us? Exec channel is asking. Even 'still investigating, next update in 15' helps."] } },
+    { "id": "t-resolved", "when": "incident_resolved", "do": { "type": "message", "channel": "incident", "from": "dana", "text": "Thanks. I'm marking INC-0412 resolved. Please post a short summary here for the postmortem doc: customer impact, root cause, what is fixed or mitigated, and the follow-ups with owners." } },
+    { "id": "t-marco-ping", "at": "11:40", "unless": "pr_reviewed:87", "do": { "type": "message", "channel": "dm-marco", "from": "marco", "text": "No pressure, but any chance you could look at #87 before lunch? With Paystream this slow I think it'd really help checkout." } },
+    { "id": "t-pr-v2", "when": "pr_feedback:87", "delay": 30, "unless": "pr_approved:87", "do": { "type": "followup", "thread": "pr:87", "from": "marco", "revise": { "pr": "87", "rev": 2 }, "text": "Pushed an update (commit 2, \"Address review\"): retries only on timeouts, 429 and 5xx now, every attempt sends an Idempotency-Key, `log` is passed in, and there's a test for the retry path. Could you take another look? Would love to merge before EOD 🙏" } },
+    { "id": "t-pr-merged", "when": "pr_approved:87", "delay": 5, "do": { "type": "message", "channel": "dm-marco", "from": "marco", "text": "Thanks for the approve! Merging #87 now 🚀" } },
+    { "id": "t-scope", "at": "13:30", "when": "incident_resolved", "do": { "type": "message", "channel": "dm-jen", "from": "jen", "text": "Phew, thanks for jumping on the incident! Quick one: marketing now wants codes to **stack** (e.g. WELCOME10 + FREESHIP) and a **free-shipping code type**, still for **Friday**. Is that doable? Please answer on SHIP-142 so it's on record for them." } },
+    { "id": "t-rfc", "at": "14:30", "do": { "type": "message", "channel": "team", "from": "priya", "text": "I wrote up the outbox RFC for payment events (Docs → *RFC: Transactional outbox*). Fresh eyes are the best eyes, so please leave a comment on it before Thursday's review.", "unlock": ["doc:rfc-outbox"] } },
+    { "id": "t-jen-check", "at": "15:45", "do": { "type": "message", "channel": "dm-jen", "from": "jen", "text": "How's SHIP-142 looking for Friday? Anything I should warn marketing about?" } },
+    { "id": "t-eod", "at": "17:00", "do": { "type": "message", "channel": "team", "from": "priya", "text": "Wrapping up for today. Before you log off, could you write a short **handoff** (Handoff in the sidebar): what you finished, what's still open, and anything someone needs to pick up tomorrow. Great first day 👏", "unlock": ["handoff"] } }
+  ]
+}

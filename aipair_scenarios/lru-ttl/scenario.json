@@ -1,0 +1,20 @@
+{
+  "order": 1,
+  "title": "Expiring LRU cache",
+  "blurb": "Build an in-memory cache with a capacity limit, per-entry expiry and hit/miss stats.",
+  "difficulty": "Medium",
+  "minutes": 45,
+  "brief": "Your team needs a small in-memory cache for API responses. It must hold a bounded number of entries, evict the least recently used one when full, and drop entries that have expired. The stats helper in stats.js is already done. Implement TTLCache in cache.js. Hidden tests check behavior, including edge cases, so read your requirements closely and verify what the assistant gives you.",
+  "requirements": [
+    "new TTLCache({ capacity, ttlMs, now = Date.now }): capacity must be a positive integer and ttlMs a positive number, otherwise throw RangeError. now is an injectable clock returning milliseconds.",
+    "set(key, value, ttlMs?) stores a value and returns the cache. An optional ttlMs overrides the default for that entry (same validation). Setting an existing key replaces its value, refreshes its expiry and makes it the most recently used.",
+    "An entry is expired once now() >= the time it was set plus its ttl.",
+    "get(key) returns the value, or undefined if the key is missing or expired. Expired entries are removed. A hit makes the key the most recently used. Any stored value, including 0, '', false and null, is a valid value.",
+    "has(key) is true only for a live entry. It must not change recency and must not count as a hit or a miss.",
+    "delete(key) returns true only if a live entry was removed, otherwise false.",
+    "get size() counts only live entries.",
+    "When set() takes the cache over capacity, first remove expired entries. Only if it is still over capacity, evict the least recently used live entries until it fits.",
+    "stats() returns { hits, misses, evictions, expirations }. Only get() counts hits and misses. evictions counts live entries removed for capacity. expirations counts each entry removed because it had expired, whichever operation noticed."
+  ],
+  "files": ["cache.js", "stats.js"]
+}

@@ -1,0 +1,49 @@
+{
+  "refill-resets-progress": [
+    {
+      "file": "limiter.js",
+      "from": "      b.last += n * this.every; // keep the partial progress",
+      "to": "      b.last = t;"
+    }
+  ],
+  "denied-consumes": [
+    {
+      "file": "limiter.js",
+      "from": "    if (b.tokens >= cost) {\n      b.tokens -= cost;\n      return { allowed: true, remaining: b.tokens, retryAfterMs: 0 };\n    }\n    const retryAfterMs = (cost - b.tokens) * this.every - (this.now() - b.last);\n    return { allowed: false, remaining: b.tokens, retryAfterMs };",
+      "to": "    const retryAfterMs = (cost - b.tokens) * this.every - (this.now() - b.last);\n    b.tokens -= cost;\n    if (b.tokens >= 0) return { allowed: true, remaining: b.tokens, retryAfterMs: 0 };\n    return { allowed: false, remaining: Math.max(0, b.tokens), retryAfterMs };"
+    }
+  ],
+  "retry-after-ignores-elapsed": [
+    {
+      "file": "limiter.js",
+      "from": "(cost - b.tokens) * this.every - (this.now() - b.last)",
+      "to": "(cost - b.tokens) * this.every"
+    }
+  ],
+  "clock-monotonic": [
+    {
+      "file": "limiter.js",
+      "from": "    if (t < b.last) {\n      b.last = t; // clock went backwards: re-base, add nothing\n      return;\n    }\n",
+      "to": ""
+    }
+  ],
+  "prune-by-idle-time": [
+    {
+      "file": "limiter.js",
+      "from": "    const b = this._bucket(key, true);\n    if (b.tokens >= cost) {",
+      "to": "    const b = this._bucket(key, true);\n    b.touched = this.now();\n    if (b.tokens >= cost) {"
+    },
+    {
+      "file": "limiter.js",
+      "from": "      if (b.tokens === this.capacity) {\n        this.buckets.delete(k);",
+      "to": "      if (this.now() - (b.touched || 0) >= this.every) {\n        this.buckets.delete(k);"
+    }
+  ],
+  "full-keeps-remainder": [
+    {
+      "file": "limiter.js",
+      "from": "    if (b.tokens === this.capacity) b.last = t; // a full bucket has no partial progress\n",
+      "to": ""
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "order": 2,
+  "title": "Token-bucket rate limiter",
+  "blurb": "Limit requests per key with a token bucket: burst capacity, steady refill, and an accurate retry-after.",
+  "difficulty": "Medium",
+  "minutes": 40,
+  "brief": "An API gateway needs a per-client rate limiter. Each client key gets a token bucket: it can burst up to a capacity, then is limited to a steady rate. Time is injected so the hidden tests can control it. All time math is in whole milliseconds, so there is no floating point to worry about. Implement RateLimiter in limiter.js.",
+  "requirements": [
+    "new RateLimiter({ capacity, refillEveryMs, now = Date.now }): capacity is a positive integer and refillEveryMs a positive integer, otherwise throw RangeError. One token is added every refillEveryMs milliseconds, up to capacity.",
+    "Every key has its own bucket, and a new key starts full.",
+    "tryConsume(key, cost = 1) returns { allowed, remaining, retryAfterMs }. cost must be an integer from 1 to capacity, otherwise throw RangeError.",
+    "If the bucket holds at least cost tokens, consume them: allowed is true and retryAfterMs is 0. Otherwise nothing is consumed, allowed is false, and retryAfterMs is the number of milliseconds until enough tokens will exist. remaining is the whole tokens left after the call.",
+    "Refill is by whole tokens, and time that has not yet earned a token is kept. If a token is 400 ms into its 1000 ms refill period, that progress must not be lost by a later call, including a denied one.",
+    "A full bucket has no partial progress: when a bucket reaches capacity, the time since its last whole token is discarded, so the next token arrives one full refillEveryMs after the bucket next drops below capacity.",
+    "If now() goes backwards, no tokens are added and no time is owed. Treat the new time as the reference point from then on.",
+    "peek(key) returns the whole tokens available without consuming any. For an unknown key it returns capacity and must not create a bucket.",
+    "reset(key) makes the key full again.",
+    "get size() is the number of buckets currently tracked.",
+    "prune() removes buckets that are full right now (they are indistinguishable from a new key) and returns how many it removed. It must never remove a bucket that is not full, since that would give a throttled client a fresh bucket."
+  ],
+  "files": ["limiter.js"]
+}

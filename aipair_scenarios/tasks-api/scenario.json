@@ -1,0 +1,23 @@
+{
+  "order": 8,
+  "title": "Add pagination and soft delete",
+  "blurb": "Extend a small multi-file tasks API with paginated listing and soft delete, without breaking what already works.",
+  "difficulty": "Medium",
+  "minutes": 45,
+  "brief": "You join a team that owns a tiny in-memory tasks API: store.js holds the data, handlers.js has one handler per endpoint, and router.js maps requests onto them. It works today. Product wants two features: paginated listing and soft delete (with restore). Read the code first, then add the features by changing the smallest amount of code that makes sense. The visible test file (a read-only tab) shows the existing behavior, which currently passes and must keep passing, and the new behavior, which currently fails. A few extra edge cases you cannot see run when you finish.",
+  "requirements": [
+    "Pagination: GET /tasks accepts page (integer, 1-based, default 1) and limit (integer from 1 to 50, default 10). A bad page or limit (not an integer, out of range) returns status 400 with { error }. It must not be silently corrected.",
+    "The list body becomes { items, page, limit, total, totalPages }. Items stay in creation order. total counts all matching tasks (after the status filter and after hiding deleted ones), not just this page, and totalPages = ceil(total / limit). A page past the end returns 200 with empty items.",
+    "The existing status filter keeps working and combines with pagination.",
+    "Soft delete: DELETE /tasks/:id no longer removes the record. It sets deletedAt to the store's clock (store.now()) and still returns 204 with a null body. Deleting an already deleted or unknown task returns 404.",
+    "A deleted task is treated as gone: GET /tasks/:id and PATCH /tasks/:id return 404 for it, and GET /tasks leaves it out unless the query has includeDeleted=true (exactly the string \"true\"; anything else, including \"false\", hides deleted tasks).",
+    "POST /tasks/:id/restore clears deletedAt and returns 200 with the task. Restoring an unknown id returns 404. Restoring a task that is not deleted returns 409 with { error }.",
+    "A restored task keeps its original position in the list and every other field.",
+    "Every existing test must keep passing."
+  ],
+  "files": [
+    "store.js",
+    "handlers.js",
+    "router.js"
+  ]
+}

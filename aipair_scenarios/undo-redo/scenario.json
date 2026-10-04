@@ -1,0 +1,24 @@
+{
+  "order": 9,
+  "title": "Add undo and redo to an editor",
+  "blurb": "Give a small text editor an undo/redo history: typing runs that group together, batches, a history cap, and keyboard shortcuts.",
+  "difficulty": "Medium",
+  "minutes": 45,
+  "brief": "A tiny text editor has three files: document.js (the text buffer), editor.js (a cursor plus typing and backspace), and keymap.js (key presses to editor calls). It works today. Add undo and redo. The visible test file (a read-only tab) shows the existing behavior, which passes and must keep passing, and the core of the new behavior, which fails for now. A few extra edge cases you cannot see run when you finish. Think about what counts as one step, what the cursor should do, and what a new edit does to the redo history.",
+  "requirements": [
+    "Editor gets undo() and redo(). Each returns true if it changed something and false if there was nothing to undo or redo. canUndo() and canRedo() return booleans.",
+    "Every backspace() that deletes a character is one undo step. A call that changes no text (backspace at position 0, type(\"\")) records nothing.",
+    "A run of consecutive type() calls is one undo step, so undoing after typing \"hello\" one letter at a time removes all of it. The run ends when anything else happens: moveTo, backspace, undo, redo, or a batch.",
+    "Undo restores the text and the cursor to what they were before the step. Redo restores the text and cursor to what they were after it.",
+    "Making a new edit after an undo throws away the redo history. moveTo alone does not.",
+    "editor.batch(fn) runs fn and makes every edit inside it a single undo step (nothing is recorded if the text ends up unchanged). Nested batch calls join the outer one. If fn throws, the edits already made stay and count as one step, and the error is rethrown.",
+    "maxHistory (default 100) is the most undo steps kept. When it is exceeded, the oldest step is dropped, so the most recent steps are always undoable.",
+    "keymap: \"ctrl+z\" undoes, and \"ctrl+y\" or \"ctrl+shift+z\" redoes. The ctrl combos are case-insensitive (\"Ctrl+Z\" works), and they return true even when there is nothing to undo or redo. Any other ctrl combo returns false. Typing an uppercase letter must still type that uppercase letter.",
+    "Every existing test must keep passing."
+  ],
+  "files": [
+    "document.js",
+    "editor.js",
+    "keymap.js"
+  ]
+}

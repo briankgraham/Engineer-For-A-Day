@@ -1,0 +1,313 @@
+{
+ "day": "shipfast-orders",
+ "flaws": [
+  {
+   "id": "orderid-dedupe",
+   "persona": "marco",
+   "thread": "pr:87",
+   "reply": "Thanks for the quick look \ud83d\ude4f On 1, tbh I'm pretty sure Paystream already dedupes on orderId, it's right there in the charge metadata, so a retry for the same order can't create a second charge. The header is just belt and braces for the clients. Not sure we need to thread the key through.\n\nOn 2, a declined card will just decline again, so retrying a 402 is harmless, it only costs a few hundred ms. But sure, I can narrow it to timeouts/429/5xx if you'd rather.\n\nAnd yep, good catch on `log`, I'll pass it in. I'll add a failure-path test too.\n\n"
+  },
+  {
+   "id": "key-per-attempt",
+   "persona": "marco",
+   "thread": "pr:87",
+   "reply": "Hmm, tbh I think per-attempt is the right call here \ud83d\ude4f Each attempt is its own request, so it needs its own key, and Paystream uses the key to tell the attempts apart. If we reuse one key for all of them, I think Paystream would reject the retry as a duplicate and we'd just fail the checkout anyway. And the test does show two calls going out, so the retry path itself is covered. Can we merge as is and look at the key in a follow-up? I'd really like this live before Friday.\n\n"
+  }
+ ],
+ "evaluation": {
+  "day": "shipfast-orders",
+  "model": "claude-sonnet-5-5",
+  "at": "2026-10-03T20:21:55+00:00",
+  "summary": "The candidate did strong PR work and little else. Both PR #87 reviews requested changes and were specific. They found the missing idempotency key and the per-attempt key bug, and they did not accept Marco's orderId claim. But they never replied to the incident commander, who asked for updates five times. They wrote no code, no tests, no scope reply, no RFC comment and no handoff. They also stayed silent while the v2.31 rollback went ahead on a wrong theory. The incident, feature and scope work were effectively abandoned.",
+  "level": {
+   "verdict": "below",
+   "explanation": "Only the PR review met the senior bar. The incident went unanswered with no code or comms, the feature had 0/14 hidden tests passing, and the scope, RFC and handoff tasks were not done."
+  },
+  "scores": [
+   {
+    "area": "debugging",
+    "score": 1,
+    "evidence": "No hypothesis was posted in the incident thread, and no fix was made. Incident tests are 1/5 passing."
+   },
+   {
+    "area": "code_quality",
+    "score": 1,
+    "evidence": "The diff is empty. The feature tests are 0/14 and the incident fix tests fail."
+   },
+   {
+    "area": "testing",
+    "score": 1,
+    "evidence": "They wrote no tests (my-tests.js has 0/0). The only test comment was in the PR review, where they noted the new test could not catch a double charge."
+   },
+   {
+    "area": "review",
+    "score": 4,
+    "evidence": "Both reviews requested changes. They caught the missing key, the declines, the log scope and the per-attempt key, and they asked for a same-key assertion. They missed the off-by-one attempts issue. Both reviews were delayed. They held the line on the per-attempt key."
+   },
+   {
+    "area": "communication",
+    "score": 1,
+    "evidence": "Dana asked for updates at 11:09, 11:50 and 12:30 with no reply. Jen's scope request and her 15:48 follow-up were unanswered. There was no RFC comment and no handoff."
+   },
+   {
+    "area": "prioritization",
+    "score": 1,
+    "evidence": "The candidate did not respond to the IC during a SEV-2. They did not touch the feature ticket, scope, RFC or handoff. The only visible output was the PR reviews."
+   },
+   {
+    "area": "judgment",
+    "score": 2,
+    "evidence": "They rejected Marco's orderId claim and the per-attempt key defense in their reviews. But they never objected to the v2.31 rollback, which Dana announced at 10:35 and ran at 10:42."
+   }
+  ],
+  "tasks": [
+   {
+    "id": "feature",
+    "title": "Ship SHIP-142: discount codes",
+    "outcome": "missed",
+    "evidence": "The diff is empty and the hidden feature tests are 0/14. They did not engage with the ticket.",
+    "missed": [
+     "Implement discounts in pricing.js and discounts.js",
+     "Ask about the ticket vs Jen and Priya conflicts",
+     "Keep the existing suite green while adding features"
+    ]
+   },
+   {
+    "id": "review",
+    "title": "Review Marco's PR #87",
+    "outcome": "done",
+    "evidence": "They requested changes, found the missing key, the declines and the log scope. They pointed to the failure-path tests and the same class of bug as today's incident. They replied kindly but did not argue the orderId claim in the thread after Marco's 11:29 reply.",
+    "missed": [
+     "Off-by-one attempts and no jitter",
+     "Direct reply to Marco's orderId pushback in-thread"
+    ]
+   },
+   {
+    "id": "incident",
+    "title": "INC-0412: customers charged twice",
+    "outcome": "missed",
+    "evidence": "They posted nothing in the incident channel and did not object to the rollback. They made no fix, mitigation or tests, and no remediation plan.",
+    "missed": [
+     "Evidence-backed hypothesis from the logs",
+     "Mitigation by turning off ios_checkout_auto_retry",
+     "Idempotency and webhook dedupe fix with regression test"
+    ]
+   },
+   {
+    "id": "scope",
+    "title": "Answer Jen about the promo scope",
+    "outcome": "missed",
+    "evidence": "Jen's 13:32 request and 15:48 follow-up got no reply on the ticket or in the DM.",
+    "missed": [
+     "Name the stacking risk and ask clarifying questions",
+     "Offer options such as FREESHIP only",
+     "Give an estimate and confidence"
+    ]
+   },
+   {
+    "id": "rereview",
+    "title": "Re-review PR #87 after Marco's update",
+    "outcome": "done",
+    "evidence": "At 15:34 they re-read rev 2. They credited the fixes, flagged the key `${orderId}:${attempt}`, asked for the checkout key to be passed through, and noted the test could not fail. They requested changes again.",
+    "missed": [
+     "Reply to Marco's 16:08 defense of the per-attempt key"
+    ]
+   },
+   {
+    "id": "rfc",
+    "title": "Comment on Priya's outbox RFC",
+    "outcome": "missed",
+    "evidence": "There is no RFC comment in the record.",
+    "missed": [
+     "Challenge exactly-once and ask for consumer idempotency",
+     "Ordering via MessageGroupId, and the DLQ and alerting",
+     "Tie it to the webhook redelivery incident"
+    ]
+   },
+   {
+    "id": "handoff",
+    "title": "Write your end-of-day handoff",
+    "outcome": "missed",
+    "evidence": "The handoff was not written.",
+    "missed": [
+     "Done and open items",
+     "Incident follow-ups: refunds, stock, postmortem",
+     "Owners and next steps"
+    ]
+   }
+  ],
+  "flaws": [
+   {
+    "id": "orderid-dedupe",
+    "title": "Says Paystream dedupes retried charges by orderId",
+    "persona": "Marco Silva",
+    "reply": "Thanks for the quick look \ud83d\ude4f On 1, tbh I'm pretty sure Paystream already dedupes on orderId, it's right there in the charge metadata, so a retry for the same order can't create a second charge. The header is just belt and braces for the clients. Not sure we need to thread the key through.\n\nOn 2, a declined card will just decline again, so retrying a 402 is harmless, it only costs a few hundred ms. But sure, I can narrow it to timeouts/429/5xx if you'd rather.\n\nAnd yep, good catch on `log`, I'll pass it in. I'll add a failure-path test too.\n\n",
+    "wrong": "Say retries are safe because Paystream already dedupes charges on orderId (it's in the metadata), so the same order can't be charged twice.",
+    "correct": "Per the Paystream notes, only the Idempotency-Key header dedupes; orderId metadata is for reporting. A timed-out charge may have succeeded, so retrying without the key double charges.",
+    "outcome": "caught",
+    "evidence": "Their 10:28 review already said orderId metadata does not dedupe, and the 15:34 review kept pushing the key to be passed through."
+   },
+   {
+    "id": "key-per-attempt",
+    "title": "Says a different idempotency key per attempt is correct",
+    "persona": "Marco Silva",
+    "reply": "Hmm, tbh I think per-attempt is the right call here \ud83d\ude4f Each attempt is its own request, so it needs its own key, and Paystream uses the key to tell the attempts apart. If we reuse one key for all of them, I think Paystream would reject the retry as a duplicate and we'd just fail the checkout anyway. And the test does show two calls going out, so the retry path itself is covered. Can we merge as is and look at the key in a follow-up? I'd really like this live before Friday.\n\n",
+    "wrong": "Say a key per attempt is right: each attempt is a separate request, so it needs its own key, and Paystream uses it to tell attempts apart; reusing one key would make Paystream reject the retry.",
+    "correct": "Paystream dedupes on the key, so every retry of the same charge must send the SAME key (best: the checkout's own idempotencyKey). A new key per attempt makes each retry a new charge, so a timeout that actually succeeded is charged again.",
+    "outcome": "caught",
+    "evidence": "They had requested the checkout's idempotencyKey be passed unchanged before Marco's 16:08 defense, and they did not approve."
+   }
+  ],
+  "not_served": [
+   {
+    "id": "discount-after-tax",
+    "title": "Says to tax the full subtotal and take the discount off the end",
+    "persona": "Priya Raman",
+    "correct": "The ticket says the discount comes off the item subtotal BEFORE tax: tax is 8% of (subtotal - discount), and free shipping also looks at the discounted subtotal."
+   },
+   {
+    "id": "round-percent",
+    "title": "Says to round percent discounts with Math.round",
+    "persona": "Priya Raman",
+    "correct": "The ticket says percent discounts round DOWN to the cent: Math.floor(subtotal * pct / 100)."
+   },
+   {
+    "id": "cache-promise-forever",
+    "title": "Says storing the in-flight promise is the whole fix",
+    "persona": "Priya Raman",
+    "correct": "If the cached promise rejects (a decline or a timeout), the key must be removed and the order set back to pending, otherwise the customer can never retry. The order should also be claimed before the await so a different key cannot charge it, and the key should be passed to Paystream."
+   },
+   {
+    "id": "freeship-pre-discount",
+    "title": "Says free shipping should look at the pre-discount cart",
+    "persona": "Jen Okafor",
+    "correct": "Her own ticket says free shipping looks at the discounted item subtotal. The candidate should notice the conflict and confirm which is right (the ticket is the record), not silently switch."
+   }
+  ],
+  "issues": [
+   {
+    "id": "retry-without-key",
+    "title": "Retries a charge without an idempotency key",
+    "severity": "high",
+    "where": "payments.js, chargeWithRetry()",
+    "detail": "A timeout does not mean the charge failed (Paystream notes). Retrying gateway.charge without the Idempotency-Key header creates a second charge, which is the same class of bug as today's incident. Pass the checkout's idempotency key through to every attempt.",
+    "rev": 1,
+    "outcome": "found",
+    "evidence": "The 10:28 review flagged retries without the Idempotency-Key and tied them to the incident."
+   },
+   {
+    "id": "retries-declines",
+    "title": "Retries card declines",
+    "severity": "medium",
+    "where": "payments.js, chargeWithRetry()",
+    "detail": "Every error is retried, including 402 card_declined and insufficient_funds. The result will not change, it adds latency, and repeated declines can get a card flagged. Only retry timeouts, 429 and 5xx.",
+    "rev": 1,
+    "outcome": "found",
+    "evidence": "The 10:28 review said not to retry 402 declines, only timeouts, 429 and 5xx."
+   },
+   {
+    "id": "log-not-in-scope",
+    "title": "The retry path crashes and is untested",
+    "severity": "medium",
+    "where": "payments.js, chargeWithRetry()",
+    "detail": "log is not in scope in the module-level helper (it lives inside create()), so the first failure throws a ReferenceError instead of retrying. CI is green only because no test makes the gateway fail. Needs tests for timeout, decline and give-up.",
+    "rev": 1,
+    "outcome": "found",
+    "evidence": "The 10:28 review flagged `log` out of scope and the missing failure-path tests."
+   },
+   {
+    "id": "off-by-one-attempts",
+    "title": "maxAttempts: 3 makes 4 attempts and sleeps after the last one",
+    "severity": "low",
+    "where": "payments.js, chargeWithRetry() loop",
+    "detail": "attempt runs from 0 to maxAttempts inclusive, so 4 tries, and it sleeps after the final failure before throwing. No jitter or cap either, so many clients retry in lockstep.",
+    "rev": 1,
+    "outcome": "missed",
+    "evidence": "Neither review mentioned the number of attempts or the sleep after the last one."
+   },
+   {
+    "id": "key-per-attempt",
+    "title": "v2: a new idempotency key on every attempt",
+    "severity": "high",
+    "where": "payments.js, chargeWithRetry() (revision 2)",
+    "detail": "The key is `${orderId}:${attempt}`, so each retry is a NEW key and Paystream charges it again: a timeout that actually succeeded is still double charged. It also ignores the checkout's own idempotencyKey. Every attempt must send the same key, ideally the checkout's idempotencyKey.",
+    "rev": 2,
+    "outcome": "found",
+    "evidence": "The 15:34 review, after rev 2 was pushed, flagged the `${orderId}:${attempt}` key."
+   },
+   {
+    "id": "test-cannot-fail",
+    "title": "v2: the new retry test cannot catch a double charge",
+    "severity": "medium",
+    "where": "orders-service.test.js, \"checkout retries a timed-out charge\" (revision 2)",
+    "detail": "The fake gateway rejects before charging, so the test models a timeout where nothing was charged. A real timeout can succeed on Paystream's side. The test should check that every attempt carries the same key (or simulate a charge that succeeds and then times out) and cover a decline not being retried.",
+    "rev": 2,
+    "outcome": "found",
+    "evidence": "The 15:34 review said the fake rejects before charging and asked for a same-key assertion."
+   }
+  ],
+  "rootCause": "checkout() records the idempotency key only after awaiting Paystream, and the order status only changes after the await, so a client retry that arrives while the first charge is in flight charges again. The iOS 5.2 auto-retry after a 1.5s client timeout (flag ios_checkout_auto_retry, on at 10:03) plus Paystream latency over 2s made this common. Separately, webhooks.js does not dedupe events, so Paystream redeliveries (same evt id) and the second charge's event take stock twice. The bug predates v2.31: ord_7302 on v2.30 yesterday was double charged from a web double click.",
+  "strengths": [
+   "The PR reviews were specific, tied to Paystream behavior and today's incident, and clearly requested changes.",
+   "They did not accept Marco's orderId dedupe claim or the pressure to merge before Friday.",
+   "In the re-review they read the new diff, credited the fixes and found the new key and test problems.",
+   "They kept the correct decision (request changes) on both revisions."
+  ],
+  "improvements": [
+   "During a SEV-2, respond to the IC right away. Post findings from the logs, challenge the rollback with evidence, and give regular updates.",
+   "Ship a fix with a regression test: idempotency for in-flight retries, passing the key to Paystream, and webhook dedupe by event id.",
+   "Propose a fast mitigation, such as disabling ios_checkout_auto_retry, and list the remediation (refunds, stock reconciliation, postmortem).",
+   "Answer Jen on the ticket with risks, clarifying questions and options. Make progress on SHIP-142 and test it.",
+   "Leave the RFC comment and write the handoff, even a short one, before the day ends."
+  ],
+  "tests": {
+   "visible": {
+    "passed": 9,
+    "total": 9,
+    "failed": []
+   },
+   "feature": {
+    "passed": 0,
+    "total": 14,
+    "failed": [
+     "[feature] a percent code comes off the items before tax",
+     "[feature] a fixed code takes cents off",
+     "[feature] codes are case-insensitive",
+     "[feature] a percent discount rounds down to the cent",
+     "[feature] a fixed code bigger than the items never takes them below zero",
+     "[feature] free shipping looks at the discounted item total",
+     "[feature] an expired code is rejected with EXPIRED_CODE, including at the exact expiry time",
+     "[feature] an unknown code is rejected with UNKNOWN_CODE and changes nothing",
+     "[feature] one code per order: applying a second code replaces the first",
+     "[feature] removeCode restores the original totals",
+     "[feature] codes cannot change an order that was already charged",
+     "[feature] checkout charges the discounted total",
+     "[feature] defineCode rejects bad codes with RangeError",
+     "[feature] a code with expiresAt null never expires"
+    ]
+   },
+   "incident": {
+    "passed": 1,
+    "total": 5,
+    "failed": [
+     "[incident] a retry with the same key while the first charge is in flight charges once and returns the same payment",
+     "[incident] a second checkout with a different key while the first is in flight does not charge again",
+     "[incident] the idempotency key is passed to Paystream",
+     "[incident] the same webhook event delivered twice takes stock once"
+    ]
+   }
+  },
+  "mine": {
+   "starter": {
+    "passed": 0,
+    "total": 0,
+    "failed": []
+   },
+   "final": {
+    "passed": 0,
+    "total": 0,
+    "failed": []
+   }
+  }
+ }
+}
