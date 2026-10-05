@@ -15,6 +15,10 @@ const AREAS = { remote: "Remote", sf: "SF Bay Area", austin: "Austin" };
 const f = { q: "", company: "", area: "", level: "", eng: true, days: "" };
 let built = false, page = 0, gen = 0, companyNames = {};
 const ui = {};
+const AKEY = "jobs.applied";
+let applied = {};
+try { applied = JSON.parse(localStorage.getItem(AKEY)) || {}; } catch (e) {}
+const saveApplied = () => { try { localStorage.setItem(AKEY, JSON.stringify(applied)); } catch (e) {} };
 
 function build() {
   built = true;
@@ -49,8 +53,10 @@ function build() {
   header.appendChild(bar);
 
   const table = ce("table");
-  table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th></tr></thead>";
+  table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th><th title=\"Check when you have submitted an application (saved in this browser)\">Applied</th></tr></thead>";
   ui.rows = ce("tbody"); table.appendChild(ui.rows);
+  const st = ce("style", null, "#tab-jobs tr.applied td:not(:last-child){opacity:.55}");
+  header.appendChild(st);
   const pager = ce("div", "pager");
   ui.prev = ce("button", null, "Prev"); ui.next = ce("button", null, "Next"); ui.page = ce("span");
   pager.append(ui.prev, ui.page, ui.next);
@@ -104,11 +110,19 @@ function render(d) {
     const loc = ce("td", "topics", j.location); if (j.remote && !/remote/i.test(j.location)) loc.textContent += " · Remote";
     tr.appendChild(loc);
     const p = ce("td", "num", ago(j.posted)); p.title = j.posted; tr.appendChild(p);
+    const ap = ce("td"), box = ce("input");
+    box.type = "checkbox"; box.checked = !!applied[j.url]; box.title = "I have submitted an application";
+    tr.classList.toggle("applied", box.checked);
+    box.onchange = () => {
+      if (box.checked) applied[j.url] = new Date().toISOString().slice(0, 10); else delete applied[j.url];
+      tr.classList.toggle("applied", box.checked); saveApplied();
+    };
+    ap.appendChild(box); tr.appendChild(ap);
     ui.rows.appendChild(tr);
   });
   if (!d.jobs.length) {
     const tr = ce("tr"), td = ce("td", null, d.boards.loaded ? "No openings match these filters." : "No openings loaded yet. Click Refresh to fetch them from the company job boards.");
-    td.colSpan = 4; td.style.cssText = "text-align:center;color:var(--muted);padding:28px"; tr.appendChild(td); ui.rows.appendChild(tr);
+    td.colSpan = 5; td.style.cssText = "text-align:center;color:var(--muted);padding:28px"; tr.appendChild(td); ui.rows.appendChild(tr);
   }
   const pages = Math.max(1, Math.ceil(d.total / PAGE));
   ui.page.textContent = `Page ${page + 1} of ${pages} · ${d.total.toLocaleString()} openings`;
@@ -142,7 +156,7 @@ function showLoading(msg) {
   ui.rows.style.opacity = ui.rows.children.length ? ".5" : "";
   if (!ui.rows.children.length) {
     const tr = ce("tr"), td = ce("td"), sp = ce("div", "busy", msg);
-    td.colSpan = 4; td.style.cssText = "padding:32px;color:var(--muted)"; sp.style.justifyContent = "center";
+    td.colSpan = 5; td.style.cssText = "padding:32px;color:var(--muted)"; sp.style.justifyContent = "center";
     td.appendChild(sp); tr.appendChild(td); ui.rows.appendChild(tr);
   }
 }
