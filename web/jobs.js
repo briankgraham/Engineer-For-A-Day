@@ -1,4 +1,4 @@
-// Jobs tab: live US software openings from /api/jobs. Loaded on first visit to the tab (see openJobs in index.html).
+// Jobs tab: live software openings (Remote, SF Bay Area, Austin) from /api/jobs. Loaded on first visit to the tab (see openJobs in index.html).
 (() => {
 const root = document.getElementById("tab-jobs");
 const PAGE = 50;
@@ -11,7 +11,8 @@ const NOT_COVERED = [
 ];
 const ce = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const LEVELS = [["intern", "Internship"], ["entry", "New grad / entry"], ["mid", "Mid-level"], ["senior", "Senior"], ["staff", "Staff / principal"], ["manager", "Management"]];
-const f = { q: "", company: "", state: "", level: "", remote: false, eng: true, days: "" };
+const AREAS = { remote: "Remote", sf: "SF Bay Area", austin: "Austin" };
+const f = { q: "", company: "", area: "", level: "", eng: true, days: "" };
 let built = false, page = 0, gen = 0, companyNames = {};
 const ui = {};
 
@@ -25,7 +26,8 @@ function build() {
   ui.company = ce("input"); ui.company.type = "search"; ui.company.placeholder = "Company (all)…"; ui.company.autocomplete = "off";
   ui.company.setAttribute("list", "jobs-colist"); ui.company.style.cssText = "flex:0 1 170px;min-width:120px";
   ui.colist = ce("datalist"); ui.colist.id = "jobs-colist";
-  ui.state = ce("select"); ui.state.appendChild(new Option("All states", ""));
+  ui.area = ce("select"); ui.area.title = "Remote, the SF Bay Area (SF through Santa Clara / San Jose, Oakland and nearby) or Austin";
+  ui.area.appendChild(new Option("Remote, SF Bay Area & Austin", ""));
   ui.level = ce("select"); ui.level.title = "Seniority, read from the job title";
   ui.level.appendChild(new Option("All levels", ""));
   LEVELS.forEach(([v, l]) => ui.level.appendChild(new Option(l, v)));
@@ -38,8 +40,7 @@ function build() {
     c.onchange = () => { f[key] = c.checked; apply(); };
     return l;
   };
-  bar.append(ui.q, ui.company, ui.colist, ui.state, ui.level, ui.days,
-    check("Remote only", "remote", "Only postings that mention remote work"),
+  bar.append(ui.q, ui.company, ui.colist, ui.area, ui.level, ui.days,
     check("Engineering roles", "eng", "Only software, data, ML, security and infrastructure titles"));
   ui.refresh = ce("button", null, "Refresh");
   ui.refresh.title = "Fetch the latest postings from the company job boards (at most once every 5 minutes)";
@@ -63,7 +64,7 @@ function build() {
 
   let deb = null;
   ui.q.oninput = () => { clearTimeout(deb); deb = setTimeout(() => { f.q = ui.q.value.trim(); apply(); }, 250); };
-  ui.state.onchange = () => { f.state = ui.state.value; apply(); };
+  ui.area.onchange = () => { f.area = ui.area.value; apply(); };
   ui.level.onchange = () => { f.level = ui.level.value; apply(); };
   ui.days.onchange = () => { f.days = ui.days.value; apply(); };
   // Same rule as the LeetCode company filter: commit on pick / Enter / blur, or when cleared, so typing "Snap" does not filter early.
@@ -116,10 +117,10 @@ function render(d) {
   if (!ui.more.classList.contains("busy")) ui.more.textContent = "Fetch more from " + f.company;
   ui.colist.replaceChildren(); companyNames = {};
   d.companies.forEach(([n, c]) => { companyNames[n.toLowerCase()] = n; const o = new Option(n); o.label = `${c} openings`; ui.colist.appendChild(o); });
-  const keep = ui.state.value;
-  ui.state.replaceChildren(new Option("All states", ""));
-  d.states.forEach(([s, c]) => ui.state.appendChild(new Option(`${s} (${c})`, s)));
-  ui.state.value = d.states.some(([s]) => s === keep) ? keep : "";
+  const keep = ui.area.value;
+  ui.area.replaceChildren(new Option("Remote, SF Bay Area & Austin", ""));
+  d.areas.forEach(([a, c]) => ui.area.appendChild(new Option(`${AREAS[a]} (${c})`, a)));
+  ui.area.value = d.areas.some(([a]) => a === keep) ? keep : "";
   LEVELS.forEach(([v, l], i) => { ui.level.options[i + 1].textContent = d.levels[v] ? `${l} (${d.levels[v]})` : l; });
   const b = d.boards, upd = d.updated_at ? Math.max(0, Math.round((Date.now() - Date.parse(d.updated_at)) / 60000)) : null;
   const age = upd === null ? "" : upd < 1 ? "just now" : upd < 60 ? upd + " min ago" : upd < 1440 ? Math.round(upd / 60) + " h ago" : Math.round(upd / 1440) + " d ago";
@@ -151,9 +152,8 @@ async function load(flash) {
   const my = ++gen, p = new URLSearchParams({ limit: PAGE, offset: page * PAGE, eng: f.eng ? 1 : 0 });
   if (f.q) p.set("q", f.q);
   if (f.company) p.set("company", f.company);
-  if (f.state) p.set("state", f.state);
+  if (f.area) p.set("area", f.area);
   if (f.level) p.set("level", f.level);
-  if (f.remote) p.set("remote", 1);
   if (f.days) p.set("days", f.days);
   if (!flash) showLoading("Loading…");
   try {
