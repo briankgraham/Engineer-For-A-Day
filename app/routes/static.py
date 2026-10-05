@@ -18,7 +18,7 @@ _serve(("/", "/index.html"), os.path.join(WEB_DIR, "index.html"), "text/html; ch
 # Served with a CSP (a Blob worker would inherit the page's origin and network access): no fetch/XHR/WebSocket/importScripts.
 _serve(("/worker.js",), os.path.join(WEB_DIR, "worker.js"), JS,
        {"Content-Security-Policy": "default-src 'none'; script-src 'unsafe-eval'; connect-src 'none'"})
-for _name in ("sysdesign.js", "whiteboard.js", "jobs.js", "workspace.js", "aipair.js", "day.js", "assess.js", "behavioral.js"):
+for _name in ("sysdesign.js", "whiteboard.js", "jobs.js", "applications.js", "workspace.js", "aipair.js", "day.js", "assess.js", "behavioral.js"):
     _serve(("/" + _name,), os.path.join(WEB_DIR, _name), JS)
 _serve(("/sysdesign_data.js",), SD_FILE, JS)
 

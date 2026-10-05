@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 from ..config import ALLOWED_HOSTS, ALLOWED_ORIGINS, API_HEADER
 from ..errors import ApiError
 from ..llm import BACKEND, take_budget, translate
-from . import aipair, behavioral, day, jobs, practice, static, sysdesign, validate, walkthrough  # noqa: F401  (importing registers the routes)
+from . import aipair, applications, behavioral, day, jobs, practice, static, sysdesign, validate, walkthrough  # noqa: F401  (importing registers the routes)
 from .router import GET, POST
 
 DEFAULT_BODY_CAP = 65536

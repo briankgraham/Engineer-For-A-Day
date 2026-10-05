@@ -1,6 +1,7 @@
 # Local runtime data
 var/aipair_sessions/
 var/jobs_cache/
+var/applications.json
 var/practice/
 var/walkthroughs/
 var/day_sessions
