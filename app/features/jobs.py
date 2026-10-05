@@ -91,6 +91,59 @@ def level_of(title):
     return "mid"
 
 
+# The Jobs tab only lists Remote roles, the SF Bay Area (SF plus cities within roughly 30 miles, through Santa Clara / San Jose) and Austin.
+AREAS = (("remote", "Remote"), ("sf", "SF Bay Area"), ("austin", "Austin"))
+_BAY = re.compile(
+    r"\b(san francisco|sf|bay area|south san francisco|daly city|brisbane|san bruno|millbrae|burlingame|san mateo|foster city|belmont|"
+    r"san carlos|redwood city|redwood shores|menlo park|east palo alto|palo alto|los altos|mountain view|sunnyvale|santa clara|cupertino|"
+    r"san jose|campbell|los gatos|saratoga|milpitas|fremont|hayward|san leandro|alameda|oakland|emeryville|berkeley|"
+    r"walnut creek|pleasanton|livermore|san ramon|san rafael|mill valley|sausalito|novato|larkspur|pacifica|half moon bay|richmond|concord|union city|newark|albany|el cerrito|san pablo|martinez|orinda|atherton|portola valley|woodside|hillsborough|tiburon|corte madera|san anselmo|fairfax|los altos hills)\b", re.I)
+_AUSTIN = re.compile(r"\b(austin|round rock|cedar park|pflugerville|georgetown|leander|kyle|buda|manor|hutto)\b", re.I)
+
+
+_AFTER = re.compile(r"\s*,\s*([A-Za-z.]+)(?:\s+([A-Za-z]+))?")
+_NEUTRAL = {"remote", "hybrid", "onsite", "on-site", "bay"}
+
+
+def _in_area(text, pattern, state):
+    """True when a location part matches the pattern and the state named right after the match, if any, is `state`.
+
+    "Austin, MN" and "San Jose, Costa Rica" do not match; "Austin, TX, San Francisco, CA" matches both areas."""
+    for part in re.split(r"[;|/]", text or ""):
+        for m in pattern.finditer(part):
+            nxt = _AFTER.match(part, m.end())
+            if not nxt:
+                return True
+            w1, w2 = nxt.group(1), nxt.group(2)
+            for word in ((w1 + " " + w2) if w2 else None, w1):
+                if word and (word.upper() in STATES or word.lower() in STATE_BY_NAME):
+                    st = word.upper() if word.upper() in STATES else STATE_BY_NAME[word.lower()]
+                    if st == state:
+                        return True
+                    break
+            else:
+                if US_TOKEN.fullmatch(w1.strip(".")) or w1.lower() in _NEUTRAL:
+                    return True
+    return False
+
+
+@functools.lru_cache(maxsize=20000)
+def _areas(loc, remote):
+    out = {"remote"} if remote else set()
+    if _in_area(loc, _BAY, "CA"):
+        out.add("sf")
+    if _in_area(loc, _AUSTIN, "TX"):
+        out.add("austin")
+    return frozenset(out)
+
+
+def areas_of(j):
+    """AREAS keys a job belongs to, derived from its stored location so older cache files work too.
+
+    Only meaningful for jobs already classified as US (query() filters on that first)."""
+    return _areas(j.get("location") or "", bool(j.get("remote")))
+
+
 def classify_location(text, country=None, region=None, remote=False):
     """Return (is_us, state_abbr, remote) from free-text location fields."""
     text = (text or "").strip()
@@ -472,9 +525,10 @@ def query(q):
     """q: parsed query-string dict. Returns one page of filtered jobs from the cache; never contacts the job boards."""
     text = _one(q, "q").strip().lower()[:80]
     company = _one(q, "company")
-    state = _one(q, "state").upper()
+    area = _one(q, "area")
+    if area not in dict(AREAS):
+        area = ""
     level = _one(q, "level")
-    remote = _one(q, "remote") == "1"
     eng = _one(q, "eng", "1") == "1"
     days = _int(q, "days", 0, 0, 365)
     limit, offset = _int(q, "limit", 50, 1, 100), _int(q, "offset", 0, 0, 10 ** 6)
@@ -492,11 +546,12 @@ def query(q):
             more[c] = True
         all_us.extend(j for j in e["jobs"] if j["us"] and (j["eng"] or not eng))
     all_us = _dedupe(all_us)  # same role listed on two boards
-    counts, states, levels = {}, {}, {}
+    counts, areas, levels = {}, {}, {}
     for j in all_us:
-        if text and text not in j["title"].lower() and text not in j["dept"].lower():
+        ja = areas_of(j)
+        if not ja:
             continue
-        if remote and not j["remote"]:
+        if text and text not in j["title"].lower() and text not in j["dept"].lower():
             continue
         if cutoff and j["posted"] < cutoff:
             continue
@@ -504,16 +559,17 @@ def query(q):
         if company and j["company"] != company:
             continue
         lv = level_of(j["title"])
-        state_ok, level_ok = not state or j["state"] == state, not level or lv == level
-        if j["state"] and level_ok:
-            states[j["state"]] = states.get(j["state"], 0) + 1
-        if state_ok:
+        area_ok, level_ok = not area or area in ja, not level or lv == level
+        if level_ok:
+            for a in ja:
+                areas[a] = areas.get(a, 0) + 1
+        if area_ok:
             levels[lv] = levels.get(lv, 0) + 1
-        if state_ok and level_ok:
+        if area_ok and level_ok:
             rows.append(j)
     rows.sort(key=lambda j: (j["posted"], j["company"]), reverse=True)
     times = [e["at"] for e in (_entry(c) for c in boards()) if e]
-    return {"total": len(rows), "jobs": [{k: j[k] for k in ("company", "title", "location", "state", "remote", "url", "posted")} for j in rows[offset:offset + limit]],
-            "companies": sorted(counts.items(), key=lambda kv: kv[0].lower()), "states": sorted(states.items()), "levels": levels,
+    return {"total": len(rows), "jobs": [{k: j[k] for k in ("company", "title", "location", "remote", "url", "posted")} for j in rows[offset:offset + limit]],
+            "companies": sorted(counts.items(), key=lambda kv: kv[0].lower()), "areas": [[k, areas[k]] for k, _ in AREAS if k in areas], "levels": levels,
             "updated_at": datetime.fromtimestamp(min(times), timezone.utc).isoformat() if times else "",
             "boards": {"total": len(boards()), "ok": ok, "failed": failed, "loaded": ok + failed}, "more": more}

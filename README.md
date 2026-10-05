@@ -103,7 +103,7 @@ Timed tests in the style of an online assessment. Choose Quick (1 Medium in 30 m
 
 ## 💼 Jobs
 
-When you're ready to apply, this tab lists live US software openings from the companies in the tracker. Filter by keyword, company, state, seniority, remote, and how recently the job was posted. Click **Refresh** the first time you open it to pull fresh listings.
+When you're ready to apply, this tab lists live software openings from the companies in the tracker, limited to Remote roles, the SF Bay Area (San Francisco plus nearby cities through Santa Clara and San Jose) and Austin. Filter by keyword, company, area, seniority, and how recently the job was posted. Click **Refresh** the first time you open it to pull fresh listings.
 
 ---
 
