@@ -1,4 +1,4 @@
-// Jobs tab: live software openings (Remote, SF Bay Area, Austin) from /api/jobs. Loaded on first visit to the tab (see openJobs in index.html).
+// Jobs tab: live software openings (Remote, SF Bay Area, Austin) from /api/jobs, each with a Track button into My applications (applications.js). Loaded on first visit to the tab (see openJobs in index.html).
 (() => {
 const root = document.getElementById("tab-jobs");
 const PAGE = 50;
@@ -13,17 +13,23 @@ const ce = (tag, cls, text) => { const n = document.createElement(tag); if (cls)
 const LEVELS = [["intern", "Internship"], ["entry", "New grad / entry"], ["mid", "Mid-level"], ["senior", "Senior"], ["staff", "Staff / principal"], ["manager", "Management"]];
 const AREAS = { remote: "Remote", sf: "SF Bay Area", austin: "Austin" };
 const f = { q: "", company: "", area: "", level: "", eng: true, days: "" };
-let built = false, page = 0, gen = 0, companyNames = {};
+let built = false, page = 0, gen = 0, companyNames = {}, view = "open", last = null;
 const ui = {};
 const AKEY = "jobs.applied";
-let applied = {};
-try { applied = JSON.parse(localStorage.getItem(AKEY)) || {}; } catch (e) {}
-const saveApplied = () => { try { localStorage.setItem(AKEY, JSON.stringify(applied)); } catch (e) {} };
+let legacy = {};
+try { legacy = JSON.parse(localStorage.getItem(AKEY)) || {}; } catch (e) {}
+const saveLegacy = () => { try { if (Object.keys(legacy).length) localStorage.setItem(AKEY, JSON.stringify(legacy)); else localStorage.removeItem(AKEY); } catch (e) {} };
 
 function build() {
   built = true;
+  // Openings (the job boards) and My applications (window.Apps, applications.js) share the tab.
+  const top = ce("header", "jobs-top"), seg = ce("div", "jobs-seg");
+  top.append(ce("h1", null, "Jobs"), seg);
+  ui.vOpen = ce("button", null, "Openings"); ui.vApps = ce("button", null, "My applications");
+  ui.vOpen.onclick = () => setView("open"); ui.vApps.onclick = () => setView("apps");
+  seg.append(ui.vOpen, ui.vApps);
+  ui.openEl = ce("div"); ui.appsEl = ce("div"); ui.appsEl.hidden = true; Apps.mount(ui.appsEl);
   const header = ce("header"), main = ce("main");
-  header.appendChild(ce("h1", null, "Jobs"));
   ui.stats = ce("div", "stats"); header.appendChild(ui.stats);
   const bar = ce("div", "controls");
   ui.q = ce("input"); ui.q.type = "search"; ui.q.placeholder = "Search title or team…";
@@ -53,7 +59,7 @@ function build() {
   header.appendChild(bar);
 
   const table = ce("table");
-  table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th><th title=\"Check when you have submitted an application (saved in this browser)\">Applied</th></tr></thead>";
+  table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th><th></th></tr></thead>";
   ui.rows = ce("tbody"); table.appendChild(ui.rows);
   const st = ce("style", null, "#tab-jobs tr.applied td:not(:last-child){opacity:.55}");
   header.appendChild(st);
@@ -66,7 +72,9 @@ function build() {
   ui.more.onclick = doFetchMore;
   ui.note = ce("p"); ui.note.style.cssText = "color:var(--muted);font-size:12px;max-width:80ch;margin:16px auto 0;text-align:center";
   main.append(table, pager, ui.more, ui.note);
-  root.replaceChildren(header, main);
+  ui.openEl.append(header, main);
+  root.replaceChildren(top, ui.openEl, ui.appsEl);
+  Apps.onChange(() => { if (last) markTracked(); });
 
   let deb = null;
   ui.q.oninput = () => { clearTimeout(deb); deb = setTimeout(() => { f.q = ui.q.value.trim(); apply(); }, 250); };
@@ -90,6 +98,38 @@ function build() {
 
 const apply = () => { page = 0; load(); };
 
+function setView(v) {
+  view = v;
+  ui.vOpen.classList.toggle("on", v === "open"); ui.vApps.classList.toggle("on", v === "apps");
+  ui.openEl.hidden = v !== "open"; ui.appsEl.hidden = v !== "apps";
+  if (v === "apps") Apps.show(ui.appsEl);
+}
+
+// Track opens the My applications editor prefilled from the posting; once tracked the button opens that record instead.
+// Rows you have applied to (an applied date, or moved past Saved) are dimmed.
+const isApplied = a => !!a && (!!a.applied_on || a.status !== "saved");
+function markTracked() {
+  ui.rows.querySelectorAll("button.track").forEach(b => {
+    const a = Apps.byUrl(b.dataset.url);
+    b.textContent = a ? "Tracked ✓" : "Track"; b.classList.toggle("on", !!a);
+    b.title = a ? `${Apps.label(a.status)}: open it in My applications` : "Track this posting in My applications";
+    b.closest("tr").classList.toggle("applied", isApplied(a));
+  });
+}
+
+// Before tracking lived on the server, an Applied checkbox kept {url: date} in this browser; each mark moves into
+// My applications the first time its row is shown.
+async function migrate(j) {
+  const date = legacy[j.url];
+  try {
+    await Apps.load();
+    const a = Apps.byUrl(j.url);
+    if (!isApplied(a)) await Apps.save(a ? { ...a, status: "applied", applied_on: date }
+      : { company: j.company, title: j.title, location: j.location, url: j.url, source: "board", status: "applied", applied_on: date });
+    delete legacy[j.url]; saveLegacy();
+  } catch (e) {}  // server unreachable: keep the local mark and try again next time the row is shown
+}
+
 function ago(iso) {
   if (!iso) return "";
   const d = Math.floor((Date.now() - Date.parse(iso + "T12:00:00Z")) / 864e5);
@@ -100,6 +140,7 @@ function ago(iso) {
 }
 
 function render(d) {
+  last = d;
   ui.rows.replaceChildren();
   d.jobs.forEach(j => {
     const tr = ce("tr");
@@ -110,14 +151,11 @@ function render(d) {
     const loc = ce("td", "topics", j.location); if (j.remote && !/remote/i.test(j.location)) loc.textContent += " · Remote";
     tr.appendChild(loc);
     const p = ce("td", "num", ago(j.posted)); p.title = j.posted; tr.appendChild(p);
-    const ap = ce("td"), box = ce("input");
-    box.type = "checkbox"; box.checked = !!applied[j.url]; box.title = "I have submitted an application";
-    tr.classList.toggle("applied", box.checked);
-    box.onchange = () => {
-      if (box.checked) applied[j.url] = new Date().toISOString().slice(0, 10); else delete applied[j.url];
-      tr.classList.toggle("applied", box.checked); saveApplied();
-    };
-    ap.appendChild(box); tr.appendChild(ap);
+    const tc = ce("td", "num"), tb = ce("button", "track", "Track");
+    tb.dataset.url = j.url;
+    tb.onclick = () => Apps.open(Apps.byUrl(j.url) || { company: j.company, title: j.title, location: j.location, url: j.url, source: "board" });
+    tc.appendChild(tb); tr.appendChild(tc);
+    if (legacy[j.url]) migrate(j);
     ui.rows.appendChild(tr);
   });
   if (!d.jobs.length) {
@@ -142,6 +180,7 @@ function render(d) {
   ui.stats.textContent = b.loaded
     ? `${d.companies.length} companies hiring · updated ${age}` + (b.failed ? ` · ${b.failed} boards unavailable` : "")
     : "Nothing loaded yet";
+  markTracked();
   ui.note.textContent = `Covers the ${b.total} companies from this tracker that publish on Greenhouse, Lever, Ashby or Workday. Google, Amazon, Meta, Microsoft and Apple run their own sites: `;
   NOT_COVERED.forEach(([n, u], i) => {
     const a = ce("a", null, n); a.href = u; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -225,5 +264,10 @@ async function doFetchMore() {
   ui.more.disabled = false;
 }
 
-window.jobsInit = () => { if (!built) build(); page = 0; load(); };
+window.jobsInit = () => {
+  if (!built) { build(); setView("open"); }
+  if (view === "apps") return Apps.show(ui.appsEl);
+  page = 0; load();
+  Apps.load().catch(() => {});  // to mark rows already tracked
+};
 })();

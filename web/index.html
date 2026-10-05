@@ -242,6 +242,25 @@ button.busy::before{width:12px;height:12px;border-color:color-mix(in srgb,curren
 #pstat.busy::before{width:12px;height:12px}
 /* ===== end pass D ===== */
 .dfb{white-space:pre-wrap;margin:8px 0;padding:8px 12px;border-radius:var(--radius);background:var(--head)}.dfb.busy{color:var(--muted)}
+/* Jobs tab: Openings / My applications */
+header.jobs-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-bottom:0}header.jobs-top h1{margin:0}
+.jobs-seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.jobs-seg button{border:0;border-radius:0;min-height:30px}.jobs-seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+button.track{min-height:28px;padding:3px 10px;font-size:12px;white-space:nowrap}button.track.on{color:var(--easy)}
+tr.app-row{cursor:pointer}.app-sub{color:var(--muted);font-size:12px;margin-top:2px}
+select.app-status{min-height:28px;padding:3px 8px;font-size:12px;font-weight:600}
+.s-applied{color:var(--accent)}.s-interviewing{color:var(--med)}.s-offer{color:var(--easy)}.s-rejected{color:var(--hard)}.s-withdrawn,.s-ghosted,.s-saved{color:var(--muted)}
+dialog.app-dlg{width:min(640px,94vw)}
+.app-form{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}@media (max-width:560px){.app-grid{grid-template-columns:1fr}}
+.app-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}.app-field>input,.app-field>select,.app-field>textarea{color:var(--fg);font-size:14px}
+.app-field textarea{font:inherit;padding:8px 12px;border:1px solid var(--line);resize:vertical}
+.app-inline{display:flex;align-items:center;gap:8px;color:var(--fg)}.app-inline input[type=date]{flex:1;min-width:0}
+.app-evh{display:flex;justify-content:space-between;align-items:center}
+.app-events{display:flex;flex-direction:column;gap:6px}.app-events:empty{display:none}
+.app-ev{display:grid;grid-template-columns:150px 170px 1fr auto;gap:6px}@media (max-width:560px){.app-ev{grid-template-columns:1fr 1fr}}
+.app-err{color:var(--hard)!important;padding:0!important}.app-err:empty{display:none}
+.app-foot{display:flex;justify-content:space-between}.app-save{margin-left:auto;background:var(--accent);color:#fff;border-color:var(--accent)}.app-save:hover{background:var(--accent);filter:brightness(1.1)}.app-del{color:var(--hard)}.app-del[hidden]{display:none}
 #sdview textarea{margin-top:8px}
 /* ===== mock interview depth ===== */
 .sd .hero{position:relative;overflow:hidden;margin:0 0 16px;padding:20px 24px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(135deg,var(--accent-soft),transparent 70%),var(--surface);box-shadow:var(--shadow-md)}
@@ -373,16 +392,15 @@ button.busy::before{width:12px;height:12px;border-color:color-mix(in srgb,curren
 <script>
 (function(){
   const tabs=[...document.querySelectorAll("nav.tabs button[data-tab]")];
-  // The Jobs tab's script and data are fetched only the first time the tab is opened.
+  // The Jobs tab's scripts (applications.js, then jobs.js) and data are fetched only the first time the tab is opened.
   let jobsLoading=false;
   const openJobs=()=>{
     if(window.jobsInit)return jobsInit();
     if(jobsLoading)return;
     jobsLoading=true;
-    const sc=document.createElement("script");sc.src="jobs.js";
-    sc.onload=()=>jobsInit();
-    sc.onerror=()=>{jobsLoading=false;document.getElementById("tab-jobs").textContent="Jobs need the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
-    document.head.appendChild(sc);
+    const fail=()=>{jobsLoading=false;document.getElementById("tab-jobs").textContent="Jobs need the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
+    const add=(src,next)=>{const sc=document.createElement("script");sc.src=src;sc.onload=next;sc.onerror=fail;document.head.appendChild(sc)};
+    add("applications.js",()=>add("jobs.js",()=>jobsInit()));
   };
   // workspace.js (window.WS: test harness, runner, apply helpers) is shared by the AI Pairing and Engineer for a Day tabs.
   let wsCbs=null;

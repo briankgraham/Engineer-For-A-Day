@@ -15,6 +15,7 @@ DAY_DIR = os.path.join(ROOT, "day_scenarios")
 DAY_SESSIONS = os.path.join(VAR_DIR, "day_sessions")  # Engineer for a Day: per-attempt log of served flaws and the evaluation
 JOBS_BOARDS_FILE = os.path.join(DATA_DIR, "jobs_boards.json")
 JOBS_CACHE_DIR = os.path.join(VAR_DIR, "jobs_cache")
+APPLICATIONS_FILE = os.path.join(VAR_DIR, "applications.json")  # Jobs tab: applications you are tracking
 
 
 def load_env():
