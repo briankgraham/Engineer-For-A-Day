@@ -1,0 +1,33 @@
+{
+  "substring-match": [
+    {
+      "file": "mutes.js",
+      "from": "  return new RegExp(\"(?<![\\\\p{L}\\\\p{N}])\" + body + \"(?![\\\\p{L}\\\\p{N}])\", \"iu\");",
+      "to": "  return new RegExp(body, \"iu\");"
+    }
+  ],
+  "cursor-timestamp-only": [
+    {
+      "file": "feed.js",
+      "from": "      .filter(p => !after || cmp(after, p) < 0);",
+      "to": "      .filter(p => !after || p.createdAt < after.createdAt);"
+    }
+  ],
+  "short-pages-ok": [
+    {
+      "file": "feed.js",
+      "from": "follows.has(p.authorId) && !hidden(p))",
+      "to": "follows.has(p.authorId))"
+    },
+    {
+      "file": "feed.js",
+      "from": "    const page = rest.slice(0, limit);",
+      "to": "    const slice = rest.slice(0, limit), page = slice.filter(p => !hidden(p));"
+    },
+    {
+      "file": "feed.js",
+      "from": "encode(page[page.length - 1])",
+      "to": "encode(slice[slice.length - 1])"
+    }
+  ]
+}
