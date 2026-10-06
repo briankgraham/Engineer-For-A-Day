@@ -256,6 +256,7 @@ function viewTopic(v,id){
   add(v,backBtn("All topics","topics"),h("h2",null,t.name),h("div","meta",t.group),h("p",null,t.summary));
   v.appendChild(controls(kt(id)));
   sect(v,"When to use it",t.use);sect(v,"Trade-offs",t.tradeoffs);sect(v,"Common pitfalls",t.pitfalls);
+  (t.deep||[]).forEach(([title,items])=>sect(v,title,items));
   const rel=SD.problems.filter(p=>p.topics.includes(id));
   if(rel.length){v.appendChild(h("h3",null,"Practice with these designs"));rel.forEach(p=>v.appendChild(chip(p.name,"problem/"+p.id,isDone(kp(p.id)))))}
 }
