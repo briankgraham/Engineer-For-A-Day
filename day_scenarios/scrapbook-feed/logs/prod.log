@@ -1,0 +1,33 @@
+2026-11-09T09:00:00.000Z INFO  release  release.rollout app=7.12 percent=100 summary="infinite scroll: prefetch the next feed page at 70% scroll (was 90%)"
+2026-11-16T19:05:11.402Z INFO  audit    audit.sample window=1h sessions=18400 duplicates=148 gaps=61 duplicate_rate=0.8% note="above the 0.5% alert threshold, but the alert was muted on Nov 10; FEED-77 open, low priority"
+2026-11-19T08:40:02.100Z INFO  moderation moderation.bulk_delete count=212 reason=spam_wave
+2026-11-19T08:55:00.000Z INFO  flags    flag.value name=feed_bulk_import value=on note="partner import running 08:00 to 11:00"
+2026-11-19T09:02:11.114Z INFO  feed-w2 v3.8 feed.page req=r_3a91 user=u_5120 app=7.11 cursor=- limit=20 returned=20 first=p_0048213 last=p_0048194
+2026-11-19T09:02:14.050Z INFO  feed-w1 v3.8 post.created id=p_0048214 author=u_880
+2026-11-19T09:02:19.870Z INFO  feed-w4 v3.8 post.created id=p_0048215 author=u_2231
+2026-11-19T09:02:27.311Z INFO  feed-w3 v3.8 post.created id=p_0048216 author=u_880
+2026-11-19T09:02:31.077Z INFO  feed-w5 v3.8 feed.page req=r_3b02 user=u_5120 app=7.11 cursor=o:20 limit=20 returned=20 first=p_0048196 last=p_0048177
+2026-11-19T09:02:31.240Z INFO  audit    audit.session user=u_5120 pages=2 duplicates=3 gaps=0
+2026-11-19T09:03:02.514Z INFO  feed-w1 v3.8 feed.page req=r_3c47 user=u_7733 app=7.12 cursor=- limit=20 returned=20 first=p_0048219 last=p_0048199
+2026-11-19T09:03:09.220Z INFO  feed-w4 v3.8 feed.page req=r_3c9e user=u_7733 app=7.12 cursor=o:20 limit=20 returned=20 first=p_0048198 last=p_0048179
+2026-11-19T09:03:09.330Z INFO  audit    audit.session user=u_7733 pages=2 duplicates=0 gaps=1
+2026-11-19T09:03:09.331Z INFO  moderation moderation.delete id=p_0048204 by=user note="author deleted their own post at 09:03:05 (between the two pages)"
+2026-11-19T09:04:40.001Z INFO  feed-w2 v3.8 feed.page req=r_3e10 user=u_9012 app=7.11 cursor=- limit=20 returned=20 first=p_0048231 last=p_0048210
+2026-11-19T09:04:58.450Z INFO  feed-w3 v3.8 feed.page req=r_3e5c user=u_9012 app=7.11 cursor=o:20 limit=20 returned=20 first=p_0048213 last=p_0048192
+2026-11-19T09:04:58.560Z INFO  audit    audit.session user=u_9012 pages=2 duplicates=8 gaps=0
+2026-11-19T09:05:30.000Z INFO  edge     edge.stats path=/v1/feed cache_status=BYPASS ratio=100%
+2026-11-19T09:08:00.000Z INFO  audit    audit.sample window=5m sessions=1620 duplicates=71 gaps=19 duplicate_rate=4.4% app_7.11=4.6% app_7.12=4.2% app_web=4.1%
+2026-11-19T09:08:00.010Z WARN  alerts   alert.firing name=feed_duplicate_rate value=4.4% threshold=0.5%
+2026-11-19T09:10:00.000Z INFO  ingest   post_rate window=1m posts=11280 per_second=188 note="evening peak, partner import adds ~60/s"
+2026-11-19T09:12:41.330Z INFO  feed-w6 v3.8 feed.page req=r_4a02 user=u_3320 app=7.12 cursor=- limit=20 returned=20 first=p_0048320 last=p_0048301
+2026-11-19T09:12:44.100Z INFO  feed-w6 v3.8 feed.page req=r_4a07 user=u_3320 app=7.12 cursor=o:20 limit=20 returned=20 first=p_0048316 last=p_0048297
+2026-11-19T09:12:44.210Z INFO  audit    audit.session user=u_3320 pages=2 duplicates=5 gaps=0 gap_between_pages_ms=2770
+2026-11-19T09:15:20.400Z INFO  feed-w1 v3.8 feed.page req=r_4c11 user=u_1442 app=7.11 cursor=- limit=20 returned=20 first=p_0048352 last=p_0048330
+2026-11-19T09:15:55.903Z INFO  feed-w2 v3.8 feed.page req=r_4c80 user=u_1442 app=7.11 cursor=o:20 limit=20 returned=20 first=p_0048356 last=p_0048335
+2026-11-19T09:15:56.010Z INFO  audit    audit.session user=u_1442 pages=2 duplicates=0 gaps=11 gap_between_pages_ms=35100 note="spam purge 08:40 left holes; 11 posts after the first page moved up"
+2026-11-19T09:20:00.000Z INFO  audit    audit.sample window=5m sessions=1655 duplicates=69 gaps=21 duplicate_rate=4.2% app_7.11=4.3% app_7.12=4.1% app_web=4.2%
+2026-11-19T09:25:00.000Z INFO  support  support.tickets topic=feed_duplicates last_hour=214 sample="same photo twice" sample="posts missing after scrolling"
+2026-11-19T09:30:00.000Z INFO  audit    audit.sample window=5m sessions=1590 duplicates=64 gaps=18 duplicate_rate=4.0% app_7.11=4.1% app_7.12=3.9% app_web=4.0%
+2026-11-19T09:45:00.000Z INFO  audit    audit.sample window=5m sessions=1488 duplicates=51 gaps=17 duplicate_rate=3.4% app_7.11=3.5% app_7.12=3.3% app_web=3.3%
+2026-11-19T10:00:00.000Z INFO  audit    audit.sample window=5m sessions=1702 duplicates=66 gaps=22 duplicate_rate=3.9% app_7.11=4.0% app_7.12=3.8% app_web=3.9%
+2026-11-19T10:15:00.000Z INFO  audit    audit.sample window=5m sessions=1731 duplicates=71 gaps=20 duplicate_rate=4.1% app_7.11=4.2% app_7.12=4.0% app_web=4.1%

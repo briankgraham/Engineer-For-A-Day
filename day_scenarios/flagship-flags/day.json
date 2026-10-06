@@ -1,0 +1,385 @@
+{
+  "order": 4,
+  "title": "Flagship: feature flags",
+  "company": "Flagship",
+  "blurb": "Your first full day on the feature-flag platform every product depends on. Percentage rollouts to build, an evaluation cache PR to review, an edge-evaluation RFC to read, and a kill switch that isn't killing anything.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": {
+    "start": "09:00",
+    "end": "17:30"
+  },
+  "service": "flags",
+  "testFile": "flags.test.js",
+  "incident": {
+    "name": "INC-0733",
+    "page": "t-page"
+  },
+  "newHire": "The candidate joined Flagship (the feature-flag service used by every Quillbox product) as a senior engineer this week, and today is their first full day of real work. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Nadia.",
+  "personas": [
+    {
+      "id": "nadia",
+      "name": "Nadia Okafor",
+      "role": "Senior Engineer · your onboarding buddy",
+      "color": "#7c5cff"
+    },
+    {
+      "id": "kofi",
+      "name": "Kofi Mensah",
+      "role": "Software Engineer",
+      "color": "#1f9d74"
+    },
+    {
+      "id": "elena",
+      "name": "Elena Rossi",
+      "role": "Product Manager, Growth",
+      "color": "#e0752d"
+    },
+    {
+      "id": "sam",
+      "name": "Sam Park",
+      "role": "SRE · Incident Commander",
+      "color": "#d6455d"
+    }
+  ],
+  "channels": [
+    {
+      "id": "team",
+      "name": "#flagship-team",
+      "members": [
+        "nadia",
+        "kofi",
+        "elena"
+      ],
+      "responder": "nadia"
+    },
+    {
+      "id": "incident",
+      "name": "#inc-0733-checkout-kill-switch",
+      "members": [
+        "sam",
+        "nadia"
+      ],
+      "responder": "sam",
+      "locked": true
+    },
+    {
+      "id": "dm-nadia",
+      "name": "Nadia Okafor",
+      "dm": true,
+      "members": [
+        "nadia"
+      ],
+      "responder": "nadia"
+    },
+    {
+      "id": "dm-elena",
+      "name": "Elena Rossi",
+      "dm": true,
+      "members": [
+        "elena"
+      ],
+      "responder": "elena"
+    },
+    {
+      "id": "dm-kofi",
+      "name": "Kofi Mensah",
+      "dm": true,
+      "members": [
+        "kofi"
+      ],
+      "responder": "kofi"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "FLAG-310",
+      "title": "Percentage rollouts",
+      "reporter": "elena",
+      "status": "To do · assigned to you",
+      "body": "Right now a flag is all or nothing for the people who match its rules. Growth wants to turn a feature on for 5% of users, watch the numbers, and ramp up. Same user, same answer every time, and ramping up must never take the feature away from anyone who already has it.",
+      "requirements": [
+        "setRollout(key, percent) sets what share of matching users get the flag. percent is an integer from 0 to 100, anything else throws RangeError. An unknown flag throws FLAG_NOT_FOUND. getFlag(key).rollout shows it; new flags start at 100.",
+        "bucketOf(key, userId) returns the user's bucket for that flag, an integer from 0 to 99. A user is in the rollout when bucket < percent: 0% is nobody, 100% is everybody.",
+        "Order of evaluation for an enabled flag: users on the allow list are always in (percentage and rules do not apply); then every attribute rule must match; then the rollout percentage. A disabled flag is off for everyone, including the allow list.",
+        "Bucketing is deterministic: the same user and flag give the same bucket on every node, in every process, after every restart. Do not use randomness or stored state.",
+        "Buckets are spread evenly (20% of 10,000 users should select between 1,800 and 2,200), and independent across flags: two different flags at 50% should overlap by about 25% of users, not 50%.",
+        "Raising the percentage never removes a user who was already in, and lowering it never adds one.",
+        "A change publishes a new version like every other change (use ctx.commit). Setting the percentage a flag already has changes nothing: no new version, no message. Other nodes that apply the update evaluate with the new percentage."
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "508",
+      "title": "Cache evaluation results for 60 seconds",
+      "author": "kofi",
+      "file": "prs/pr-508.md",
+      "locked": true,
+      "revisions": [
+        {
+          "rev": 2,
+          "file": "prs/pr-508-v2.md"
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "id": "flagship-notes",
+      "title": "Flagship: how flags reach your code",
+      "author": "nadia",
+      "file": "docs/flagship-notes.md"
+    },
+    {
+      "id": "rfc-edge",
+      "title": "RFC: Evaluate flags at the edge",
+      "author": "nadia",
+      "file": "docs/rfc-edge.md",
+      "locked": true,
+      "comments": true
+    }
+  ],
+  "logs": {
+    "file": "logs/prod.log",
+    "locked": true,
+    "example": "new-checkout or /sync\\.(applied|ignored)/"
+  },
+  "files": [
+    "app.js",
+    "flags.js",
+    "sync.js",
+    "evaluate.js",
+    "rollout.js",
+    "store.js"
+  ],
+  "tasks": [
+    {
+      "id": "feature",
+      "title": "Ship FLAG-310: percentage rollouts",
+      "item": "ticket:FLAG-310",
+      "unlock": "start"
+    },
+    {
+      "id": "review",
+      "title": "Review Kofi's PR #508",
+      "item": "pr:508",
+      "unlock": "t-pr"
+    },
+    {
+      "id": "incident",
+      "title": "INC-0733: kill switch not reaching users",
+      "item": "channel:incident",
+      "unlock": "t-page"
+    },
+    {
+      "id": "scope",
+      "title": "Answer Elena about scheduled ramps",
+      "item": "ticket:FLAG-310",
+      "unlock": "t-scope"
+    },
+    {
+      "id": "rfc",
+      "title": "Comment on Nadia's edge RFC",
+      "item": "doc:rfc-edge",
+      "unlock": "t-rfc"
+    },
+    {
+      "id": "handoff",
+      "title": "Write your end-of-day handoff",
+      "item": "handoff",
+      "unlock": "t-eod"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t-welcome",
+      "at": "09:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "nadia",
+        "text": "Morning, and welcome! 👋 Your first ticket is **FLAG-310** (percentage rollouts): it's under Tickets, and Elena owns it. The repo is under Code; `flags.test.js` is what CI runs. The notes in Docs explain how a change gets from the admin UI to the eval nodes. Ask me anything."
+      }
+    },
+    {
+      "id": "t-elena-hello",
+      "at": "09:05",
+      "do": {
+        "type": "message",
+        "channel": "dm-elena",
+        "from": "elena",
+        "text": "Hey, welcome! Percentage rollouts are what Growth has wanted all year. We're launching the **new checkout** to everyone in US and CA and I'd much rather ramp it than flip it. I need this for **Thursday** so we can use it on the next launch. Ping me with any questions on the ticket."
+      }
+    },
+    {
+      "id": "t-pr",
+      "at": "09:30",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "kofi",
+        "text": "Could someone review **PR #508**? It caches flag evaluations for 60 s, which cuts about a third of our CPU in the load test. The bot already approved. Would be great to merge before Friday's load test 🙂",
+        "unlock": [
+          "pr:508"
+        ]
+      }
+    },
+    {
+      "id": "t-page",
+      "at": "10:20",
+      "do": {
+        "type": "page",
+        "channel": "incident",
+        "from": "sam",
+        "text": "🚨 **SEV-2 · INC-0733**: Elena switched the `new-checkout` flag **off at 10:02** after card errors on the new checkout, but the `new_checkout_exposure` alert says **33% of checkout sessions are still on it** and card errors are still elevated. A kill switch that doesn't kill. You're secondary on-call, so please take point on investigating. Logs are under Logs. I'm IC: tell me what you find and what you want to do.",
+        "unlock": [
+          "channel:incident",
+          "logs"
+        ]
+      }
+    },
+    {
+      "id": "t-vendor",
+      "at": "10:24",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "My read: the flag *is* off in the control plane, so this is client caching. The SDK caches answers for 5 minutes and the CDN config has `max_age=300`, so people with open tabs are stuck on the old state. My plan: post on the status page that the change is propagating and will clear within minutes, and wait it out. I'll post in ~10 min unless you see something different."
+      }
+    },
+    {
+      "id": "t-vendor-go",
+      "at": "10:36",
+      "unless": "posted:incident",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "No objections, so I've posted: \"The new-checkout change is propagating through client caches and will clear within a few minutes.\" Waiting."
+      }
+    },
+    {
+      "id": "t-vendor-done",
+      "at": "10:52",
+      "after": "t-vendor-go",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "It's 10:52. That's 50 minutes since the switch, ten times the SDK cache, and exposure is **still 33%**. Support says customers on new tabs get the new checkout too. So it isn't just client caches, and our status message is wrong. What else could it be? I need a hypothesis from you."
+      }
+    },
+    {
+      "id": "t-nadia-busy",
+      "at": "10:26",
+      "do": {
+        "type": "message",
+        "channel": "dm-nadia",
+        "from": "nadia",
+        "text": "Saw the page. I'm in a design review until ~11:30 but I'll check Slack between sessions. The \"Sync\" section of the Flagship notes covers how a change gets to each node, worth a read."
+      }
+    },
+    {
+      "id": "t-nudge",
+      "do": {
+        "type": "nudge",
+        "channel": "incident",
+        "from": "sam",
+        "after": "t-page",
+        "until": "incident_resolved",
+        "quietMinutes": 6,
+        "texts": [
+          "Status update? Payments wants to know whether to keep refunding failed checkouts.",
+          "I need an update for the status page: what do we know, and what's next?",
+          "Still with us? Leadership is asking in #exec. Even 'still investigating, next update in 15' helps."
+        ]
+      }
+    },
+    {
+      "id": "t-resolved",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "Thanks. Marking INC-0733 resolved. Please post a short summary here for the postmortem: user impact, root cause, what's fixed or mitigated, and follow-ups with owners."
+      }
+    },
+    {
+      "id": "t-kofi-ping",
+      "at": "11:45",
+      "unless": "pr_reviewed:508",
+      "do": {
+        "type": "message",
+        "channel": "dm-kofi",
+        "from": "kofi",
+        "text": "Hey, any chance you could look at #508 today? The load test is Friday and I'd love to show the CPU savings 🙏"
+      }
+    },
+    {
+      "id": "t-scope",
+      "at": "13:30",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "dm-elena",
+        "from": "elena",
+        "text": "Thanks for handling the incident! Quick one: for the launch, Growth now wants two more things by **Thursday**: **scheduled ramps** (5% → 25% → 50% → 100% over three days, automatically) and **'everyone except' exclusion lists** (never show it to these customers). Code freeze is **Wednesday 6 PM**. Doable? Please answer on FLAG-310 so it's on record."
+      }
+    },
+    {
+      "id": "t-rfc",
+      "at": "14:15",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "nadia",
+        "text": "I've written up the edge-evaluation RFC (Docs → *RFC: Evaluate flags at the edge*). Please leave a comment before Thursday's design review, especially after this morning.",
+        "unlock": [
+          "doc:rfc-edge"
+        ]
+      }
+    },
+    {
+      "id": "t-elena-check",
+      "at": "15:40",
+      "do": {
+        "type": "message",
+        "channel": "dm-elena",
+        "from": "elena",
+        "text": "How's FLAG-310 looking for Thursday? Anything I should warn the launch team about?"
+      }
+    },
+    {
+      "id": "t-eod",
+      "at": "17:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "nadia",
+        "text": "Heading out soon. Before you go, could you write a short **handoff** (Handoff in the sidebar): what's done, what's open, and what someone needs to pick up tomorrow. Solid first day 🙌",
+        "unlock": [
+          "handoff"
+        ]
+      }
+    },
+    {
+      "id": "t-pr-v2",
+      "when": "pr_feedback:508",
+      "delay": 30,
+      "unless": "pr_approved:508",
+      "do": {
+        "type": "followup",
+        "thread": "pr:508",
+        "from": "kofi",
+        "revise": {
+          "pr": "508",
+          "rev": 2
+        },
+        "text": "Pushed an update (commit 2, \"Address review\"): the cache is cleared whenever a node applies an update, the key can't collide any more, it's capped at 100k entries and lives in the store, and it uses `now()`. Put the assertion back too. Could you take another look? Would love to merge before EOD 🙏"
+      }
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "order": 5,
+  "title": "Scrapbook: the feed API",
+  "company": "Scrapbook",
+  "blurb": "Your first full day on the feed team at a photo-sharing app. Muted words to build, a page-numbers PR to review, a ranked-feed RFC to read, and people are seeing the same photo twice while others' posts go missing.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": {
+    "start": "09:00",
+    "end": "17:30"
+  },
+  "service": "feed",
+  "testFile": "feed.test.js",
+  "incident": {
+    "name": "INC-0841",
+    "page": "t-page"
+  },
+  "newHire": "The candidate joined Scrapbook's feed team (the service behind the home feed of the Scrapbook photo-sharing app) as a senior engineer this week, and today is their first full day of real work. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Ines.",
+  "personas": [
+    {
+      "id": "ines",
+      "name": "Ines Duarte",
+      "role": "Senior Engineer · your onboarding buddy",
+      "color": "#7c5cff"
+    },
+    {
+      "id": "tariq",
+      "name": "Tariq Aziz",
+      "role": "Software Engineer",
+      "color": "#1f9d74"
+    },
+    {
+      "id": "june",
+      "name": "June Whitfield",
+      "role": "Product Manager",
+      "color": "#e0752d"
+    },
+    {
+      "id": "owen",
+      "name": "Owen Brandt",
+      "role": "SRE · Incident Commander",
+      "color": "#d6455d"
+    }
+  ],
+  "channels": [
+    {
+      "id": "team",
+      "name": "#feed-team",
+      "members": [
+        "ines",
+        "tariq",
+        "june"
+      ],
+      "responder": "ines"
+    },
+    {
+      "id": "incident",
+      "name": "#inc-0841-feed-duplicates",
+      "members": [
+        "owen",
+        "ines"
+      ],
+      "responder": "owen",
+      "locked": true
+    },
+    {
+      "id": "dm-ines",
+      "name": "Ines Duarte",
+      "dm": true,
+      "members": [
+        "ines"
+      ],
+      "responder": "ines"
+    },
+    {
+      "id": "dm-june",
+      "name": "June Whitfield",
+      "dm": true,
+      "members": [
+        "june"
+      ],
+      "responder": "june"
+    },
+    {
+      "id": "dm-tariq",
+      "name": "Tariq Aziz",
+      "dm": true,
+      "members": [
+        "tariq"
+      ],
+      "responder": "tariq"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "SCRAP-412",
+      "title": "Muted words",
+      "reporter": "june",
+      "status": "To do · assigned to you",
+      "body": "People tell us the feed is full of things they do not want to see (spoilers for a show, an ex's name, a football team during the final). Let them mute words and phrases, for good or for a while, so those posts just do not show up.",
+      "requirements": [
+        "muteWord(userId, phrase, { hours }) mutes a phrase for that user. The phrase is trimmed, runs of whitespace collapse to one space and it is stored lowercase. It must have 1 to 40 characters after that, otherwise RangeError (this includes non-strings). hours is optional: a positive integer, otherwise RangeError. An unknown user throws USER_NOT_FOUND. It returns { phrase, until }.",
+        "A mute with hours lasts that many hours from now (until = now() + hours * 3,600,000 ms) and stops applying exactly at until. Without hours it never expires. Muting a phrase again (any letter case) replaces its expiry. A person can have at most 100 active mutes (a 101st new phrase throws RangeError); replacing one or letting one expire does not count against that.",
+        "unmuteWord(userId, phrase) removes a mute and returns true if there was an active one, otherwise false. getMutes(userId) lists the active mutes as [{ phrase, until }] (until is a number or null), sorted by phrase, as copies.",
+        "A post is hidden from a viewer's feed when its text contains one of their muted phrases. Matching is case-insensitive and literal (characters like . + ? ( $ are not special). A phrase of several words matches those words in order with any whitespace between them.",
+        "A muted phrase must not touch a letter or a digit on either side: muting \"cat\" hides \"My CAT is asleep\", \"cat!\" and \"the cat's toy\", but not \"category\", \"concatenate\" or \"cat5\". Letters in any script count as letters.",
+        "Mutes belong to the viewer: other people's feeds are not affected.",
+        "A page is full. When posts are hidden, getFeed takes the next visible ones, so every page except the last has exactly `limit` items, nextCursor is null when nothing visible is left, and nobody sees a short page in the middle of the feed."
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "377",
+      "title": "Page numbers and a total count for the web feed",
+      "author": "tariq",
+      "file": "prs/pr-377.md",
+      "locked": true,
+      "revisions": [
+        {
+          "rev": 2,
+          "file": "prs/pr-377-v2.md"
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "id": "feed-notes",
+      "title": "The feed API: how it works",
+      "author": "ines",
+      "file": "docs/feed-notes.md"
+    },
+    {
+      "id": "rfc-ranked",
+      "title": "RFC: A ranked feed",
+      "author": "ines",
+      "file": "docs/rfc-ranked.md",
+      "locked": true,
+      "comments": true
+    }
+  ],
+  "logs": {
+    "file": "logs/prod.log",
+    "locked": true,
+    "example": "u_5120 or /audit\\.session/"
+  },
+  "files": [
+    "app.js",
+    "feed.js",
+    "mutes.js",
+    "posts.js",
+    "users.js",
+    "store.js"
+  ],
+  "tasks": [
+    {
+      "id": "feature",
+      "title": "Ship SCRAP-412: muted words",
+      "item": "ticket:SCRAP-412",
+      "unlock": "start"
+    },
+    {
+      "id": "review",
+      "title": "Review Tariq's PR #377",
+      "item": "pr:377",
+      "unlock": "t-pr"
+    },
+    {
+      "id": "incident",
+      "title": "INC-0841: duplicate and missing posts",
+      "item": "channel:incident",
+      "unlock": "t-page"
+    },
+    {
+      "id": "scope",
+      "title": "Answer June about regex mutes",
+      "item": "ticket:SCRAP-412",
+      "unlock": "t-scope"
+    },
+    {
+      "id": "rfc",
+      "title": "Comment on Ines's ranked-feed RFC",
+      "item": "doc:rfc-ranked",
+      "unlock": "t-rfc"
+    },
+    {
+      "id": "handoff",
+      "title": "Write your end-of-day handoff",
+      "item": "handoff",
+      "unlock": "t-eod"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t-welcome",
+      "at": "09:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "ines",
+        "text": "Morning, and welcome! 👋 Your first ticket is **SCRAP-412** (muted words): it's under Tickets, and June owns it. The repo is under Code; `feed.test.js` is what CI runs. The feed notes in Docs explain how a feed is built. Ask me anything."
+      }
+    },
+    {
+      "id": "t-june-hello",
+      "at": "09:05",
+      "do": {
+        "type": "message",
+        "channel": "dm-june",
+        "from": "june",
+        "text": "Hey, welcome to the team! Muted words is the most upvoted request on our feedback board (\"I just want to stop seeing the finale spoilers\"). The apps already have the settings screen, so I'd love the backend done for **Thursday's release**. Ping me with any questions on the ticket."
+      }
+    },
+    {
+      "id": "t-pr",
+      "at": "09:30",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "tariq",
+        "text": "Could someone review **PR #377**? It adds page numbers and a total count to the feed for the new web grid. The bot already approved. Would be great to merge before Friday's web release 🙂",
+        "unlock": [
+          "pr:377"
+        ]
+      }
+    },
+    {
+      "id": "t-page",
+      "at": "10:20",
+      "do": {
+        "type": "page",
+        "channel": "incident",
+        "from": "owen",
+        "text": "🚨 **SEV-2 · INC-0841**: users are seeing the **same posts twice** while scrolling, and others say **posts are missing** after they scroll. The `feed_duplicate_rate` alert is at 4% of sampled scroll sessions (normally under 0.5%), and support has 200+ tickets in the last hour. You're secondary on-call, so please take point on investigating. Logs are under Logs. I'm IC: tell me what you find and what you want to do.",
+        "unlock": [
+          "channel:incident",
+          "logs"
+        ]
+      }
+    },
+    {
+      "id": "t-vendor",
+      "at": "10:24",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "owen",
+        "text": "My read: this started with the **7.12 app release** (it changed infinite scroll to prefetch the next page earlier, so I bet it double-fires and shows page 1 again). My plan: halt the 7.12 rollout, post on the status page that an app bug is causing duplicate posts and a fix is coming from the mobile team, and wait for their patch. I'll go ahead in ~10 min unless you see something different."
+      }
+    },
+    {
+      "id": "t-vendor-go",
+      "at": "10:36",
+      "unless": "posted:incident",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "owen",
+        "text": "No objections, so I've halted the 7.12 rollout and posted: \"Duplicate posts are caused by a bug in the latest app version. A fix is on the way.\" Mobile is looking at it."
+      }
+    },
+    {
+      "id": "t-vendor-done",
+      "at": "10:52",
+      "after": "t-vendor-go",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "owen",
+        "text": "Mobile says 7.12's scroll code is fine: one request per page. And the audit shows the **same rate on 7.11 and on web**. So it isn't the app, and our status message is wrong. What else could it be? I need a hypothesis from you."
+      }
+    },
+    {
+      "id": "t-ines-busy",
+      "at": "10:26",
+      "do": {
+        "type": "message",
+        "channel": "dm-ines",
+        "from": "ines",
+        "text": "Saw the page. I'm in planning until ~11:30 but I'll check Slack between sessions. The feed notes in Docs cover what changes underneath a feed while someone is scrolling, worth a read."
+      }
+    },
+    {
+      "id": "t-nudge",
+      "do": {
+        "type": "nudge",
+        "channel": "incident",
+        "from": "owen",
+        "after": "t-page",
+        "until": "incident_resolved",
+        "quietMinutes": 6,
+        "texts": [
+          "Status update? Support wants to know what to tell users.",
+          "I need an update for the status page: what do we know, and what's next?",
+          "Still with us? Leadership is asking in #exec. Even 'still investigating, next update in 15' helps."
+        ]
+      }
+    },
+    {
+      "id": "t-resolved",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "owen",
+        "text": "Thanks. Marking INC-0841 resolved. Please post a short summary here for the postmortem: user impact, root cause, what's fixed or mitigated, and follow-ups with owners."
+      }
+    },
+    {
+      "id": "t-tariq-ping",
+      "at": "11:45",
+      "unless": "pr_reviewed:377",
+      "do": {
+        "type": "message",
+        "channel": "dm-tariq",
+        "from": "tariq",
+        "text": "Hey, any chance you could look at #377 today? The web release is Friday and the grid is blocked on it 🙏"
+      }
+    },
+    {
+      "id": "t-scope",
+      "at": "13:30",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "dm-june",
+        "from": "june",
+        "text": "Thanks for handling the incident! Quick one: the launch team wants two more things in **Thursday's release**: **regex muting** for power users (\"mute /final(e|s)?/\"), and the **same mutes applied to notifications and search**. The app-store submission cutoff is **Wednesday 6 PM**. Doable? Please answer on SCRAP-412 so it's on record."
+      }
+    },
+    {
+      "id": "t-rfc",
+      "at": "14:15",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "ines",
+        "text": "I've written up the ranked-feed RFC (Docs → *RFC: A ranked feed*). Please leave a comment before Thursday's design review, especially after this morning.",
+        "unlock": [
+          "doc:rfc-ranked"
+        ]
+      }
+    },
+    {
+      "id": "t-june-check",
+      "at": "15:40",
+      "do": {
+        "type": "message",
+        "channel": "dm-june",
+        "from": "june",
+        "text": "How's SCRAP-412 looking for Thursday? Anything I should warn the mobile team about?"
+      }
+    },
+    {
+      "id": "t-eod",
+      "at": "17:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "ines",
+        "text": "Heading out soon. Before you go, could you write a short **handoff** (Handoff in the sidebar): what's done, what's open, and what someone needs to pick up tomorrow. Solid first day 🙌",
+        "unlock": [
+          "handoff"
+        ]
+      }
+    },
+    {
+      "id": "t-pr-v2",
+      "when": "pr_feedback:377",
+      "delay": 30,
+      "unless": "pr_approved:377",
+      "do": {
+        "type": "followup",
+        "thread": "pr:377",
+        "from": "tariq",
+        "revise": {
+          "pr": "377",
+          "rev": 2
+        },
+        "text": "Pushed an update (commit 2, \"Address review\"): `limit` is capped at 100, `page` is validated, a page past the end returns an empty list, and `total` is cached for 5 minutes so we don't count the whole feed on every request. Could you take another look? Would love to merge before EOD 🙏"
+      }
+    }
+  ]
+}

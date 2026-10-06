@@ -1,0 +1,30 @@
+{
+  "random-bucket": [
+    {
+      "file": "rollout.js",
+      "from": "  return h % 100;",
+      "to": "  return Math.floor(Math.random() * 100);"
+    }
+  ],
+  "userid-hash": [
+    {
+      "file": "rollout.js",
+      "from": "  const s = key + \":\" + userId;",
+      "to": "  const s = userId;"
+    }
+  ],
+  "version-not-equal": [
+    {
+      "file": "sync.js",
+      "from": "if (cur && version <= cur.version) {",
+      "to": "if (cur && version === cur.version) {"
+    }
+  ],
+  "allow-obeys-rollout": [
+    {
+      "file": "evaluate.js",
+      "from": "    if (flag.allow.includes(user.id)) return true;",
+      "to": "    if (flag.allow.includes(user.id)) return bucketOf(key, user.id) < (flag.rollout === undefined ? 100 : flag.rollout);"
+    }
+  ]
+}

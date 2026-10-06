@@ -1,0 +1,56 @@
+2026-11-12T17:08:10.000Z INFO  deploy   deploy.started service=flagship-eval version=v2.31 batch=3 summary="control plane API v2: int64 fields are strings (FLAG-298)"
+2026-11-12T17:09:02.331Z INFO  flagship-w6 v2.31 snapshot.loaded flags=41
+2026-11-12T17:10:44.502Z INFO  flagship-w7 v2.31 snapshot.loaded flags=41
+2026-11-12T17:12:20.118Z INFO  flagship-w8 v2.31 snapshot.loaded flags=41
+2026-11-12T17:14:40.904Z WARN  deploy   deploy.paused service=flagship-eval version=v2.31 healthy=3/8 reason="alert eval_latency_p99 firing on w-6 (perf team load test)" by=deploy-bot note="resume after the alert clears"
+2026-11-13T10:41:07.220Z INFO  flags    flag.updated key=search-v2 version=12 enabled=true by=dmitri
+2026-11-13T10:41:07.341Z INFO  flagship-w2 v2.30 sync.applied key=search-v2 version=12
+2026-11-13T10:41:07.352Z INFO  flagship-w7 v2.31 sync.applied key=search-v2 version="12" cached_version="11"
+2026-11-14T09:30:15.012Z INFO  flags    flag.updated key=promo-banner version=10 enabled=false by=marta note="banner campaign over"
+2026-11-14T09:30:15.130Z INFO  flagship-w3 v2.30 sync.applied key=promo-banner version=10
+2026-11-14T09:30:15.141Z INFO  flagship-w6 v2.31 sync.ignored key=promo-banner msg_version="10" cached_version="9" reason=stale
+2026-11-14T09:30:15.148Z INFO  flagship-w7 v2.31 sync.ignored key=promo-banner msg_version="10" cached_version="9" reason=stale
+2026-11-14T09:30:15.155Z INFO  flagship-w8 v2.31 sync.ignored key=promo-banner msg_version="10" cached_version="9" reason=stale
+2026-11-14T12:00:02.410Z INFO  cron     resync.done node=w-6 flags=41 changed=1 ms=1980
+2026-11-14T12:00:02.480Z INFO  cron     resync.done node=w-7 flags=41 changed=1 ms=2012
+2026-11-14T12:00:02.511Z INFO  cron     resync.done node=w-8 flags=41 changed=1 ms=1954
+2026-11-17T00:00:01.905Z INFO  cron     resync.done node=w-6 flags=41 changed=0 ms=1971
+2026-11-17T06:00:01.870Z INFO  cron     resync.done node=w-6 flags=41 changed=0 ms=1990
+2026-11-17T08:40:22.616Z INFO  flags    flag.updated key=new-checkout version=9 enabled=true by=elena note="launch new checkout to US and CA (rule country in US,CA)"
+2026-11-17T08:40:22.731Z INFO  flagship-w1 v2.30 sync.applied key=new-checkout version=9
+2026-11-17T08:40:22.744Z INFO  flagship-w6 v2.31 sync.applied key=new-checkout version="9" cached_version="8"
+2026-11-17T09:20:00.000Z INFO  cdn      sdk.config max_age_seconds=300 path=/sdk/v1/flags
+2026-11-17T09:58:30.214Z WARN  alerts   alert.firing name=checkout_error_rate value=7.9% threshold=2% service=payments
+2026-11-17T10:02:11.402Z INFO  flags    flag.updated key=new-checkout version=10 enabled=false by=elena note="kill switch: card errors on the new checkout (PAY-882)"
+2026-11-17T10:02:11.520Z INFO  flagship-w1 v2.30 sync.applied key=new-checkout version=10
+2026-11-17T10:02:11.521Z INFO  flagship-w2 v2.30 sync.applied key=new-checkout version=10
+2026-11-17T10:02:11.523Z INFO  flagship-w3 v2.30 sync.applied key=new-checkout version=10
+2026-11-17T10:02:11.526Z INFO  flagship-w4 v2.30 sync.applied key=new-checkout version=10
+2026-11-17T10:02:11.529Z INFO  flagship-w5 v2.30 sync.applied key=new-checkout version=10
+2026-11-17T10:02:11.533Z INFO  flagship-w6 v2.31 sync.ignored key=new-checkout msg_version="10" cached_version="9" reason=stale
+2026-11-17T10:02:11.537Z INFO  flagship-w7 v2.31 sync.ignored key=new-checkout msg_version="10" cached_version="9" reason=stale
+2026-11-17T10:02:11.541Z INFO  flagship-w8 v2.31 sync.ignored key=new-checkout msg_version="10" cached_version="9" reason=stale
+2026-11-17T10:03:00.011Z INFO  flagship-w1 v2.30 eval.stats flag=new-checkout on=0 off=2288 window=60s
+2026-11-17T10:03:00.012Z INFO  flagship-w5 v2.30 eval.stats flag=new-checkout on=0 off=2301 window=60s
+2026-11-17T10:03:00.014Z INFO  flagship-w6 v2.31 eval.stats flag=new-checkout on=1634 off=655 window=60s
+2026-11-17T10:03:00.015Z INFO  flagship-w7 v2.31 eval.stats flag=new-checkout on=1590 off=700 window=60s
+2026-11-17T10:03:00.016Z INFO  flagship-w8 v2.31 eval.stats flag=new-checkout on=1611 off=688 window=60s
+2026-11-17T10:08:00.010Z INFO  flagship-w2 v2.30 eval.stats flag=new-checkout on=0 off=2410 window=60s
+2026-11-17T10:08:00.013Z INFO  flagship-w7 v2.31 eval.stats flag=new-checkout on=1702 off=741 window=60s
+2026-11-17T10:15:00.012Z INFO  flagship-w4 v2.30 eval.stats flag=new-checkout on=0 off=2502 window=60s
+2026-11-17T10:15:00.016Z INFO  flagship-w8 v2.31 eval.stats flag=new-checkout on=1688 off=759 window=60s
+2026-11-17T10:16:42.330Z WARN  alerts   alert.firing name=new_checkout_exposure value=33% note="flag new-checkout is off but 33% of checkout sessions still use it"
+2026-11-17T10:16:42.331Z WARN  alerts   alert.firing name=checkout_error_rate value=3.4% threshold=2% service=payments
+2026-11-17T10:20:00.012Z INFO  flagship-w3 v2.30 eval.stats flag=new-checkout on=0 off=2480 window=60s
+2026-11-17T10:20:00.019Z INFO  flagship-w6 v2.31 eval.stats flag=new-checkout on=1655 off=712 window=60s
+2026-11-17T10:21:14.870Z INFO  flagship-w6 v2.31 sync.applied key=search-v2 version="14" cached_version="13"
+2026-11-17T10:25:00.014Z INFO  flagship-w1 v2.30 eval.stats flag=new-checkout on=0 off=2391 window=60s
+2026-11-17T10:25:00.018Z INFO  flagship-w7 v2.31 eval.stats flag=new-checkout on=1672 off=730 window=60s
+2026-11-17T10:30:00.016Z INFO  flagship-w8 v2.31 eval.stats flag=new-checkout on=1640 off=704 window=60s
+2026-11-17T10:30:00.019Z INFO  flagship-w4 v2.30 eval.stats flag=new-checkout on=0 off=2445 window=60s
+2026-11-17T10:31:20.101Z INFO  gateway  lb.stats node=w-6 requests_per_min=2289 node=w-7 requests_per_min=2290 node=w-8 requests_per_min=2311 note="round robin, no stickiness"
+2026-11-17T10:40:00.020Z INFO  flagship-w6 v2.31 eval.stats flag=new-checkout on=1630 off=702 window=60s
+2026-11-17T10:40:00.022Z INFO  flagship-w2 v2.30 eval.stats flag=new-checkout on=0 off=2399 window=60s
+2026-11-17T10:55:00.015Z INFO  flagship-w7 v2.31 eval.stats flag=new-checkout on=1666 off=712 window=60s
+2026-11-17T11:15:00.017Z INFO  flagship-w8 v2.31 eval.stats flag=new-checkout on=1649 off=730 window=60s
+2026-11-17T11:30:00.012Z INFO  flagship-w3 v2.30 eval.stats flag=new-checkout on=0 off=2451 window=60s

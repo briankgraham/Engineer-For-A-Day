@@ -37,11 +37,13 @@ It's your first day on a fictional team. You get a small repo, Slack-style chann
 
 Your coworkers are AI, and each has their own agenda. Some of them will tell you things that sound right and aren't. When you click **End day**, every test suite runs and a manager-style review scores how you debugged, the quality of your code and tests, how you reviewed the PR, how you communicated, and the calls you made about what mattered.
 
-Three days to choose from:
+Five days to choose from:
 
 - **ShipFast: orders & payments.** Ship discount codes, review a charge-retry PR, and work out why customers are being charged twice.
 - **Huddle: push notifications.** Build quiet hours, review an in-memory rate limiter, and track down duplicate pushes.
 - **Plotline: subscriptions & billing.** Handle mid-cycle upgrades, review a renewal batch job, and find out why people are charged after they cancel. (Hint: time zones are involved.)
+- **Flagship: feature flags.** Build percentage rollouts, review an evaluation-cache PR, and find out why a kill switch isn't killing anything on some servers.
+- **Scrapbook: the feed API.** Build muted words, review a page-numbers PR, and work out why people see the same photo twice while other posts go missing.
 
 ## 🤝 AI Pairing
 
