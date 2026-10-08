@@ -194,7 +194,8 @@ tbody tr{transition:background .12s}
 tbody tr:hover td{background:var(--head)}
 tr.done td{background:var(--done)}
 tr.done:hover td{background:color-mix(in srgb,var(--done),var(--easy) 8%)}
-tr.done td:nth-child(4) a{color:var(--muted)}
+tr.done td:nth-child(5) a{color:var(--muted)}
+tr.rv td:first-child{box-shadow:inset 3px 0 0 var(--med)}
 td a{font-weight:500}
 .topics{line-height:1.5}
 .pager{justify-content:center;padding:18px 0 0}
@@ -295,6 +296,52 @@ dialog.app-dlg{width:min(640px,94vw)}
 .chatpanel .chat>div:first-child:empty{display:none}
 @media (prefers-reduced-motion:reduce){.panel,.step{transition:none}}
 /* ===== end mock interview depth ===== */
+/* ===== LeetCode walkthrough: sections, jump bar, approach tabs ===== */
+#lb .wsnav{position:sticky;top:var(--wsnav-top,45px);z-index:1;display:flex;gap:6px;flex-wrap:wrap;margin:-16px -22px 16px;padding:10px 22px;background:var(--bg);border-bottom:1px solid var(--line)}
+#lb .wsnav .langs{margin:0 0 0 auto;gap:4px}#lb .wsnav .pick{padding:3px 10px;font-size:12px}
+.ws-j{border-radius:999px;padding:3px 12px;font-size:12px;color:var(--muted)}
+.ws-j.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
+.ws{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin:0 0 14px;scroll-margin-top:110px;overflow:hidden}
+.ws-hd{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:0;background:none;padding:12px 16px;text-align:left;font-weight:600;font-size:15px}
+.ws-hd:hover{background:var(--head)}
+.ws-ic{width:28px;height:28px;flex:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--accent-soft)}
+.ws-n{font-size:11px;font-weight:600;color:var(--muted);background:var(--head);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.ws-cv{margin-left:auto;color:var(--muted);transition:transform .15s}
+.ws.shut .ws-cv{transform:rotate(-90deg)}.ws.shut .ws-b{display:none}
+.ws-b{padding:4px 16px 16px;border-top:1px solid var(--line)}
+#lb .ws-lead{font-size:15px;line-height:1.6;margin:10px 0 0}
+.ws-tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 0;margin-bottom:4px}
+.ws-tab{flex:1 1 0;min-width:120px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);text-align:left;background:var(--bg)}
+.ws-tab .k{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.ws-tab .nm{font-weight:600;font-size:13px;line-height:1.3}
+.ws-tab .o{font:12px ui-monospace,Menlo,monospace;color:var(--muted)}
+.ws-tab.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 -2px 0 var(--accent)}
+.ws-tab.on .o,.ws-tab.on .k{color:var(--accent)}
+.ws-tab.opt .k{color:var(--easy)}
+.ws-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.ws-stat{border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--bg);font-size:13px}
+.ws-stat b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px}
+#lb .ws-b .ins{margin:12px 0}
+#lb .ins b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:2px}
+.ws-code{margin:12px 0 0;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.ws-code .cbar{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 4px 12px;background:var(--head);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+.ws-code .cbar button{padding:2px 10px;font-size:12px}
+#lb .ws-code pre{margin:0;border:0;border-radius:0}
+.ws-trace{margin:12px 0 0;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg)}
+.ws-trace>summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:13px}
+.ws-trace>.meta{padding:0 12px}
+#lb ol.steps{list-style:none;counter-reset:st;padding:6px 12px 12px;margin:0}
+#lb ol.steps li{counter-increment:st;position:relative;padding:4px 0 8px 34px;border-left:2px solid var(--line);margin-left:11px;padding-left:22px}
+#lb ol.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+#lb ol.steps li::before{content:counter(st);position:absolute;left:-12px;top:2px;width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.ws-tips{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.ws-tip{border:1px solid var(--line);border-left:3px solid var(--tc,var(--accent));border-radius:var(--radius-sm);padding:10px 12px;background:var(--bg)}
+#lb .ws-tip h4{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:13px}
+#lb .ws-tip ul{padding-left:20px;font-size:14px;line-height:1.55}#lb .ws-tip li{padding:2px 0}
+#lb .ws-b>ul{margin-top:10px}
+#lb .ws .chat{border-top:0;margin-top:8px;padding-top:0}
+#lb>.fine{text-align:center;margin-top:4px}
+@media (max-width:560px){.ws-stats{grid-template-columns:1fr}#lb .wsnav .langs{margin-left:0}}
 /* ===== chat redesign: ChatGPT-style bubbles (shared by walkthrough + system-design chats) ===== */
 .chat>h3{margin-bottom:10px}
 .chat>div:not([class]){display:flex;flex-direction:column;gap:18px;max-height:60vh;overflow-y:auto;padding:4px 2px 8px;margin-bottom:10px;background:none;box-shadow:none;border-radius:0;scroll-behavior:smooth}
@@ -366,13 +413,14 @@ dialog.app-dlg{width:min(640px,94vw)}
     <select id="status"><option value="">All</option><option value="todo">Not done</option><option value="done">Done</option><option value="due">Due for review</option></select>
     <select id="sort"><option value="rank">Sort: rank</option><option value="companies">Sort: companies</option><option value="avg">Sort: avg frequency</option><option value="prep">Sort: prep time</option><option value="company">Sort: company frequency</option><option value="times">Sort: times solved</option></select>
     <label class="sfchk" data-tip="Only problems that come up a lot in senior loops (hover a Senior badge for why and the usual follow-up)"><input type="checkbox" id="senior"> Senior favs</label>
+    <label class="sfchk" data-tip="Only problems you flagged to revisit"><input type="checkbox" id="revisit"> Revisit</label>
     <button id="next-up"data-tip="Jump to the next unfinished problem">Next up</button>
     <button id="export" data-tip="Download your progress and notes">Export progress</button>
   </div>
 </header>
 <main>
 <table>
-<thead><tr><th class="num">#</th><th>Done</th><th>Times</th><th>Title</th><th>Diff</th><th class="num" data-tip="Rough time to learn and solve it from scratch (estimated from difficulty and topics)">Prep</th><th class="num">Companies</th><th class="num">Avg freq</th><th class="num">Co. freq</th><th>Note</th><th>Topics</th></tr></thead>
+<thead><tr><th class="num">#</th><th>Done</th><th data-tip="Flag problems you want to come back to">Revisit</th><th>Times</th><th>Title</th><th>Diff</th><th class="num" data-tip="Rough time to learn and solve it from scratch (estimated from difficulty and topics)">Prep</th><th class="num">Companies</th><th class="num">Avg freq</th><th class="num">Co. freq</th><th>Note</th><th>Topics</th></tr></thead>
 <tbody id="rows"></tbody>
 </table>
 <div class="pager"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></div>
@@ -501,6 +549,7 @@ const PREP_BASE={E:20,M:35,H:55},PREP_HARD=/Dynamic Programming|Graph|Backtracki
 const prepMins=r=>PREP_BASE[r[1]]+(PREP_HARD.test(r[7])?10:0);
 const fmtPrep=m=>m<60?m+" min":(m%60?Math.floor(m/60)+"h "+m%60+"m":m/60+"h");
 const KEY="leetcode-global-progress-v1", PAGE=100;
+const keep=p=>p.done||p.times||p.note||p.revisit;
 const cleanProgress=obj=>{
   const out={};
   if(!obj||typeof obj!=="object"||Array.isArray(obj))return out;
@@ -510,7 +559,8 @@ const cleanProgress=obj=>{
     const p={done:v.done===true,times:Number.isInteger(v.times)&&v.times>0?v.times:0};
     if(typeof v.note==="string"&&v.note)p.note=v.note;
     if(typeof v.last==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v.last))p.last=v.last;
-    if(p.done||p.times||p.note)out[k]=p;
+    if(v.revisit===true)p.revisit=true;
+    if(keep(p))out[k]=p;
   }
   return out;
 };
@@ -543,7 +593,7 @@ DATA.forEach(r=>r[7].split(",").forEach(t=>{t=t.trim();if(t)topics.add(t)}));
 const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function filter(){
-  const co=selCo, sen=$("senior").checked, q=$("q").value.trim().toLowerCase(), d=$("diff").value, t=$("topic").value, st=$("status").value, so=$("sort").value;
+  const co=selCo, sen=$("senior").checked, rv=$("revisit").checked, q=$("q").value.trim().toLowerCase(), d=$("diff").value, t=$("topic").value, st=$("status").value, so=$("sort").value;
   view=DATA.filter(r=>{
     if(d&&r[1]!==d)return false;
     if(t&&!r[7].split(",").some(x=>x.trim()===t))return false;
@@ -551,6 +601,7 @@ function filter(){
     if(co&&!(r[6] in CO[co]))return false;
     if(sen&&!(r[6] in SENIOR))return false;
     const p=get(r[6]);
+    if(rv&&!p.revisit)return false;
     if(st==="due"&&!isDue(p))return false;
     if(st==="done"&&!p.done)return false;
     if(st==="todo"&&p.done)return false;
@@ -568,6 +619,8 @@ function stats(){
   $("fill").style.width=(100*done/total)+"%";
   const due=DATA.filter(r=>isDue(get(r[6]))).length;
   if(due)$("stats").textContent+=` · ${due} due for review`;
+  const rv=DATA.filter(r=>get(r[6]).revisit).length;
+  if(rv)$("stats").textContent+=` · ${rv} to revisit`;
   const co=selCo,cs=$("cstats");
   cs.hidden=!co;
   if(co){
@@ -584,9 +637,10 @@ function render(){
   const slice=view.slice(page*PAGE,(page+1)*PAGE);
   $("rows").innerHTML=slice.map(r=>{
     const p=get(r[6]);
-    return `<tr class="${p.done?"done":""}" data-s="${r[6]}">
+    return `<tr class="${p.done?"done":""}${p.revisit?" rv":""}" data-s="${r[6]}">
 <td class="num">${r[0]}</td>
 <td><input type="checkbox" class="chk" ${p.done?"checked":""} aria-label="Done" data-tip="Mark as done"></td>
+<td><input type="checkbox" class="rvchk" ${p.revisit?"checked":""} aria-label="Revisit" data-tip="Flag to revisit"></td>
 <td><span class="cnt"><button class="dec" aria-label="Decrease" data-tip="Decrease times solved">−</button><span>${p.times}</span><button class="inc" aria-label="Increase" data-tip="Increase times solved">+</button></span></td>
 <td><a href="https://leetcode.com/problems/${r[6]}" target="_blank" rel="noopener">${esc(r[2])}</a>${SENIOR[r[6]]?` <span class="sfav" data-tip="${esc(`Senior fav: ${SENIOR[r[6]][0]}.\nFollow-up: ${SENIOR[r[6]][1]}.`)}">Senior</span>`:""}</td>
 <td><span class="pill ${r[1]}">${DN[r[1]]}</span></td>
@@ -628,21 +682,22 @@ $("rows").addEventListener("click",e=>{
     p.done=e.target.checked;
     if(p.done&&p.times===0)p.times=1;
     if(p.done)p.last=today();
-  }else if(e.target.classList.contains("inc")){p.times++;p.done=true;p.last=today()}
+  }else if(e.target.classList.contains("rvchk")){if(e.target.checked)p.revisit=true;else delete p.revisit}
+  else if(e.target.classList.contains("inc")){p.times++;p.done=true;p.last=today()}
   else if(e.target.classList.contains("dec")){p.times=Math.max(0,p.times-1);if(p.times===0)p.done=false}
   else return;
-  if(p.done||p.times||p.note)progress[s]=p;else delete progress[s];
+  if(keep(p))progress[s]=p;else delete progress[s];
   save();
   const st=$("status").value,so=$("sort").value;
-  if(st||so==="times"||so==="company")refresh(false);else render();
+  if(st||$("revisit").checked||so==="times"||so==="company")refresh(false);else render();
 });
-["q","diff","topic","status","sort","senior"].forEach(id=>$(id).addEventListener("input",()=>refresh(true)));
+["q","diff","topic","status","sort","senior","revisit"].forEach(id=>$(id).addEventListener("input",()=>refresh(true)));
 let noteSlug="";
 $("nx").onclick=()=>$("ndlg").close();
 $("nsave").onclick=()=>{
   const p={...get(noteSlug)},t=$("nta").value.trim();
   if(t)p.note=t;else delete p.note;
-  if(p.done||p.times||p.note)progress[noteSlug]=p;else delete progress[noteSlug];
+  if(keep(p))progress[noteSlug]=p;else delete progress[noteSlug];
   save();$("ndlg").close();render();
 };
 // Apply the company filter only on commit (pick from the list, Enter, blur) so typing "Snap" doesn't filter before you reach "Snapdeal".
@@ -724,10 +779,69 @@ function showPicker(){
   b.appendChild(el("div","fine","Each language is generated once and then cached."));
 }
 
-function listSection(body,title,items){
+// Walkthrough sections: each is a collapsible card with a jump button in the sticky bar; collapsed ones are remembered.
+const WS_KEY="leetcode-walk-collapsed-v1";
+const wsShut=()=>{try{return JSON.parse(localStorage.getItem(WS_KEY))||{}}catch(e){return {}}};
+function wsSection(b,nav,key,icon,title,count){
+  const s=el("section","ws"),hd=el("button","ws-hd"),body=el("div","ws-b");
+  s.id="ws-"+key;hd.type="button";
+  hd.append(el("span","ws-ic",icon),el("span",null,title));
+  if(count)hd.appendChild(el("span","ws-n",String(count)));
+  hd.appendChild(el("span","ws-cv","▾"));
+  const set=shut=>{s.classList.toggle("shut",shut);hd.setAttribute("aria-expanded",String(!shut))};
+  set(!!wsShut()[key]);
+  hd.onclick=()=>{
+    const shut=!s.classList.contains("shut");set(shut);
+    try{const m=wsShut();if(shut)m[key]=1;else delete m[key];localStorage.setItem(WS_KEY,JSON.stringify(m))}catch(e){}
+  };
+  s.append(hd,body);b.appendChild(s);
+  const j=el("button","ws-j",title);j.type="button";j.dataset.k=key;
+  j.onclick=()=>{if(s.classList.contains("shut"))hd.click();s.scrollIntoView({behavior:"smooth",block:"start"})};
+  nav.appendChild(j);
+  return body;
+}
+function listSection(body,icon,title,items,color){
   if(!items||!items.length)return;
-  body.appendChild(el("h3",null,title));
-  const ul=el("ul");items.forEach(t=>ul.appendChild(el("li",null,t)));body.appendChild(ul);
+  const c=el("div","ws-tip");if(color)c.style.setProperty("--tc",color);
+  c.appendChild(el("h4",null,icon+" "+title));
+  const ul=el("ul");items.forEach(t=>ul.appendChild(el("li",null,t)));c.appendChild(ul);body.appendChild(c);
+}
+const bigO=s=>(String(s).match(/O\((?:[^()]|\([^()]*\))*\)/)||[""])[0];
+function traceBlock(t,open){
+  const d=el("details","ws-trace");d.open=open;
+  d.appendChild(el("summary",null,`Trace it on an example (${t.steps.length} steps)`));
+  d.appendChild(el("div","meta",t.example));
+  const ol=el("ol","steps");t.steps.forEach(s=>ol.appendChild(el("li",null,s)));d.appendChild(ol);
+  return d;
+}
+function approachTabs(body,w){
+  const n=w.approaches.length,paired=w.trace.length===n,LN=Object.fromEntries(LANGS);
+  const tabs=el("div","ws-tabs"),panel=el("div");tabs.setAttribute("role","tablist");
+  const show=i=>{
+    tabs.querySelectorAll(".ws-tab").forEach((t,k)=>{t.classList.toggle("on",k===i);t.setAttribute("aria-selected",String(k===i));t.tabIndex=k===i?0:-1});
+    const a=w.approaches[i],p=el("div");p.setAttribute("role","tabpanel");
+    p.appendChild(el("p",null,a.idea));
+    const st=el("div","ws-stats");
+    [["Time",a.time],["Space",a.space]].forEach(([k,v])=>{const d=el("div","ws-stat");d.append(el("b",null,k),v);st.appendChild(d)});
+    p.appendChild(st);
+    const ins=el("div","ins");ins.append(el("b",null,i<n-1?"What to improve next":"Why this is optimal"),a.insight);p.appendChild(ins);
+    const cb=el("div","ws-code"),bar=el("div","cbar"),copy=el("button",null,"Copy");copy.type="button";
+    copy.onclick=()=>{try{navigator.clipboard.writeText(a.code).then(()=>{copy.textContent="Copied";setTimeout(()=>copy.textContent="Copy",1200)},()=>{})}catch(e){}};
+    bar.append(LN[learnLang]||"Code",copy);
+    const pre=el("pre");pre.appendChild(el("code",null,a.code));cb.append(bar,pre);p.appendChild(cb);
+    if(paired&&w.trace[i])p.appendChild(traceBlock(w.trace[i],false));
+    panel.replaceChildren(p);
+  };
+  w.approaches.forEach((a,i)=>{
+    const t=el("button","ws-tab"+(i===n-1&&n>1?" opt":""));t.type="button";t.setAttribute("role","tab");
+    t.append(el("span","k",i===0&&n>1?"1 · Brute force":i===n-1&&n>1?`${i+1} · Optimal`:`Step ${i+1}`),el("span","nm",a.name));
+    const o=bigO(a.time);if(o)t.appendChild(el("span","o",o));
+    t.onclick=()=>show(i);
+    t.onkeydown=e=>{const d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(!d)return;e.preventDefault();const k=(i+d+n)%n;show(k);tabs.children[k].focus()};
+    tabs.appendChild(t);
+  });
+  body.append(tabs,panel);show(0);
+  return paired;
 }
 // Likely follow-ups: click one to answer it yourself (typed or spoken) or have the AI answer it straight away.
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -751,7 +865,6 @@ function makeMic(ta){
 }
 function followupSection(body,items){
   if(!items||!items.length)return;
-  body.appendChild(el("h3",null,"Likely follow-ups"));
   const ul=el("ul");
   items.forEach(q=>{
     const li=el("li","fu");li.tabIndex=0;li.setAttribute("role","button");li.setAttribute("aria-expanded","false");
@@ -767,7 +880,7 @@ function followupSection(body,items){
       const row=el("div","row");
       const mine=el("button",null,"🎤 Answer it myself"),ask=el("button",null,"✨ Just show me the answer"),cancel=el("button",null,"Cancel");
       row.append(mine,ask,cancel);panel.appendChild(row);li.appendChild(panel);
-      const scrollChat=()=>{const c=$("clog");if(c)c.scrollIntoView({behavior:"smooth",block:"nearest"})};
+      const scrollChat=()=>{const s=$("ws-chat");if(s&&s.classList.contains("shut"))s.firstChild.click();const c=$("clog");if(c)c.scrollIntoView({behavior:"smooth",block:"nearest"})};
       ask.onclick=()=>{if(chatBusy)return;close();sendChat(`Interview follow-up question: "${q}"\n\nAnswer it the way a strong candidate would in a real interview: concise, concrete, with complexity where relevant.`,"Follow-up: "+q);scrollChat()};
       cancel.onclick=close;
       mine.onclick=()=>{
@@ -791,42 +904,48 @@ function followupSection(body,items){
   body.appendChild(ul);
 }
 function renderWalk(doc){
-  const w=doc.walkthrough,b=$("lb");b.replaceChildren();
-  const sw=el("div","langs");
+  const w=doc.walkthrough,b=$("lb"),dlg=$("ldlg");b.replaceChildren();
+  const nav=el("nav","wsnav"),sw=el("div","langs");
   LANGS.forEach(([id,name])=>{const btn=el("button",id===learnLang?"pick on":"pick",name);btn.disabled=id===learnLang;btn.onclick=()=>pickLang(id);sw.appendChild(btn)});
-  b.appendChild(sw);
-  if(w.statement_note)b.appendChild(el("div","warn","⚠ "+w.statement_note));
-  b.appendChild(el("p",null,w.summary));
-  b.appendChild(el("h3",null,"Brute force → optimal"));
-  w.approaches.forEach((a,i)=>{
-    const c=el("div","card");
-    c.appendChild(el("h4",null,`${i+1}. ${a.name}`));
-    c.appendChild(el("p",null,a.idea));
-    c.appendChild(el("div","cx",`Time: ${a.time} · Space: ${a.space}`));
-    c.appendChild(el("div","ins",(i<w.approaches.length-1?"Next step: ":"Why this is optimal: ")+a.insight));
-    const pre=el("pre"),code=el("code",null,a.code);pre.appendChild(code);c.appendChild(pre);
-    b.appendChild(c);
-  });
-  if(w.trace.length)b.appendChild(el("h3",null,"Step-by-step trace"));
-  w.trace.forEach(t=>{
-    const c=el("div","card");
-    c.appendChild(el("h4",null,t.approach));
-    c.appendChild(el("div","meta",t.example));
-    const ol=el("ol");t.steps.forEach(s=>ol.appendChild(el("li",null,s)));c.appendChild(ol);
-    b.appendChild(c);
-  });
-  listSection(b,"Clarifying questions to ask",w.tips.clarify);
-  listSection(b,"Edge cases",w.tips.edge_cases);
-  listSection(b,"Common mistakes",w.tips.mistakes);
-  followupSection(b,w.tips.followups);
-  b.appendChild(el("div","fine",`AI-generated (${doc.model}, ${doc.generated_at.slice(0,10)}). Verify against the actual problem.`));
+  b.appendChild(nav);
+  const ov=wsSection(b,nav,"overview","📌","Problem");
+  if(w.statement_note)ov.appendChild(el("div","warn","⚠ "+w.statement_note));
+  ov.appendChild(el("p","ws-lead",w.summary));
+  const paired=approachTabs(wsSection(b,nav,"approaches","🧭","Approaches",w.approaches.length),w);
+  if(!paired&&w.trace.length){
+    const tb=wsSection(b,nav,"trace","👣","Step-by-step trace",w.trace.length);
+    w.trace.forEach((t,i)=>{const d=traceBlock(t,i===0);d.firstChild.textContent=`${t.approach} (${t.steps.length} steps)`;tb.appendChild(d)});
+  }
+  const tips=w.tips,nTips=["clarify","edge_cases","mistakes"].reduce((s,k)=>s+(tips[k]||[]).length,0);
+  if(nTips){
+    const g=el("div","ws-tips");wsSection(b,nav,"tips","🎯","Interview checklist",nTips).appendChild(g);
+    listSection(g,"❓","Clarifying questions",tips.clarify,"var(--accent)");
+    listSection(g,"🧪","Edge cases",tips.edge_cases,"var(--med)");
+    listSection(g,"⚠️","Common mistakes",tips.mistakes,"var(--hard)");
+  }
+  if(tips.followups&&tips.followups.length){
+    const fb=wsSection(b,nav,"followups","🔁","Likely follow-ups",tips.followups.length);
+    fb.appendChild(el("p","meta","Click one to answer it yourself or see a strong answer."));
+    followupSection(fb,tips.followups);
+  }
   const chat=el("div","chat");
-  chat.appendChild(el("h3",null,"Ask a follow-up"));
+  const cs=wsSection(b,nav,"chat","💬","Ask the tutor");
+  cs.appendChild(el("p","meta","Stuck on a step? Ask the AI anything about this problem; it has read the walkthrough above."));cs.appendChild(chat);
+  b.appendChild(el("div","fine",`AI-generated (${doc.model}, ${doc.generated_at.slice(0,10)}). Verify against the actual problem.`));
+  nav.appendChild(sw);
+  // Keep the jump bar just under the dialog header, and highlight the section being read.
+  nav.style.setProperty("--wsnav-top",dlg.querySelector(".hd").offsetHeight+"px");
+  const spy=()=>{
+    const y=nav.getBoundingClientRect().bottom+24;let cur="";
+    b.querySelectorAll(".ws").forEach(s=>{if(s.getBoundingClientRect().top<=y)cur=s.id.slice(3)});
+    nav.querySelectorAll(".ws-j").forEach(j=>j.classList.toggle("on",j.dataset.k===(cur||"overview")));
+  };
+  dlg.onscroll=spy;spy();
   const log=el("div");log.id="clog";chat.appendChild(log);
   const form=el("form"),inp=el("input");inp.type="text";inp.id="cin";inp.placeholder="e.g. why a hash map here?";inp.maxLength=1000;inp.autocomplete="off";
   const send=el("button",null,"Send");send.type="submit";const cmic=makeMic(inp);if(cmic)form.append(inp,cmic,send);else form.append(inp,send);
   form.onsubmit=ev=>{ev.preventDefault();stopRec();const t=inp.value.trim();if(!t||chatBusy)return;inp.value="";sendChat(t)};
-  chat.appendChild(form);b.appendChild(chat);
+  chat.appendChild(form);
   $("lregen").hidden=false;
 }
 async function loadWalk(url,opts){
