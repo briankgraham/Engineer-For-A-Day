@@ -115,8 +115,8 @@
       const card=el("div","ap-card");
       card.appendChild(el("h3","",sc.title));
       card.appendChild(el("p","",sc.blurb));
-      const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="debug"?["Debugging"]:sc.kind==="lld"?["Object design"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
-      if(s){bits.push("in progress · "+fmt(s.elapsed||0));if(s.last)bits.push(s.last.passed+"/"+s.last.total+" tests passing");if(s.followup)bits.push("follow-up revealed")}
+      const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="debug"?["Debugging"]:sc.kind==="lld"?["Object design"]:sc.kind==="levels"?[sc.levels.length+1+" levels"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
+      if(s){bits.push("in progress · "+fmt(s.elapsed||0));if(s.last)bits.push(s.last.passed+"/"+s.last.total+" tests passing");if(s.followup)bits.push("follow-up revealed");if(sc.kind==="levels")bits.push("on level "+(1+(s.levels||[]).length))}
       card.appendChild(el("div","meta",bits.join(" · ")));
       const b=el("button","",s?"Resume":"Start");
       b.onclick=()=>openWork(sc);
@@ -152,6 +152,12 @@
     const lld=sc.kind==="lld";
     const DESIGN_STARTER="# Design\n\n## Classes and what each one owns\n- \n\n## Interfaces (the methods each class exposes, and who calls them)\n- \n\n## States and transitions\n- \n\n## Where would a new requirement go?\n- \n";
     if(typeof sess.design!=="string")sess.design=DESIGN_STARTER;
+    // Multi-level scenarios: level 1 is the brief; each later level unlocks when every visible test so far passes.
+    // sess.levels = elapsed seconds at which level 2, 3, ... were unlocked.
+    const multi=sc.kind==="levels",LV=multi?sc.levels:[];
+    if(!Array.isArray(sess.levels))sess.levels=[];
+    const lvName=k=>"level"+k,lvTabs=LV.map((_,i)=>lvName(i+2));
+    const unlockedLv=()=>LV.slice(0,sess.levels.length);
     if(!Number.isInteger(sess.runs))sess.runs=0;
     const code=name=>sess.files[name]!=null?sess.files[name]:sc.files.find(f=>f.name===name).code;
 
@@ -190,7 +196,7 @@
     bsum.append(el("span","chip hi",sc.requirements.length+" requirements"),el("span","chip",sc.difficulty+" · ~"+sc.minutes+" min"));
     brief.appendChild(bsum);
     const bd=el("div","bd"),goal=el("div","goal");
-    goal.append(el("h4","","Goal"),el("p","",sc.brief));
+    goal.append(el("h4","",multi?"Level 1 of "+(LV.length+1)+": "+(sc.levelTitle||"Getting started"):"Goal"),el("p","",sc.brief));
     const reqs=el("div","reqs"),ol=el("ol");
     reqs.appendChild(el("h4","","Requirements"));
     // Identifiers, calls like on(event, fn) and quoted names like 'error' render as inline code.
@@ -216,6 +222,15 @@
       fr.appendChild(el("h4","","Requirements"));reqList(sc.followup.requirements,fol);fr.appendChild(fol);
       fb.append(fg,fr);fuBox.append(fs,fb);main.appendChild(fuBox);
     }
+    // One card per later level, shown from its rail tab once unlocked.
+    const lvBoxes=LV.map((lv,i)=>{
+      const box=el("div","ap-brief ap-fu");box.hidden=true;
+      const hd=el("div","hd","Level "+(i+2)+": "+lv.title);hd.appendChild(el("span","chip hi",lv.requirements.length+" requirements"));
+      const b=el("div","bd"),g=el("div","goal"),rq=el("div","reqs"),o=el("ol");
+      g.append(el("h4","","Level "+(i+2)+" of "+(LV.length+1)),el("p","",lv.brief));
+      rq.appendChild(el("h4","","Requirements"));reqList(lv.requirements,o);rq.appendChild(o);
+      b.append(g,rq);box.append(hd,b);main.appendChild(box);return box;
+    });
     // Design gate: code files stay read-only until design.md has some substance and the candidate starts coding.
     const gate=el("div","ap-gate");gate.hidden=true;
     const gateMsg=el("span"),gateBtn=el("button","","Start coding");
@@ -244,7 +259,8 @@
     // Some scenarios show their test file: a read-only tab that is never saved, applied to or reset.
     const testName=sc.visibleTests?sc.id+".test.js":null;
     const FU_HEAD="\n\n// ---- Follow-up: "+(sc.followup?sc.followup.title:"")+" ----\n\n";
-    const testDoc=testName?CodeMirror.Doc(sc.visibleTests+(sess.followup&&sc.followupVisibleTests?FU_HEAD+sc.followupVisibleTests:""),"javascript"):null;
+    const visibleText=()=>sc.visibleTests+(sess.followup&&sc.followupVisibleTests?FU_HEAD+sc.followupVisibleTests:"")+unlockedLv().map((lv,i)=>"\n\n// ---- Level "+(i+2)+": "+lv.title+" ----\n\n"+lv.visibleTests).join("");
+    const testDoc=testName?CodeMirror.Doc(visibleText(),"javascript"):null;
     // Your own tests: editable, saved with the attempt, and run together with the visible ones.
     const mineName="my-tests.js";
     const mineDoc=CodeMirror.Doc(sess.custom,"javascript");
@@ -253,15 +269,17 @@
     const locked=name=>lld&&!sess.coding&&!!docs[name];
     let running=false;
     const BRIEF="brief",FU="followup";
-    const tabs=[BRIEF,FU,prName,designName,...sc.files.map(f=>f.name),testName,mineName,reviewName].filter(Boolean);
+    const tabs=[BRIEF,FU,...lvTabs,prName,designName,...sc.files.map(f=>f.name),testName,mineName,reviewName].filter(Boolean);
+    const lvOpen=name=>!lvTabs.includes(name)||lvTabs.indexOf(name)<sess.levels.length;
     // Reopens the last tab; a fresh attempt starts on the brief.
-    let open=tabs.includes(sess.open)&&(sess.open!==FU||sess.followup)?sess.open:!sess.elapsed?BRIEF:prName||(lld&&!sess.coding?designName:sc.files[0].name);
-    const isView=name=>name===BRIEF||name===FU||name===prName;
+    let open=tabs.includes(sess.open)&&(sess.open!==FU||sess.followup)&&lvOpen(sess.open)?sess.open:!sess.elapsed?BRIEF:prName||(lld&&!sess.coding?designName:sc.files[0].name);
+    const isView=name=>name===BRIEF||name===FU||name===prName||lvTabs.includes(name);
     const showTab=name=>{
       open=sess.open=name;const isTest=name===testName,isPr=name===prName;
       if(isTest)sess.viewedTests=true;
       if(name===FU)sess.fuSeen=true;
-      brief.hidden=name!==BRIEF;fuBox.hidden=name!==FU;prView.hidden=!isPr;host.hidden=isView(name);
+      if(name===lvName(sess.levels.length+1))sess.lvSeen=true;
+      brief.hidden=name!==BRIEF;fuBox.hidden=name!==FU;lvBoxes.forEach((b,i)=>{b.hidden=name!==lvName(i+2)});prView.hidden=!isPr;host.hidden=isView(name);
       if(!isView(name)){ed.swapDoc(isTest?testDoc:name===mineName?mineDoc:name===reviewName?reviewDoc:name===designName?designDoc:docs[name]);ed.setOption("readOnly",isTest||locked(name));ed.refresh()}
       renderRail();
     };
@@ -281,7 +299,8 @@
         if(TITLES[name])b.title=TITLES[name];
       };
       rail.appendChild(el("h4","","Scenario"));
-      tab(BRIEF,"📋","Brief");
+      tab(BRIEF,"📋",multi?"Level 1":"Brief");
+      unlockedLv().forEach((lv,i)=>tab(lvName(i+2),"✦","Level "+(i+2),i===sess.levels.length-1&&!sess.lvSeen?el("span","ap-badge","new"):null));
       if(sess.followup)tab(FU,"✦","New requirement",sess.fuSeen?null:el("span","ap-badge","new"));
       if(prName)tab(prName,sc.incident?"🚨":"🔀",sc.incident?"Incident":"Pull request");
       if(designName)tab(designName,"✎");
@@ -323,15 +342,25 @@
       if(testDoc&&sc.followupVisibleTests)testDoc.setValue(sc.visibleTests+FU_HEAD+sc.followupVisibleTests);
       sess.fuSeen=false;save();renderRail(); // the rail item carries a "new" badge until it is opened
     }
-    const save=()=>dead||writeSession(sc.id,{id:sess.id,msgs:sess.msgs,files:state.files(),custom:mineDoc.getValue(),review:reviewDoc?reviewText():undefined,design:designDoc?designText():undefined,coding:sess.coding||undefined,followup:sess.followup||undefined,fuSeen:sess.fuSeen||undefined,open:sess.open,hidden:sess.hidden||undefined,runs:sess.runs,viewedTests:sess.viewedTests,elapsed:sess.elapsed,last:sess.last,result:sess.result});
+    // The next level appears when every visible test passes (the candidate's own tests aside), as in a multi-level assessment.
+    function unlockLevel(){
+      if(!multi||sess.levels.length>=LV.length)return;
+      sess.levels.push(sess.elapsed);
+      if(testDoc)testDoc.setValue(visibleText());
+      sess.lvSeen=false;save();renderRail(); // the rail item carries a "new" badge until it is opened
+      const k=sess.levels.length+1,note=el("div","sum","All visible tests pass. Level "+k+" unlocked: "+LV[k-2].title+". Open it in the left rail.");
+      results.prepend(note);
+    }
+    const save=()=>dead||writeSession(sc.id,{id:sess.id,msgs:sess.msgs,files:state.files(),custom:mineDoc.getValue(),review:reviewDoc?reviewText():undefined,design:designDoc?designText():undefined,coding:sess.coding||undefined,followup:sess.followup||undefined,fuSeen:sess.fuSeen||undefined,levels:multi?sess.levels:undefined,lvSeen:sess.lvSeen||undefined,open:sess.open,hidden:sess.hidden||undefined,runs:sess.runs,viewedTests:sess.viewedTests,elapsed:sess.elapsed,last:sess.last,result:sess.result});
     let saveT=0;
     ed.on("change",()=>{clearTimeout(saveT);saveT=setTimeout(save,500)});
     // A test() call outside a comment counts as a written test; the untouched starter has none.
     const mineCount=()=>(mineDoc.getValue().replace(/\/\*[\s\S]*?\*\//g,"").replace(/^\s*\/\/.*$/gm,"").match(/\btest\s*\(/g)||[]).length;
 
-    // Counts up while the workspace is visible and the browser tab is in the foreground.
+    // Counts up while the workspace is visible and the browser tab is in the foreground, and stops from the moment Finish is pressed (Reset starts it again).
+    let finishing=false;
     const tick=setInterval(()=>{
-      if(root().hidden||document.hidden)return;
+      if(root().hidden||document.hidden||finishing||sess.result)return;
       sess.elapsed++;timer.textContent=fmt(sess.elapsed);
       if(lld&&!sess.followup&&sess.elapsed>=Math.round(sc.minutes*60*0.6))revealFollowup();
       if(sess.elapsed%5===0)save();
@@ -407,7 +436,7 @@
       try{
         // Only the latest 11 messages go up (an odd count keeps the first one a user turn).
         const messages=sess.msgs.slice(-11);
-        const res=await apiFetch("/api/ap/chat",{method:"POST",signal:ac.signal,body:JSON.stringify({scenario:sc.id,session:sess.id,files:state.files(),messages,review:reviewText().slice(0,6000),...(lld?{design:designText().slice(0,8000),followup:!!sess.followup}:{})})});
+        const res=await apiFetch("/api/ap/chat",{method:"POST",signal:ac.signal,body:JSON.stringify({scenario:sc.id,session:sess.id,files:state.files(),messages,review:reviewText().slice(0,6000),...(lld?{design:designText().slice(0,8000),followup:!!sess.followup}:{}),...(multi?{level:1+sess.levels.length}:{})})});
         if(!res.ok){const d=await res.json();throw new Error(d.error||"Request failed")}
         answer=(await readSSE(res,a=>{out.classList.remove("busy");renderMd(out,a);if(chatLog.scrollHeight-chatLog.scrollTop-chatLog.clientHeight<160)chatLog.scrollTop=chatLog.scrollHeight})).trim();
         sess.msgs.push({role:"assistant",content:answer||"(no answer)"});
@@ -431,7 +460,8 @@
       if(!full)sess.runs++;
       const mine=mineDoc.getValue();
       const fu=lld&&sess.followup;
-      const vis=fu?apJoin(sc.visibleTests,sc.followupVisibleTests):sc.visibleTests,hid=fu?apJoin(sc.tests,sc.followupTests):sc.tests;
+      let vis=fu?apJoin(sc.visibleTests,sc.followupVisibleTests):sc.visibleTests,hid=fu?apJoin(sc.tests,sc.followupTests):sc.tests;
+      unlockedLv().forEach(lv=>{vis=apJoin(vis,lv.visibleTests);hid=apJoin(hid,lv.tests)});
       const src=!sc.visibleTests?sc.tests:apCombine(vis,full?hid:"",mine);
       const res=await runAp(state.files(),src,s=>{con.textContent+=s});
       running=false;run.disabled=false;stop.hidden=true;
@@ -440,7 +470,9 @@
       if(total){sess.last={passed,total};save()}
       renderRail();
       // Every visible test passing (the candidate's own tests aside) brings the follow-up in early.
-      if(lld&&!full&&!sess.followup&&sess.coding&&res.names.length&&res.names.every((n,i)=>n.startsWith("[mine] ")||(res.cases[i]&&res.cases[i].pass)))revealFollowup();
+      const allVisible=res.names.length&&res.names.every((n,i)=>n.startsWith("[mine] ")||(res.cases[i]&&res.cases[i].pass));
+      if(lld&&!full&&!sess.followup&&sess.coding&&allVisible)revealFollowup();
+      if(multi&&!full&&allVisible)unlockLevel();
       return res;
     }
     // ---- finish: fresh test run, then the server evaluates the transcript + files against its own flaw log ----
@@ -465,7 +497,7 @@
       if(sess.hidden&&sess.hidden.length){
         hidHead=el("h4","","Hidden tests");evalBox.appendChild(hidHead);
         evalBox.appendChild(el("div","hint","These ran with your visible tests when you finished. Open a failing one to see the test."));
-        const box=el("div","ap-res");WS.renderHidden(box,sess.hidden,[sc.tests,sess.followup&&sc.followupTests]);evalBox.appendChild(box);
+        const box=el("div","ap-res");WS.renderHidden(box,sess.hidden,[sc.tests,sess.followup&&sc.followupTests,...unlockedLv().map(lv=>lv.tests)]);evalBox.appendChild(box);
       }
       else if(sc.visibleTests&&!sess.hidden){evalBox.appendChild(el("h4","","Hidden tests"));evalBox.appendChild(el("div","hint","This feedback is from before hidden test results were kept. Press Finish & get feedback again to see which hidden tests failed and their code."))}
       if(r.issues){
@@ -477,6 +509,10 @@
           if(x.evidence)row.appendChild(el("div","hint",x.evidence));
           evalBox.appendChild(row);
         });
+      }
+      if(r.levels){
+        evalBox.appendChild(el("h4","","Levels"));
+        evalBox.appendChild(el("div","hint","Reached level "+r.levels.reached+" of "+r.levels.total+(r.levels.at_min.length?". "+r.levels.at_min.map((m,i)=>"Level "+(i+2)+" unlocked at "+m+" min").join(", ")+".":". Level 2 unlocks when every visible test passes.")));
       }
       if(r.followup){
         evalBox.appendChild(el("h4","","How the design took the follow-up"));
@@ -507,7 +543,6 @@
       evalBox.appendChild(el("div","hint","Reviewed by "+r.model+" · "+r.at.replace("T"," ").replace(/\+00:00$/," UTC")));
     }
     if(sess.result)renderEval(sess.result);
-    let finishing=false;
     finish.onclick=async()=>{
       if(finishing||running)return;
       if(chatBusy){evalBox.hidden=false;evalBox.textContent="Wait for the assistant's reply to finish first.";return}
@@ -520,7 +555,7 @@
         sess.hidden=WS.hiddenCases(res,"[hidden] ");
         const total=res.names.length,passed=res.cases.filter(c=>c&&c.pass).length;
         if(!total)failed.push("(tests could not run: "+(res.fatal||res.err.trim().split("\n")[0]||"unknown error").slice(0,150)+")");
-        const resp=await apiFetch("/api/ap/evaluate",{method:"POST",body:JSON.stringify({scenario:sc.id,session:sess.id,transcript:sess.msgs,files:state.files(),tests:{passed,total,failed:failed.slice(0,100)},activity:{runs:sess.runs,viewedTests:!!sess.viewedTests,customTests:mineCount(),customSource:mineCount()?mineDoc.getValue().slice(0,4000):""},review:reviewText().slice(0,6000),...(lld?{design:designText().slice(0,8000),followup:sess.followup||null}:{}),elapsed:sess.elapsed})});
+        const resp=await apiFetch("/api/ap/evaluate",{method:"POST",body:JSON.stringify({scenario:sc.id,session:sess.id,transcript:sess.msgs,files:state.files(),tests:{passed,total,failed:failed.slice(0,100)},activity:{runs:sess.runs,viewedTests:!!sess.viewedTests,customTests:mineCount(),customSource:mineCount()?mineDoc.getValue().slice(0,4000):""},review:reviewText().slice(0,6000),...(lld?{design:designText().slice(0,8000),followup:sess.followup||null}:{}),...(multi?{levels:sess.levels}:{}),elapsed:sess.elapsed})});
         const data=await resp.json();
         if(!resp.ok)throw new Error(data.error||"Request failed");
         sess.result=data;save();renderEval(data);renderRail();
@@ -545,6 +580,7 @@
       if(ac)ac.abort();
       sess.id=crypto.randomUUID();sess.msgs=[];sess.elapsed=0;timer.textContent=fmt(0);sess.result=null;evalBox.hidden=true;evalBox.textContent="";chatLog.textContent="";save(); // a new attempt gets a clean flaw log too
       if(lld){designDoc.setValue(DESIGN_STARTER);sess.coding=false;sess.followup=null;save();openWork(sc)} // rebuilds the gate, tabs and follow-up card
+      if(multi){sess.levels=[];sess.lvSeen=false;save();openWork(sc)} // back to level 1 only
     };
   }
 

@@ -86,6 +86,27 @@ def ap_followup_snapshot(body):
     return fu
 
 
+def ap_levels_unlocked(body, meta):
+    """Multi-level scenarios: when each later level was unlocked (elapsed seconds), level 2 first; [] if only level 1 is open."""
+    at = body.get("levels", [])
+    if not (isinstance(at, list) and len(at) <= len(meta.get("levels", []))
+            and all(isinstance(x, int) and not isinstance(x, bool) and 0 <= x <= 86400 * 7 for x in at)):
+        raise ApiError(400, "Bad levels.")
+    return at
+
+
+def read_ap_level_visible_tests(sid, meta, unlocked):
+    """The visible tests of level 1 plus every unlocked later level, joined the way the browser shows them."""
+    out = read_ap_visible_tests(sid) or ""
+    for k, level in enumerate(meta["levels"][:unlocked], 2):
+        try:
+            with open(os.path.join(AP_DIR, sid, f"level{k}_visible_tests.js"), encoding="utf-8") as f:
+                out += f"\n\n// ---- Level {k}: {level['title']} ----\n\n" + f.read()
+        except OSError:
+            pass
+    return out
+
+
 def followup_diff(before, after):
     """(unified diff text, files changed, lines added, lines removed) between the reveal snapshot and the final files."""
     parts, changed, added, removed = [], 0, 0, 0
@@ -167,7 +188,7 @@ def read_ap_visible_tests(sid):
         return None
 
 
-def build_ap_system(meta, files, flaws, visible_tests=None, test_name="tests.js", pr=None, review="", design=None, followup=None):
+def build_ap_system(meta, files, flaws, visible_tests=None, test_name="tests.js", pr=None, review="", design=None, followup=None, unlocked=None):
     reqs = "\n".join(f"{i}. {r}" for i, r in enumerate(meta["requirements"], 1))
     shown = "\n\n".join(f"### {n}\n```js\n{c}\n```" for n, c in files.items())
     system = prompts.SYSTEM_AP_CHAT.format(title=meta["title"], brief=meta["brief"], reqs=reqs, files="{files}").replace("{files}", shown)
@@ -182,6 +203,10 @@ def build_ap_system(meta, files, flaws, visible_tests=None, test_name="tests.js"
         if followup:
             reqs_fu = "\n".join(f"{i}. {r}" for i, r in enumerate(followup["requirements"], 1))
             system += prompts.SYSTEM_AP_LLD_FOLLOWUP.format(title=followup["title"], brief=followup["brief"], reqs="{reqs}").replace("{reqs}", reqs_fu)
+    if unlocked is not None:
+        later = "".join(f"\nLevel {k}: {lv['title']}. {lv['brief']}\n" + "\n".join(f"{i}. {r}" for i, r in enumerate(lv["requirements"], 1))
+                        for k, lv in enumerate(meta["levels"][:unlocked], 2))
+        system += prompts.SYSTEM_AP_LEVELS.format(n=len(meta["levels"]) + 1, level=unlocked + 1, level1=meta.get("levelTitle", "Level 1"), later="{later}").replace("{later}", later or "\n(none yet)")
     if flaws:
         listing = "\n".join(f'- id: {f["id"]}\n  trigger: {f["trigger"]}\n  flawed thing to write: {f["wrongClaim"]}\n  what is actually correct: {f["correctBehavior"]}' for f in flaws)
         system += prompts.SYSTEM_AP_FLAWS.replace("{flaws}", listing)
@@ -213,6 +238,8 @@ def evaluate_ap(body):
     pr = read_ap_pr(sc_id) if issues else None
     lld = meta.get("kind") == "lld"
     design, fu = (ap_design(body), ap_followup_snapshot(body)) if lld else ("", None)
+    levels = meta.get("kind") == "levels"
+    unlocked_at = ap_levels_unlocked(body, meta) if levels else []
     areas, schema = (AP_AREAS_REVIEW, SCHEMA_AP_EVAL_REVIEW) if issues else (AP_AREAS_LLD, SCHEMA_AP_EVAL_LLD) if lld else (AP_AREAS, SCHEMA_AP_EVAL)
     by_id = {f["id"]: f for f in flaws}
     log = read_ap_log(sess, sc_id)
@@ -247,9 +274,16 @@ def evaluate_ap(body):
                      + (f"```diff\n{diff}\n```" if diff else "(no changes)"))
         else:
             user += "\n\nThe follow-up was never revealed: the candidate finished before it appeared, so its tests did not run."
+    if levels:
+        n = len(meta["levels"]) + 1
+        user += f"\n\nLevels: the candidate reached level {len(unlocked_at) + 1} of {n}. Level 1 ({meta.get('levelTitle', 'Level 1')}) is the task and requirements above."
+        for k, lv in enumerate(meta["levels"], 2):
+            reached = k - 2 < len(unlocked_at)
+            user += (f"\nLevel {k}: {lv['title']} ({'unlocked at ' + str(unlocked_at[k - 2] // 60) + ' min' if reached else 'never reached: its tests did not run'}). {lv['brief']}\n"
+                     + "\n".join(f"{i}. {r}" for i, r in enumerate(lv["requirements"], 1)))
     take_budget()
     try:
-        ev = BACKEND.json(prompts.SYSTEM_AP_EVAL + (prompts.SYSTEM_AP_EVAL_REVIEW if issues else prompts.SYSTEM_AP_EVAL_LLD if lld else ""), user, schema)
+        ev = BACKEND.json(prompts.SYSTEM_AP_EVAL + (prompts.SYSTEM_AP_EVAL_REVIEW if issues else prompts.SYSTEM_AP_EVAL_LLD if lld else prompts.SYSTEM_AP_EVAL_LEVELS if levels else ""), user, schema)
     except Exception as e:
         raise translate(e)
     if (not valid(ev, schema) or [x["area"] for x in ev["scores"]] != list(areas)
@@ -274,6 +308,8 @@ def evaluate_ap(body):
             j = judged_i.get(x["id"], {})
             outcome = j.get("outcome") if j.get("outcome") in AP_ISSUE_OUTCOMES else "unclear"
             result["issues"].append({**{k: x[k] for k in ("id", "title", "severity", "where", "detail")}, "outcome": outcome, "evidence": j.get("evidence", "")})
+    if levels:
+        result["levels"] = {"reached": len(unlocked_at) + 1, "total": len(meta["levels"]) + 1, "at_min": [x // 60 for x in unlocked_at]}
     if lld:
         result["followup"] = {"revealed": fu is not None, **(fu_stats or {}), "assessment": ev.get("followup_assessment", "")}
     with _ap_lock:

@@ -3,7 +3,8 @@ from ..chat import chat_messages
 from ..data import load_ap_scenarios
 from ..errors import ApiError
 from ..features.aipair import (
-    FlawFilter, ap_design, ap_files_ok, ap_review, ap_session_path, build_ap_system, evaluate_ap, log_ap_flaw, read_ap_log, read_ap_pr, read_ap_scenario, read_ap_visible_tests)
+    FlawFilter, ap_design, ap_files_ok, ap_review, ap_session_path, build_ap_system, evaluate_ap, log_ap_flaw, read_ap_level_visible_tests, read_ap_log, read_ap_pr,
+    read_ap_scenario, read_ap_visible_tests)
 from .router import get, post
 
 AP_BODY_CAP = 262144
@@ -33,10 +34,16 @@ def chat(h, body):
     # Object design scenarios: the follow-up (and its flaws) only enter the conversation once the browser has revealed it.
     lld = meta.get("kind") == "lld"
     revealed = lld and body.get("followup") is True
+    # Multi-level scenarios: only the levels the browser has unlocked (and their flaws and visible tests) are in play.
+    levels = meta.get("kind") == "levels"
+    level = body.get("level", 1)
+    if levels and not (isinstance(level, int) and not isinstance(level, bool) and 1 <= level <= len(meta["levels"]) + 1):
+        raise ApiError(400, "Bad level.")
     served = {f["id"] for f in read_ap_log(sess, sc_id)["flaws"]}
-    avail = [f for f in flaws if f["id"] not in served and (revealed or not f.get("followup"))]
-    system = build_ap_system(meta, files, avail, read_ap_visible_tests(sc_id), sc_id + ".test.js", read_ap_pr(sc_id), review,
-                             ap_design(body) if lld else None, meta.get("followup") if revealed else None)
+    avail = [f for f in flaws if f["id"] not in served and (revealed or not f.get("followup")) and (not levels or f.get("level", 1) <= level)]
+    visible = read_ap_level_visible_tests(sc_id, meta, level - 1) if levels else read_ap_visible_tests(sc_id)
+    system = build_ap_system(meta, files, avail, visible, sc_id + ".test.js", read_ap_pr(sc_id), review,
+                             ap_design(body) if lld else None, meta.get("followup") if revealed else None, level - 1 if levels else None)
     filt, reply = FlawFilter(f["id"] for f in avail), len(messages) // 2
 
     def transform(chunks):

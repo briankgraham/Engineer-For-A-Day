@@ -1,0 +1,9 @@
+{
+  "dedupe-by-charge": [{"file": "webhooks.js", "from": "const key = event.id;", "to": "const key = event.data.chargeId;"}],
+  "dedupe-by-content": [{"file": "webhooks.js", "from": "const key = event.id;", "to": "const key = event.type + \":\" + event.data.chargeId + \":\" + event.data.amount;"}],
+  "mark-before-apply": [{"file": "webhooks.js", "from": "    inFlight.add(key);\n", "to": "    inFlight.add(key);\n    processed.add(key);\n"}],
+  "refund-total-before-write": [{"file": "webhooks.js", "from": "      await ledger.debit(charge.account, d.amount, event.id);\n      charge.refunded += d.amount;", "to": "      charge.refunded += d.amount;\n      await ledger.debit(charge.account, d.amount, event.id);"}],
+  "swallow-errors": [{"file": "webhooks.js", "from": "return { status: 500, body: { error: String((e && e.message) || e) } };", "to": "return { status: 200, body: { ok: true } };"}],
+  "no-in-flight-guard": [{"file": "webhooks.js", "from": "    if (inFlight.has(key)) return { status: 409, body: { error: \"already in progress, retry later\" } };\n", "to": ""}],
+  "unknown-charge-acked": [{"file": "webhooks.js", "from": "if (!charge) return { status: 409, body: { error: \"unknown charge \" + d.chargeId + \", retry later\" } };", "to": "if (!charge) return { status: 200, body: { ignored: true } };"}]
+}

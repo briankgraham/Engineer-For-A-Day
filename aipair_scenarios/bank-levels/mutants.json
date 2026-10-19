@@ -1,0 +1,50 @@
+{
+  "transfer-same-account": [
+    {
+      "file": "bank.js",
+      "from": "    if (sourceId === targetId) return null;\n",
+      "to": ""
+    }
+  ],
+  "top-spenders-ties": [
+    {
+      "file": "bank.js",
+      "from": ".sort((a, b) => b.outgoing - a.outgoing || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))",
+      "to": ".sort((a, b) => b.outgoing - a.outgoing)"
+    }
+  ],
+  "cashback-on-status-check": [
+    {
+      "file": "bank.js",
+      "fromFile": "mutants/bank-settle-on-status.js"
+    }
+  ],
+  "cashback-rounding": [
+    {
+      "file": "bank.js",
+      "from": "Math.floor((p.amount * CASHBACK_PERCENT) / 100)",
+      "to": "Math.round(p.amount * 0.02)"
+    }
+  ],
+  "merge-rewrites-history": [
+    {
+      "file": "bank.js",
+      "from": "    keep.credit(timestamp, gone.balance);\n",
+      "to": "    keep.history = keep.history.map(([t, bal]) => [t, bal + gone.balanceAt(t)]);\n    keep.credit(timestamp, gone.balance);\n"
+    }
+  ],
+  "merged-account-still-answers": [
+    {
+      "file": "bank.js",
+      "from": "    gone.closedAt = timestamp;\n",
+      "to": ""
+    }
+  ],
+  "merge-drops-cashback": [
+    {
+      "file": "bank.js",
+      "from": "    for (const p of this.payments.values()) if (p.account === gone) p.account = keep;\n",
+      "to": ""
+    }
+  ]
+}

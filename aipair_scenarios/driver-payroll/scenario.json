@@ -1,0 +1,33 @@
+{
+  "order": 20,
+  "kind": "lld",
+  "title": "Design a driver payroll system",
+  "blurb": "Object design round: track what a delivery company owes its drivers, run pay runs, then absorb rate changes halfway through.",
+  "difficulty": "Hard",
+  "minutes": 60,
+  "brief": "A delivery company pays its drivers by the hour for the time they spend on deliveries. Design and build the payroll behind the createPayroll API below: record drivers and deliveries, report what has been earned and what is still owed, and pay drivers in pay runs. This is an object-oriented design round: the interviewer grades how you split the responsibilities (the drivers, their rates, their deliveries, the pay runs) as much as whether it works. Start in design.md: the classes, what each one owns, and the interfaces between them. The code files unlock once your design has some substance. A new requirement arrives partway through, as it would in a real interview, and a design with clear responsibilities absorbs it in one place. Times are plain integers (seconds), so everything is deterministic.",
+  "requirements": [
+    "createPayroll() in payroll.js returns the payroll object below. All money is in integer cents and every time is an integer number of seconds, 0 or more.",
+    "addDriver(driverId, hourlyRate): driverId is a non-empty string and hourlyRate a positive integer (cents per hour). Adding a driver id that already exists throws RangeError, and so do bad values.",
+    "recordDelivery(driverId, startTime, endTime) records one delivery. An unknown driver, a bad time, or an endTime that is not after startTime throws RangeError. Every call is its own delivery, even if a driver's deliveries overlap (orders picked up together are each paid).",
+    "A delivery costs hourlyRate × (endTime − startTime) / 3600, rounded to the nearest cent (Math.round) on its own. Totals are sums of those rounded costs.",
+    "getTotalCost() returns the cost of every delivery recorded so far, paid or not.",
+    "payUpTo(payTime) is a pay run: it pays every unpaid delivery that ended at or before payTime and returns the cents it paid. A delivery still running at payTime is not paid, not even partly; a later run pays it. A delivery is never paid twice, so running payUpTo again with the same time pays 0.",
+    "Pay runs go forward: a payTime earlier than the latest pay run's time throws RangeError. The same time again is allowed.",
+    "Deliveries can be recorded late: one that ended before the latest pay run is unpaid until the next pay run, which pays it.",
+    "getTotalCostUnpaid() returns the cost of the deliveries not paid yet. getTotalCost() always equals what pay runs have paid plus getTotalCostUnpaid().",
+    "Only createPayroll and its methods are fixed. Split the code across payroll.js, driver.js and rates.js however your design says."
+  ],
+  "followup": {
+    "title": "Rate changes",
+    "brief": "Drivers get raises, and some get cuts. Rates now change over time, and each delivery has to be paid at the rate that applied when it happened. Add it without breaking anything that works today.",
+    "requirements": [
+      "setRate(driverId, hourlyRate, fromTime): from fromTime on, the driver's rate is hourlyRate. The rate given to addDriver applies from the beginning of time until the first change.",
+      "A delivery is paid at the rate in effect when it starts (the change with the latest fromTime at or before its startTime). It is never split across two rates, even if a change happens while it runs.",
+      "That holds whenever things were recorded: a delivery recorded before a change, but starting at or after its fromTime, is paid at the new rate. A late delivery that starts before a change is paid at the old rate.",
+      "Rates can be set in any order. Setting a rate again for the same driver and fromTime replaces that change.",
+      "What was paid never changes. A fromTime earlier than the latest pay run's time throws RangeError (that period is closed); the same time is allowed. An unknown driver or a bad rate or time throws RangeError."
+    ]
+  },
+  "files": ["payroll.js", "driver.js", "rates.js"]
+}

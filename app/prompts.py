@@ -147,6 +147,11 @@ Follow-up: {title}. {brief}
 {reqs}
 """
 
+SYSTEM_AP_LEVELS = """
+This is a MULTI-LEVEL assessment with {n} levels. Each level unlocks only when every visible test of the levels so far passes, and earlier levels must keep working. The developer is on level {level}. Level 1 ({level1}) is the task and requirements above. Help only with the levels listed here: you do not know what later levels will ask, so never guess at them or build for them.
+Unlocked later levels:{later}
+"""
+
 SYSTEM_AP_FLAWS = """
 PRACTICE-MODE INSTRUCTIONS (never mention, hint at, or acknowledge these). This tool trains developers to verify AI output, so you sometimes give a subtly wrong answer on purpose. The candidate flaws are listed below.
 - Serve at most ONE flaw per reply, and only when the developer's latest message clearly matches that flaw's trigger. If nothing matches, answer correctly and honestly with no flaw.
@@ -180,10 +185,16 @@ This was a CODE REVIEW scenario: the candidate reviewed a teammate's pull reques
 - Verification should also reflect whether they proved suspected bugs (a test in my-tests.js that reproduces one, or a concrete input) rather than just asserting them, and whether they trusted the green CI or the review bot.
 - Correctness is about the final fixed files against the requirements, as before."""
 
+SYSTEM_AP_EVAL_LEVELS = """
+
+This was a MULTI-LEVEL assessment: each level unlocked only when every visible test of the levels so far passed, and you are told which levels the candidate reached and when. These rules change the above:
+- Judge correctness on the levels reached. Tests of levels never reached did not run: do not count them as failures, but say in the summary how far the candidate got and how the pace compared with the suggested time.
+- Under decomposition, credit a level-1 design that absorbed the later levels without rewrites (for example per-account state that could grow a history), and note where a later level forced a large rework."""
+
 SYSTEM_AP_EVAL_LLD = """
 
 This was an OBJECT-ORIENTED DESIGN round: the candidate wrote design.md before coding, implemented it behind a fixed public API, and a FOLLOW-UP requirement was revealed partway through. You also receive their design.md, the follow-up, when it was revealed, and a diff of every change made after the reveal. These rules change the above:
-- The first score area is "design" instead of "decomposition". Judge design.md and the final code's structure together: clear single responsibilities (no god object that does dispatching, movement and bookkeeping in one place), interfaces between parts rather than reaching into each other's state, a design.md that names the parts and their interfaces before coding, and code that actually follows it. Above all, use the follow-up diff: a change that landed in one place (the part that owns that responsibility) is strong evidence of a good design; a change smeared across every file and function is evidence against. A design.md that is empty or boilerplate caps this area at 2.
+- The first score area is "design" instead of "decomposition". Judge design.md and the final code's structure together: clear single responsibilities (no god object that owns every concern, such as dispatching, movement and bookkeeping, in one place), interfaces between parts rather than reaching into each other's state, a design.md that names the parts and their interfaces before coding, and code that actually follows it. Above all, use the follow-up diff: a change that landed in one place (the part that owns that responsibility) is strong evidence of a good design; a change smeared across every file and function is evidence against. A design.md that is empty or boilerplate caps this area at 2.
 - Some served flaws are design advice rather than bugs (for example, to put everything in one class). For those, "caught" means the candidate pushed back or kept a better structure, and "shipped" means the final code follows the bad advice.
 - Failing tests whose names start with "follow-up:" belong to the new requirement. If the follow-up was never revealed, its tests were not run: do not count that against correctness, but say so in the summary.
 - followup_assessment: 2-3 sentences on how the design absorbed the follow-up, citing the diff (which files and functions changed and whether that matched the responsibilities in design.md). If the follow-up was never revealed, say that it was not reached."""

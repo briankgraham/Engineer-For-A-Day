@@ -1,0 +1,41 @@
+{
+  "order": 23,
+  "kind": "levels",
+  "title": "Debug a queue and solve array problems",
+  "blurb": "A multi-level round: fix a ring-buffer deque that loses and reorders jobs, then use it to solve two array problems in O(n): sliding window maximum and the shortest subarray with a large enough sum.",
+  "difficulty": "Hard",
+  "minutes": 60,
+  "levelTitle": "Debug the deque",
+  "brief": "This round has three levels. Only level 1 is shown now; when every visible test passes, the next level unlocks with new requirements and new tests, and everything from earlier levels must keep working. Level 1 is debugging. deque.js is the double-ended queue behind the team's job scheduler: a ring buffer that doubles in size when it is full. Since it shipped, on-call has seen jobs run out of order after a burst of traffic, the newest job come back wrong when a job is cancelled from the back, and a job vanish right after an idle worker polled the empty queue. Several of the visible tests fail. Find each bug and fix it in deque.js without rewriting it as something else: every operation must stay O(1) (amortized for growth). Hidden tests for each level you reach run when you finish.",
+  "requirements": [
+    "new Deque(capacity) starts with room for capacity items (default 4) and doubles its buffer whenever a push finds it full, so it never runs out of room.",
+    "pushBack(x) and pushFront(x) add x at the back or the front and return the new size. popFront() and popBack() remove and return the item at that end, and peekFront() and peekBack() return it without removing it. On an empty deque all four return undefined and change nothing.",
+    "size is the number of items. isEmpty() is true when there are none. at(i) is the i-th item from the front (0-based), or undefined when i is not between 0 and size - 1. toArray() returns the items from front to back.",
+    "Every operation is O(1), amortized for the pushes that grow the buffer: keep the ring buffer (no Array.prototype.shift, unshift or splice)."
+  ],
+  "levels": [
+    {
+      "title": "Sliding window maximum",
+      "brief": "The scheduler's dashboard shows the peak queue depth over the last k samples. Add windowMax to arrays.js. Example: windowMax([1, 3, -1, -3, 5, 3, 6, 7], 3) is [3, 3, 5, 5, 6, 7].",
+      "requirements": [
+        "windowMax(nums, k) returns the maximum of every contiguous window of k elements of nums, from left to right: nums.length - k + 1 values.",
+        "If k is less than 1 or greater than nums.length, it returns [].",
+        "It runs in O(n): each element is read a constant number of times, whatever k is. The tests count reads of nums and allow at most 10 per element. Use the Deque from level 1.",
+        "It never modifies nums."
+      ]
+    },
+    {
+      "title": "Shortest subarray with a large enough sum",
+      "brief": "Capacity planning wants the shortest stretch of samples whose net change in queue depth reaches a target. The samples can be negative. Add shortestSubarray to arrays.js. Examples: shortestSubarray([2, -1, 2], 3) is 3, and shortestSubarray([84, -37, 32, 40, 95], 167) is 3.",
+      "requirements": [
+        "shortestSubarray(nums, k) returns the length of the shortest non-empty contiguous subarray of nums whose sum is at least k, or -1 if there is none. nums holds integers, which can be negative, and k is a positive integer.",
+        "It runs in O(n): each element is read a constant number of times. The tests count reads of nums and allow at most 10 per element.",
+        "It never modifies nums."
+      ]
+    }
+  ],
+  "files": [
+    "deque.js",
+    "arrays.js"
+  ]
+}

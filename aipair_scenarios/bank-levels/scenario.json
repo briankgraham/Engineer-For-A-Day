@@ -1,0 +1,52 @@
+{
+  "order": 22,
+  "kind": "levels",
+  "title": "Implement a timestamped banking system",
+  "blurb": "A multi-level coding assessment: accounts and transfers, then top spenders, payments with delayed cashback, and account merges with balance history. Each level unlocks when the last one passes.",
+  "difficulty": "Hard",
+  "minutes": 90,
+  "levelTitle": "Accounts, deposits and transfers",
+  "brief": "Build an in-memory banking system in four levels, like a timed multi-level coding assessment. Only level 1 is shown now. When every visible test passes, the next level unlocks with new requirements and new tests, and everything from earlier levels must keep working. Later levels build on earlier ones, so a clear design now saves you time later. Every operation gets the current timestamp (an integer number of milliseconds) as its first argument, and timestamps only go up from one call to the next. Inputs are always well-formed: ids are non-empty strings and amounts are positive integers, so there is nothing to validate. Hidden tests for each level you reach run when you finish.",
+  "requirements": [
+    "createBank() in bank.js returns the bank. All of its methods take timestamp first.",
+    "createAccount(timestamp, accountId) creates an account with a balance of 0 and returns true. If an account with that id already exists it returns false and changes nothing.",
+    "deposit(timestamp, accountId, amount) adds amount to the account and returns the new balance, or null if the account does not exist.",
+    "transfer(timestamp, sourceId, targetId, amount) moves amount from the source account to the target account and returns the new balance of the source. It returns null and changes nothing if either account does not exist, if both ids are the same account, or if the source has less than amount."
+  ],
+  "levels": [
+    {
+      "title": "Top spenders",
+      "brief": "Finance wants to see who spends the most. Add a ranking of accounts by how much money has left them.",
+      "requirements": [
+        "topSpenders(timestamp, n) returns up to n strings of the form \"<accountId>(<total>)\", where total is the outgoing total of the account: the sum of its successful transfers out.",
+        "Accounts are sorted by outgoing total, highest first. Ties are sorted by account id in ascending (alphabetical) order. Accounts that have spent nothing are included with a total of 0. If there are fewer than n accounts, all of them are returned.",
+        "Deposits and money received by transfer do not count as outgoing. Failed transfers change nothing."
+      ]
+    },
+    {
+      "title": "Payments with cashback",
+      "brief": "Accounts can now pay merchants. Every payment earns cashback, paid a day later.",
+      "requirements": [
+        "pay(timestamp, accountId, amount) withdraws amount from the account and returns a payment id, or null (changing nothing) if the account does not exist or has less than amount. Payment ids are \"payment1\", \"payment2\" and so on, counting successful payments across the whole bank.",
+        "Payments count as outgoing for topSpenders, the same as transfers out. Cashback does not reduce the outgoing total.",
+        "Each payment earns cashback of 2% of its amount, rounded down to a whole number, credited to the account exactly 24 hours (86400000 ms) after the payment. Cashback that is due at or before the timestamp of any operation is credited before that operation runs, whichever account the operation touches.",
+        "getPaymentStatus(timestamp, accountId, paymentId) returns \"IN_PROGRESS\" until the cashback of the payment has been credited and \"CASHBACK_RECEIVED\" from then on. It returns null if the account does not exist, if the payment does not exist, or if the payment was not made from that account."
+      ]
+    },
+    {
+      "title": "Merges and balance history",
+      "brief": "Customers can now merge two of their accounts into one, and support needs to look up what an account held at any moment in the past.",
+      "requirements": [
+        "mergeAccounts(timestamp, accountId1, accountId2) merges account 2 into account 1 and returns true. It returns false and changes nothing if the ids are the same or either account does not exist.",
+        "After a merge, account 1 holds both balances and both outgoing totals. Payments made from account 2 now belong to account 1: their pending cashback is credited to account 1, and getPaymentStatus works for them through account 1.",
+        "Account 2 is removed: every operation treats it as an account that does not exist, and it no longer appears in topSpenders. A new account can later be created with the same id; it starts empty.",
+        "getBalance(timestamp, accountId, timeAt) returns the balance the account had at timeAt (timeAt <= timestamp), after everything that happened at timeAt, including cashback due by then. It returns null if no account with that id existed at timeAt.",
+        "Merges do not rewrite history. For account 1, a time before the merge gives its own balance then, without account 2. For account 2, a time before the merge gives its balance then, and the moment of the merge or later gives null (unless a new account with that id exists by then)."
+      ]
+    }
+  ],
+  "files": [
+    "bank.js",
+    "account.js"
+  ]
+}

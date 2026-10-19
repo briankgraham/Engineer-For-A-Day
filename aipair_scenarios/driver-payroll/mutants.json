@@ -1,0 +1,16 @@
+{
+  "round-the-total": [
+    { "file": "driver.js", "from": "return Math.round((this.rates.at(d.start) * (d.end - d.start)) / 3600);", "to": "return (this.rates.at(d.start) * (d.end - d.start)) / 3600;" },
+    { "file": "driver.js", "from": "return this.unpaid.reduce((sum, d) => sum + this.cost(d), 0);", "to": "return Math.round(this.unpaid.reduce((sum, d) => sum + this.cost(d), 0));" },
+    { "file": "driver.js", "from": "return due.reduce((sum, d) => sum + this.cost(d), 0);", "to": "return Math.round(due.reduce((sum, d) => sum + this.cost(d), 0));" }
+  ],
+  "pay-in-progress": [{ "file": "driver.js", "from": "const done = d => d.end <= t;", "to": "const done = d => d.start <= t;" }],
+  "pay-twice": [{ "file": "driver.js", "from": "    this.unpaid = this.unpaid.filter(d => !done(d));\n", "to": "" }],
+  "late-delivery-dropped": [{ "file": "payroll.js", "from": "      d.record(startTime, endTime);", "to": "      if (endTime > paidUpTo) d.record(startTime, endTime);" }],
+  "price-at-record": [
+    { "file": "driver.js", "from": "this.unpaid.push({ start, end });", "to": "this.unpaid.push({ start, end, rate: this.rates.at(start) });" },
+    { "file": "driver.js", "from": "this.rates.at(d.start) * (d.end - d.start)", "to": "d.rate * (d.end - d.start)" }
+  ],
+  "current-rate": [{ "file": "driver.js", "from": "this.rates.at(d.start) * (d.end - d.start)", "to": "this.rates.at(Infinity) * (d.end - d.start)" }],
+  "backdated-rate": [{ "file": "payroll.js", "from": "      if (fromTime < paidUpTo) throw new RangeError(\"pay up to \" + paidUpTo + \" is closed\");\n", "to": "" }]
+}

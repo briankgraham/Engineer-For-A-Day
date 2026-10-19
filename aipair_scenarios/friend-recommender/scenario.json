@@ -1,0 +1,41 @@
+{
+  "order": 24,
+  "kind": "levels",
+  "title": "Build a friend recommender",
+  "blurb": "A multi-level round on an existing codebase, like Meta's AI-assisted coding interview: fix a \"People You May Know\" recommender, add blocking and dismissals, then cache the results without serving stale suggestions.",
+  "difficulty": "Hard",
+  "minutes": 60,
+  "levelTitle": "Fix People You May Know",
+  "brief": "This round has three levels. Only level 1 is shown now. When every visible test passes, the next level unlocks with new requirements and new tests, and everything from earlier levels must keep working. graph.js is the social graph the whole app shares, and it works. recommender.js powers \"People You May Know\" (PYMK), and since it launched the team has had three tickets: users' friend counts go up by one after they open PYMK, suggestions with the same number of mutual friends come out in a different order depending on who joined first, and people are told they share mutual friends who have deactivated their accounts. Several visible tests fail. Fix recommender.js so it meets the requirements below. Hidden tests for each level you reach run when you finish.",
+  "requirements": [
+    "new Recommender(graph) takes a SocialGraph from graph.js. recommend(userId, k = 10) returns up to k suggestions as objects { id, mutual }, best first.",
+    "A candidate is an active user who is friends with at least one active friend of userId, and who is neither userId nor already a friend of userId. mutual is the number of active friends of userId who are friends with the candidate.",
+    "Suggestions are sorted by mutual, highest first. Ties are sorted by id in ascending order, comparing the strings with < (so \"U2\" < \"u10\" < \"u9\").",
+    "An unknown or deactivated userId gets []. recommend never changes the graph."
+  ],
+  "levels": [
+    {
+      "title": "Block and dismiss",
+      "brief": "Users can now block other users and dismiss suggestions they do not want. Add both to Recommender.",
+      "requirements": [
+        "block(userId, otherId) returns true. From then on neither user is ever suggested to the other. If they were friends, the friendship ends (call graph.removeFriendship). It returns false and changes nothing if either user is unknown or the ids are the same.",
+        "dismiss(userId, candidateId) returns true. From then on candidateId is never suggested to userId, but userId can still be suggested to candidateId. It returns false and changes nothing if either user is unknown or the ids are the same.",
+        "recommend still returns k suggestions when there are enough candidates left after blocks and dismissals."
+      ]
+    },
+    {
+      "title": "Cache the suggestions",
+      "brief": "PYMK is loaded on every visit to the home page and is now the biggest reader of the graph. Cache the suggestions, so a user's list is only computed again when something it depends on has changed.",
+      "requirements": [
+        "Calling recommend(userId, k) again when nothing that affects userId's suggestions has changed must not read the graph: no calls to graph.friendsOf. This holds for any k, not only the k of the earlier call.",
+        "Suggestions are never stale: after any change (graph.addFriendship, graph.removeFriendship, graph.deactivate, block or dismiss), the next recommend for every user returns exactly what it would without a cache. Use graph.onChange to hear about graph changes.",
+        "Only the users whose suggestions can change are recomputed: a change in another part of the graph keeps a user's cached suggestions (and they are served without reading the graph).",
+        "Changing a returned list or its objects does not change what later calls return."
+      ]
+    }
+  ],
+  "files": [
+    "recommender.js",
+    "graph.js"
+  ]
+}

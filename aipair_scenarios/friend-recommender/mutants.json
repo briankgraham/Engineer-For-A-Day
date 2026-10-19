@@ -1,0 +1,75 @@
+{
+  "exclude-mutates-graph": [
+    {
+      "file": "recommender.js",
+      "from": "    const friends = graph.friendsOf(userId);\n",
+      "to": "    const friends = graph.friendsOf(userId);\n    friends.add(userId); // never suggest the user to themselves\n"
+    }
+  ],
+  "tie-break-boolean": [
+    {
+      "file": "recommender.js",
+      "from": "(a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)",
+      "to": "a[0] > b[0]"
+    }
+  ],
+  "inactive-bridge": [
+    {
+      "file": "recommender.js",
+      "from": "      if (!graph.isActive(friend)) continue;\n",
+      "to": ""
+    }
+  ],
+  "block-one-way": [
+    {
+      "file": "recommender.js",
+      "from": "    this._add(this.blocked, otherId, userId);\n",
+      "to": ""
+    }
+  ],
+  "block-keeps-friendship": [
+    {
+      "file": "recommender.js",
+      "from": "    this.graph.removeFriendship(userId, otherId);\n",
+      "to": ""
+    }
+  ],
+  "filter-after-slice": [
+    {
+      "file": "recommender.js",
+      "from": " || this._has(this.dismissed, userId, id);",
+      "to": ";"
+    },
+    {
+      "file": "recommender.js",
+      "from": "return ranked.slice(0, k).map(r => ({ ...r }));",
+      "to": "return ranked.slice(0, k).filter(r => !this._has(this.dismissed, userId, r.id)).map(r => ({ ...r }));"
+    }
+  ],
+  "invalidate-endpoints-only": [
+    {
+      "file": "recommender.js",
+      "from": "      return [event.a, event.b, ...graph.friendsOf(event.a), ...graph.friendsOf(event.b)];\n",
+      "to": "      return [event.a, event.b];\n"
+    },
+    {
+      "file": "recommender.js",
+      "from": "      for (const f of graph.friendsOf(event.id)) {\n        out.push(f);\n        for (const ff of graph.friendsOf(f)) out.push(ff);\n      }\n",
+      "to": ""
+    }
+  ],
+  "cache-ignores-k": [
+    {
+      "file": "recommender.js",
+      "from": "    let ranked = this.cache.get(userId);\n    if (!ranked) {\n      ranked = this._rank(userId);\n      this.cache.set(userId, ranked);\n    }\n    return ranked.slice(0, k).map(r => ({ ...r }));\n",
+      "to": "    const hit = this.cache.get(userId);\n    if (hit) return hit;\n    const result = this._rank(userId).slice(0, k);\n    this.cache.set(userId, result);\n    return result;\n"
+    }
+  ],
+  "clear-whole-cache": [
+    {
+      "file": "recommender.js",
+      "from": "    for (const id of ids) this.cache.delete(id);\n",
+      "to": "    this.cache.clear();\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "silence-cycle-check": [
+    { "file": "graph.js", "fromFile": "mutants/graph-skip-seen.js" }
+  ],
+  "nuke-the-cache": [
+    { "file": "build.js", "from": "let out = cache.get(key);", "to": "let out = undefined;" }
+  ],
+  "hash-collision-blame": [
+    { "file": "build.js", "fromFile": "mutants/build-direct-deps.js" }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "order": 21,
+  "kind": "debug",
+  "title": "Debug a stale build cache",
+  "blurb": "A build tool ships a stale binary and fails on a dependency cycle that is not there. The tests are green. Trace the checksums and the dependency graph to the real causes.",
+  "difficulty": "Medium",
+  "minutes": 35,
+  "brief": "You own the team's small build tool. It builds targets in dependency order and caches each target's output under a checksum of its inputs, so unchanged targets are never compiled twice. This week two things broke: a fix to a low-level library never reached the CLI binary that uses it, and CI now fails on //app:server with a dependency cycle. The incident page (read-only tab) has what is known, what was tried, the build logs and the error. The tool's own tests are in a read-only tab and all pass. Find why each one happens, then fix both in the code. The assistant does not see the incident page, so paste in whatever you want its help with. Hidden tests that encode the requirements below run when you finish.",
+  "requirements": [
+    "hash.js and cache.js are correct. Leave them alone.",
+    "A target is { srcs, deps }: its source text and the names of the targets it depends on. buildOrder(targets, root) returns root and every target it depends on, directly or through other targets, each exactly once, with every target after all of its deps. Deps are visited in sorted order, so the order is the same on every machine. An unknown target throws BuildError(\"no such target: <name>\").",
+    "A target reached through more than one path (a diamond, such as two libraries that both use //base:strings) is not a cycle. A real cycle throws BuildError whose message names only the loop, starting and ending at the target that repeats, for example \"dependency cycle: //a -> //b -> //a\".",
+    "build(targets, root, cache) returns { output, built, hits }: the output of root, and the targets compiled this time and the ones served from the cache, both in build order. The output of a target is compile(name, target, depOutputs), with the outputs of its deps in sorted order.",
+    "The cache key of a target must change whenever its own sources change or anything it depends on changes, directly or transitively, and must not change otherwise. A second build with nothing changed compiles nothing. After the sources of one target change, exactly that target and the targets that depend on it (directly or transitively) are compiled again; everything else is a cache hit, and the output of root is never stale.",
+    "build and buildOrder never modify the targets they are given."
+  ],
+  "files": [
+    "build.js",
+    "graph.js",
+    "hash.js",
+    "cache.js"
+  ]
+}

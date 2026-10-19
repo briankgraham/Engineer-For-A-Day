@@ -64,6 +64,12 @@ def load_ap_scenarios():
                     followup["followupVisibleTests"] = f.read()
                 with open(os.path.join(d, "followup_tests.js"), encoding="utf-8") as f:
                     followup["followupTests"] = f.read()
+            if sc.get("kind") == "levels":
+                for k, level in enumerate(sc["levels"], 2):
+                    with open(os.path.join(d, f"level{k}_visible_tests.js"), encoding="utf-8") as f:
+                        level["visibleTests"] = f.read()
+                    with open(os.path.join(d, f"level{k}_tests.js"), encoding="utf-8") as f:
+                        level["tests"] = f.read()
             files = []
             for fn in sc["files"]:
                 if not re.fullmatch(r"[A-Za-z0-9_-]+\.js", fn):

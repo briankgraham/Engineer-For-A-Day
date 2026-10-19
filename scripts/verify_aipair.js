@@ -12,6 +12,9 @@
 //   - object design scenarios ("kind": "lld"): scenario.json has a "followup", followup_visible_tests.js and followup_tests.js
 //     exist, and the follow-up tests run with the rest (fail on the starter, pass on the solution). Flaws marked
 //     "design": true are judged by the evaluator only, so they must not have a mutant.
+//   - multi-level scenarios ("kind": "levels"): scenario.json has "levels" (level 2 onward), and every level k >= 2 has
+//     level<k>_visible_tests.js and level<k>_tests.js. All levels run together (the starter fails, the solution passes all),
+//     and a flaw's "level" must name an existing level.
 // mutants.json: { flawOrIssueId: [ { file, from, to } | { file, fromFile: "mutants/x.js" } ] }
 // Usage: node scripts/verify_aipair.js [scenario-id ...]
 const fs = require("fs"), path = require("path"), vm = require("vm");
@@ -58,6 +61,19 @@ for (const id of ids) {
     visible = apJoin(visible, fv);
     hidden = apJoin(hidden, fh);
   }
+  const levels = meta.kind === "levels";
+  if (levels) {
+    const n = Array.isArray(meta.levels) ? meta.levels.length : 0;
+    const missing = [];
+    for (let k = 2; k <= n + 1; k++) {
+      const lv = opt(`level${k}_visible_tests.js`), lh = opt(`level${k}_tests.js`);
+      if (lv == null || lh == null) { missing.push(k); continue; }
+      // Same composition as the browser once level k is unlocked.
+      visible = apJoin(visible, lv);
+      hidden = apJoin(hidden, lh);
+    }
+    if (!n || visible == null || missing.length) { console.log(id); fail("levels scenarios need \"levels\" in scenario.json, visible_tests.js, and level<k>_visible_tests.js + level<k>_tests.js for every level k >= 2" + (missing.length ? " (missing level " + missing.join(", ") + ")" : "")); continue; }
+  }
   const tests = visible == null ? hidden : apCombine(visible, hidden);
   const starter = Object.fromEntries(meta.files.map(f => [f, read(path.join(d, "files", f))]));
   const solution = { ...starter };
@@ -99,6 +115,7 @@ for (const id of ids) {
       continue;
     }
     if (fl.followup && !lld) fail(`flaw ${fl.id}: "followup" flaws are only for lld scenarios`);
+    if (fl.level != null && !(levels && Number.isInteger(fl.level) && fl.level >= 1 && fl.level <= meta.levels.length + 1)) fail(`flaw ${fl.id}: "level" must be a level of a levels scenario`);
     if (!edits) { fail(`${kind} ${fl.id}: no mutant in mutants.json`); continue; }
     const files = { ...solution };
     let ok = true;

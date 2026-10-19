@@ -1,0 +1,23 @@
+{
+  "order": 19,
+  "title": "Idempotent payment webhooks",
+  "blurb": "Turn a payment provider's webhooks into ledger entries when events arrive twice, out of order, or while the database is failing. No double credits.",
+  "difficulty": "Hard",
+  "minutes": 50,
+  "brief": "Your team's billing service receives webhooks from a payment provider and turns them into ledger entries: charge.succeeded credits an account, charge.refunded debits it. webhooks.js does this today and it works on the happy path. But the provider only promises at-least-once delivery: it retries anything that does not get a 2xx back, it can send the same event more than once (even two copies at the same time), and it does not promise order. A refund can arrive before the charge it refunds. The ledger is a database, so writes can fail. Make the handler safe: money must move exactly once per event, and no event may be lost. ledger.js and payments.js are fakes you can read (ledger.failNextWrite() simulates a database timeout). The work is in webhooks.js. The visible test file (a read-only tab) shows the existing behavior, which passes and must keep passing, and the core of the new behavior, which fails for now. Extra edge cases you cannot see run when you finish.",
+  "requirements": [
+    "handle(event) always resolves to { status, body }; it never rejects. The provider treats any 2xx as delivered and retries anything else later.",
+    "Each event id is applied at most once. A redelivery of an event that was already applied returns 200 { duplicate: true } and changes nothing. Dedupe on the event id only: two different events with identical contents (for example two partial refunds of the same amount on one charge) are both applied.",
+    "If applying an event fails (the ledger write throws), handle returns 500 { error } and the event counts as not delivered: nothing about it is recorded (no charge record, no change to the refunded total of a charge), so the retry from the provider applies it normally.",
+    "A redelivery that arrives while the first copy of the same event is still being applied returns 409 { error } and changes nothing. Different events must not block each other.",
+    "A refund for a charge we have not recorded yet returns 409 { error } and changes nothing, so the provider retries it later. Once the charge has been applied, the retried refund applies normally.",
+    "Validation: a malformed event returns 400 { error } and changes nothing. Every event needs a non-empty string id and a data object. charge.succeeded needs a chargeId, an account (non-empty strings) and an amount that is a positive integer number of cents. charge.refunded needs a chargeId and a positive integer amount.",
+    "Event types other than charge.succeeded and charge.refunded are acknowledged with 200 { ignored: true }.",
+    "Every existing test must keep passing."
+  ],
+  "files": [
+    "ledger.js",
+    "payments.js",
+    "webhooks.js"
+  ]
+}

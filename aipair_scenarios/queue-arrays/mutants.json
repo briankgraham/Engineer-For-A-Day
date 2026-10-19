@@ -1,0 +1,37 @@
+{
+  "grow-keeps-head": [
+    {
+      "file": "deque.js",
+      "from": "    const next = new Array(this.buf.length * 2);\n    for (let i = 0; i < this.size; i++) next[i] = this.buf[this._slot(i)];\n    this.buf = next;\n    this.head = 0;\n",
+      "to": "    this.buf = this.buf.concat(new Array(this.buf.length));\n"
+    }
+  ],
+  "back-slot-off-by-one": [
+    {
+      "file": "deque.js",
+      "from": "    const i = this._slot(this.size - 1);\n",
+      "to": "    const i = (this.head + this.size) % this.buf.length - 1;\n"
+    },
+    {
+      "file": "deque.js",
+      "from": "this.buf[this._slot(this.size - 1)];",
+      "to": "this.buf[(this.head + this.size) % this.buf.length - 1];"
+    }
+  ],
+  "window-values-not-indices": [
+    { "file": "arrays.js", "fromFile": "mutants/window-values.js" }
+  ],
+  "window-slice-max": [
+    { "file": "arrays.js", "fromFile": "mutants/window-slice.js" }
+  ],
+  "two-pointer-with-negatives": [
+    { "file": "arrays.js", "fromFile": "mutants/two-pointer.js" }
+  ],
+  "prefix-no-back-pop": [
+    {
+      "file": "arrays.js",
+      "from": "    while (!dq.isEmpty() && p[dq.peekBack()] >= p[i]) dq.popBack();\n",
+      "to": ""
+    }
+  ]
+}
