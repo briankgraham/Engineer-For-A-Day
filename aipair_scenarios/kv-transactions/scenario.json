@@ -1,0 +1,22 @@
+{
+  "order": 17,
+  "title": "Key-value store with transactions",
+  "blurb": "Build an in-memory store with nested begin, commit and rollback, plus count and prefix scans that see uncommitted changes.",
+  "difficulty": "Medium",
+  "minutes": 40,
+  "brief": "A config service keeps its settings in memory. Callers want to group changes into transactions, nest them, and roll back a mistake without losing the work around it. Implement KVStore in store.js. The tricky parts are deletes inside a transaction, what commit means when transactions are nested, and making count, keys and size agree with get. Hidden tests check the edge cases, so read your requirements closely and verify what the assistant gives you.",
+  "requirements": [
+    "new KVStore() starts empty with no open transaction. Keys are strings; set(key, value) with a non-string key throws TypeError. Any value except undefined can be stored, including null, 0, '' and false. set(key, undefined) throws TypeError.",
+    "get(key) returns the value, or undefined if the key is missing. has(key) is true if the key exists. delete(key) removes the key and returns true, or returns false if the key did not exist.",
+    "begin() opens a transaction. Transactions nest: a begin() inside a transaction opens an inner one. get depth is the number of open transactions (0 when none).",
+    "Reads always see the current view: committed data plus the changes of every open transaction, innermost winning. That applies to get, has, count, keys and size.",
+    "rollback() discards the changes made in the innermost open transaction, including deletes, and closes it. Outer transactions are untouched.",
+    "commit() closes only the innermost open transaction and merges its changes, including deletes, into the transaction around it (or into committed data if it was the outermost). Rolling back an outer transaction later still discards changes that an inner one committed into it.",
+    "rollback() and commit() with no open transaction throw an Error whose message contains \"no transaction\".",
+    "A key deleted inside a transaction is gone from the current view even if an outer transaction or committed data still has it, and it comes back if that transaction is rolled back.",
+    "count(value) returns how many keys currently hold a value strictly equal (===) to value.",
+    "keys(prefix = '') returns the keys that start with prefix, sorted ascending.",
+    "get size() is the number of keys in the current view."
+  ],
+  "files": ["store.js"]
+}

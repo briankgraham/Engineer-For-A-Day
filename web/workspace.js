@@ -130,6 +130,41 @@
     else if(res.err.trim())into.appendChild(el("pre","",res.err.trim()));
   }
 
+  // ---- Hidden tests, shown after Finish / End day so the candidate can see what they missed ----
+  // One suite's outcomes from a run, by case-name prefix (e.g. "[hidden] "), small enough to keep in localStorage.
+  function hiddenCases(res,prefix){
+    return res.names.map((n,i)=>[n,res.cases[i]]).filter(([n])=>n.startsWith(prefix))
+      .map(([n,c])=>({name:n.slice(prefix.length),pass:!!(c&&c.pass),err:c?String(c.err||"").slice(0,600):"did not run"}));
+  }
+  // Splits a test file into its shared setup (the helpers above the first test) and each top-level test(...) by name.
+  function testSources(src){
+    const head=/^test\(\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`)/,byName={},pre=[];let cur=null;
+    const close=()=>{if(!cur)return;while(cur.lines.length&&/^\s*(\/\/.*)?$/.test(cur.lines[cur.lines.length-1]))cur.lines.pop();byName[cur.name]=cur.lines.join("\n")};
+    String(src||"").split("\n").forEach(l=>{
+      const m=l.match(head);
+      if(m){close();let n=m[1];try{n=n[0]==='"'?JSON.parse(n):n.slice(1,-1).replace(/\\(.)/g,"$1")}catch(e){n=n.slice(1,-1)}cur={name:n,lines:[l]}}
+      else if(cur)cur.lines.push(l);else pre.push(l);
+    });
+    close();
+    const setup=pre.join("\n").trim();
+    return {setup:/^\s*(?!\/\/)\S/m.test(setup)?setup:"",byName};
+  }
+  // Failing cases first, each with its error and the test's code; then the passing ones, and the helpers the tests use.
+  function renderHidden(into,cases,sources,label){
+    const parsed=sources.filter(Boolean).map(testSources),find=n=>{for(const p of parsed)if(Object.prototype.hasOwnProperty.call(p.byName,n))return p.byName[n];return null};
+    const failed=cases.filter(c=>!c.pass);
+    into.appendChild(el("div","sum",(cases.length-failed.length)+" / "+cases.length+" "+(label||"hidden tests")+" passing"));
+    [...failed,...cases.filter(c=>c.pass)].forEach(c=>{
+      const row=el("div","row "+(c.pass?"ok":"no"),c.name);
+      if(c.err)row.appendChild(el("pre","",c.err));
+      const code=find(c.name);
+      if(code){const d=el("details","src");d.open=!c.pass&&failed.length<=3;d.append(el("summary","",c.pass?"Show the test":"Show the test you missed"),el("pre","code",code));row.appendChild(d)}
+      into.appendChild(row);
+    });
+    const setup=parsed.map(p=>p.setup).filter(Boolean).join("\n\n");
+    if(setup&&cases.length){const d=el("details","src");d.append(el("summary","","Helpers these tests use"),el("pre","code",setup));into.appendChild(d)}
+  }
+
   // ---- Apply helpers: a line diff, and merging a snippet into a file by top-level chunk or by class member ----
   function lineDiff(a,b){
     const n=a.length,m=b.length,L=Array.from({length:n+1},()=>new Uint16Array(m+1));
@@ -225,5 +260,5 @@
     return {text:lines.join("\n"),replaced,added};
   }
 
-  window.WS={apHarness,apCombine,apJoin,apSuites,runAp,stopRun,readSSE,renderResults,lineDiff,mergeSnippet,mergeMembers};
+  window.WS={apHarness,apCombine,apJoin,apSuites,runAp,stopRun,readSSE,renderResults,hiddenCases,renderHidden,lineDiff,mergeSnippet,mergeMembers};
 })();

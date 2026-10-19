@@ -57,22 +57,25 @@ function voiceInput(inp){
     let base="";
     rec.onstart=()=>{base=inp.value.trim()};
     rec.onresult=ev=>{
+      // A result can land after Stop or Send (or after the box left the page): drop it so sent text never reappears.
+      if(!listening||!inp.isConnected)return stop();
       let fin="",tmp="";
       for(let i=0;i<ev.results.length;i++){(ev.results[i].isFinal?(fin+=ev.results[i][0].transcript):(tmp+=ev.results[i][0].transcript))}
       inp.value=(base?base+" ":"")+(fin+tmp).trim();
+      inp.dispatchEvent(new Event("input",{bubbles:true}));  // so draft autosave and the like see dictated text
     };
     rec.onerror=ev=>{
       if(ev.error==="no-speech"||ev.error==="aborted")return;
       stop();note.textContent=ev.error==="not-allowed"||ev.error==="service-not-allowed"?"Microphone access was blocked. Allow it in the browser's site settings.":"Voice input error: "+ev.error;
     };
     // Browsers end the session after a pause; restart while the user still wants to talk.
-    rec.onend=()=>{if(listening){try{rec.start()}catch(e){stop()}}};
+    rec.onend=()=>{if(listening&&inp.isConnected){try{rec.start()}catch(e){stop()}}else stop()};
     listening=true;mic.textContent="⏹ Stop";mic.classList.add("on");
     try{rec.start()}catch(e){stop()}
   };
   return {mic,note,stop};
 }
-window.voiceInput=voiceInput; // shared with aipair.js (this file is wrapped in an IIFE)
+window.voiceInput=voiceInput; // shared with every AI text box in the app: aipair.js, behavioral.js, day.js, the LeetCode practice chat (this file is wrapped in an IIFE)
 
 // ---- streaming chat (same SSE protocol as the LeetCode tutor) ----
 function chatBox(id,mode,msgs,placeholder,onChange){
@@ -82,6 +85,12 @@ function chatBox(id,mode,msgs,placeholder,onChange){
   const btn=h("button",null,"Send");btn.type="submit";
   add(form,inp,btn);add(root,log,form);
   let evalBtn=null,vi=null;
+  if(!voice){
+    // Dictation fills the box; nothing is sent until Send.
+    vi=voiceInput(inp);form.insertBefore(vi.mic,btn);
+    if(!vi.mic.disabled)vi.note.textContent="";
+    root.appendChild(vi.note);
+  }
   if(voice){
     // Voice dictation (browser speech-to-text) fills the box; nothing is sent until Send / AI evaluate response.
     const tools=h("div","pb");tools.style.marginTop="6px";

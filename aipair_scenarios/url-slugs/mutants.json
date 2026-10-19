@@ -1,0 +1,12 @@
+{
+  "mutates-existing": [
+    { "file": "unique.js", "from": "  if (!taken.has(base)) return base;", "to": "  if (!taken.has(base)) { existing.push(base); return base; }" },
+    { "file": "unique.js", "from": "  return base + \"-\" + n;", "to": "  existing.push(base + \"-\" + n);\n  return base + \"-\" + n;" }
+  ],
+  "cut-leaves-dash": [
+    { "file": "slug.js", "from": "  while (slug.endsWith(\"-\")) slug = slug.slice(0, -1);\n", "to": "" }
+  ],
+  "count-suffix": [
+    { "file": "unique.js", "fromFile": "mutants/count-suffix.js" }
+  ]
+}

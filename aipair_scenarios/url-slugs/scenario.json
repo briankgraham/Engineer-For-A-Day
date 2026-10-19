@@ -1,0 +1,21 @@
+{
+  "order": 18,
+  "title": "URL slugs for blog posts",
+  "blurb": "A short warm-up: turn post titles into clean URL slugs and keep them unique when two posts share a title.",
+  "difficulty": "Easy",
+  "minutes": 25,
+  "brief": "You have a small blogging app. text.js already works, including a words() helper that splits a title into clean lowercase words, so no regex is needed. Finish slugify in slug.js so a post title becomes a URL slug, then write uniqueSlug in unique.js so a new post never reuses a slug that is already taken. The visible test file (a read-only tab) shows the expected behavior; some of its tests fail right now. A few extra edge cases you cannot see run when you finish.",
+  "requirements": [
+    "text.js works: words(s) returns the words in s, lowercased with accents removed, so words(\"Hello,  Wörld!\") is [\"hello\", \"world\"]. Leave it alone.",
+    "slugify(title, maxLength = 60) joins the words of the title with \"-\". So \"Hello,  World!\" is \"hello-world\".",
+    "The slug is at most maxLength characters. If cutting it leaves a \"-\" at the end, drop that too.",
+    "If there are no words (for example the title is \"!!!\"), the slug is \"untitled\".",
+    "slugify throws TypeError if title is not a string.",
+    "uniqueSlug(title, existing) returns slugify(title) if it is not in the existing array of slugs. Otherwise it tries base-2, base-3, and so on, and returns the first one that is not taken. It must not modify existing."
+  ],
+  "files": [
+    "text.js",
+    "slug.js",
+    "unique.js"
+  ]
+}

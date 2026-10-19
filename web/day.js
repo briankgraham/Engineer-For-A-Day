@@ -3,7 +3,7 @@
 // Depends on globals from index.html: $, el, loadCM, makeEditor, formatCode, RUN_TIMEOUT, darkMode, renderMd, apiFetch, and WS from workspace.js.
 (function(){
   const KEY="day-sessions-v1";
-  const {apCombine,apSuites,runAp,stopRun,readSSE,renderResults,lineDiff,mergeSnippet,mergeMembers}=WS;
+  const {apCombine,apSuites,runAp,stopRun,readSSE,renderResults,hiddenCases,renderHidden,lineDiff,mergeSnippet,mergeMembers}=WS;
   // Testing aid: ?dayspeed=20 runs the day's clock 20x faster.
   const SPEED=Math.max(1,Math.min(120,Number(new URLSearchParams(location.search).get("dayspeed"))||1));
 
@@ -47,6 +47,8 @@
 .dy-rail button.it:hover{background:var(--head)}.dy-rail button.it.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .dy-rail button.it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dy-rail button.it.unread .nm{font-weight:700}
+.dy-rail button.it.file{padding-left:22px;font-size:13px}.dy-rail button.it.file>span:first-child{flex:none;width:18px;text-align:center;font:12px ui-monospace,Menlo,monospace;color:var(--muted)}
+.dy-pass{font-size:11px;font-weight:700;padding:0 6px;border-radius:99px;background:var(--head);color:var(--muted)}.dy-pass.ok{background:var(--easy-bg);color:var(--easy)}.dy-pass.no{background:var(--hard-bg);color:var(--hard)}
 .dy-badge{font-size:11px;font-weight:700;min-width:18px;padding:0 6px;border-radius:99px;background:var(--hard);color:#fff;text-align:center}
 .dy-task{display:flex;gap:8px;align-items:flex-start;padding:5px 8px;font-size:13px;line-height:1.35;cursor:pointer;border-radius:var(--radius-sm)}
 .dy-task:hover{background:var(--head)}.dy-task .ck{flex:none;width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px}
@@ -67,7 +69,7 @@
 .dy-sys{text-align:center;color:var(--muted);font-size:12px;margin:8px 0}
 .dy-comp{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:6px}
 .dy-comp textarea{width:100%;resize:vertical;min-height:56px;font:inherit;box-sizing:border-box}
-.dy-comp .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.dy-comp .row .hint{flex:1;color:var(--muted);font-size:12px}
+.dy-comp .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.dy-comp .row .hint{flex:1;color:var(--muted);font-size:12px}.dy-comp>.meta{color:var(--hard);font-size:12px}.dy-comp>.meta:empty{display:none}
 .dy-pane{padding:14px 18px;overflow:auto;line-height:1.55}
 .dy-pane h1{font-size:20px;margin:4px 0 10px}.dy-pane h2{font-size:16px;margin:16px 0 6px}
 .dy-doc pre{margin:8px 0;padding:0;border:1px solid var(--line);border-radius:6px;overflow-x:auto;font:12px/1.5 ui-monospace,Menlo,monospace;background:var(--head)}
@@ -89,8 +91,10 @@
 .dy-logs pre .l{display:block;padding:0 14px;white-space:pre}.dy-logs pre .l.warn{color:var(--med)}.dy-logs pre mark{background:color-mix(in srgb,var(--accent) 30%,transparent);color:inherit}
 .dy-code{padding:10px 14px}
 .dy-files{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+@media(min-width:861px){.dy-files{display:none}} /* the rail lists the files instead */
 .dy-files button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-.dy-code .CodeMirror{height:430px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px}
+.dy-code>div:not([class]){scroll-margin-top:calc(var(--nav-h) + 72px)}
+.dy-code .CodeMirror{height:calc(100vh - var(--nav-h) - 200px);min-height:320px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px}
 .dy-code .dy-bar{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
 .dy-codewrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:4px;align-items:start}
 .dy-codewrap>.dy-code{min-width:0}
@@ -101,10 +105,12 @@
 .dy-aipanel .dy-msg .tx pre{font-size:11.5px}
 .dy-aipanel .dy-comp{padding:8px 12px}.dy-aipanel .dy-comp textarea{min-height:48px}
 @media(max-width:1180px){.dy-codewrap{grid-template-columns:minmax(0,1fr)}.dy-aipanel{margin:0 14px 14px;height:480px}}
-.dy-res{margin-top:6px}.dy-res .sum{font-weight:600;margin-bottom:6px}
+.dy-res{margin-top:6px;scroll-margin-top:calc(var(--nav-h) + 72px)}.dy-res .sum{font-weight:600;margin-bottom:6px}
 .dy-res .row{padding:4px 0;border-bottom:1px solid var(--line)}.dy-res .row.ok::before{content:"✓ ";color:var(--easy);font-weight:700}.dy-res .row.no::before{content:"✗ ";color:var(--hard)}
 .dy-res pre,.dy-con{background:var(--head);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:4px 0 0;overflow-x:auto;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap}
 .dy-con:empty{display:none}
+.dy-res details.src{margin:4px 0 2px}.dy-res details.src summary{cursor:pointer;color:var(--accent);font-size:13px}
+.dy-res pre.code{white-space:pre;max-height:360px;overflow:auto}.dy-rev .dy-res h4{margin:12px 0 4px}
 .dy-apply{display:flex;gap:6px;align-items:center;margin:-2px 0 8px}.dy-apply .to{color:var(--muted);font-size:12px}
 .dy-diff{margin:0 0 8px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .dy-diff .dh{display:flex;gap:6px;align-items:center;padding:6px 8px;background:var(--head);font-size:12px;flex-wrap:wrap}.dy-diff .dh span{flex:1}
@@ -506,6 +512,13 @@
       day.docs.forEach(x=>add("doc:"+x.id,x.title,"📄"));
       add("logs","Production logs","📜");
       add("code","Code ("+SERVICE+")","</>");
+      // With the code open, its files sit under it so they stay in reach while the editor and results scroll.
+      if(view==="code"&&isOpen("code")){
+        const sub=(icon,label,on,onclick,extra)=>{const b=el("button","it file"+(on?" on":""));b.append(el("span","",icon),el("span","nm",label));if(extra)b.appendChild(extra);b.onclick=onclick;rail.appendChild(b);return b};
+        [...day.files.map(f=>[f.name,"{}"]),[TEST_NAME,"🔒"],["my-tests.js","✎"]].forEach(([n,icon])=>sub(icon,n,openFile===n,()=>cur&&cur.showFile&&cur.showFile(n,true)));
+        const chip=running?el("span","dy-pass","…"):lastRun?el("span","dy-pass "+(lastRun.passed===lastRun.total?"ok":"no"),lastRun.passed+"/"+lastRun.total):null;
+        sub("✓","Test results",false,()=>cur&&cur.showResults&&cur.showResults(),chip).title="Jump to the latest test run";
+      }
       add("handoff","End-of-day handoff","✍");
       if(sess.result){const b=el("button","it"+(view==="review"?" on":""));b.append(el("span","","★"),el("span","nm","Manager review"));b.onclick=()=>open("review");rail.appendChild(b);railSel.appendChild(new Option("★ Manager review","review"))}
       railSel.value=view;
@@ -514,6 +527,7 @@
 
     // ---- views ----
     let cur=null;
+    let running=false,lastRun=null,lastRes=null; // the latest test run, kept so the results survive switching views
     function open(item){
       if(item!=="review"&&!isOpen(item))return;
       if(cur&&cur.leave)cur.leave();
@@ -585,7 +599,10 @@
       ta.placeholder=placeholder;ta.maxLength=4000;send.type="submit";
       ta.value=(sess.drafts||{})[key]||"";
       ta.oninput=()=>{(sess.drafts||(sess.drafts={}))[key]=ta.value;saveSoon()};
-      row.append(hint,send);comp.append(ta,row);box.append(list,comp);
+      // Dictation (voiceInput, from sysdesign.js) only fills the box; nothing is sent until Send.
+      const vi=typeof voiceInput==="function"?voiceInput(ta):null;
+      row.append(...(vi?[vi.mic]:[]),hint,send);comp.append(ta,row);box.append(list,comp);
+      if(vi&&!vi.mic.disabled)vi.note.textContent="";if(vi)comp.appendChild(vi.note);
       if(sess.result){comp.hidden=true}
       let liveEl=null;
       function bubble(m){
@@ -622,7 +639,7 @@
         else{liveEl.classList.add("typing");liveEl.textContent="typing…"}
         if(list.scrollHeight-list.scrollTop-list.clientHeight<200)list.scrollTop=list.scrollHeight;
       }
-      comp.onsubmit=ev=>{ev.preventDefault();if(live[key])return;const t=ta.value;ta.value="";if(sess.drafts)delete sess.drafts[key];say(key,t)};
+      comp.onsubmit=ev=>{ev.preventDefault();if(live[key])return;if(vi)vi.stop();const t=ta.value;ta.value="";if(sess.drafts)delete sess.drafts[key];say(key,t)};
       ta.onkeydown=ev=>{if(ev.key==="Enter"&&!ev.shiftKey&&!ev.isComposing){ev.preventDefault();comp.requestSubmit()}};
       renderList();list.scrollTop=list.scrollHeight;
       return {box,renderList,updateLive,focus:()=>ta.focus()};
@@ -745,7 +762,6 @@
       return {};
     }
 
-    let running=false;
     function codeView(){
       header(SERVICE,"Your working copy. Run executes the existing suite plus my-tests.js. Hidden checks run when you end the day."+(sess.ai?" The AI assistant is on the right.":""));
       const box=el("div","dy-code"),tabs=el("div","dy-files"),host=el("div"),bar=el("div","dy-bar"),run=el("button","","▶ Run tests (⌘/Ctrl+Enter)"),stop=el("button","","Stop"),fmtBtn=el("button","","Format"),res=el("div","dy-res"),con=el("pre","dy-con");
@@ -761,25 +777,28 @@
         ed.swapDoc(name===TEST_NAME?testDoc:name==="my-tests.js"?mineDoc:docs[name]);ed.setOption("readOnly",name===TEST_NAME||!!sess.result);
         Object.entries(btns).forEach(([n,b])=>b.classList.toggle("on",n===name));
         if(name===TEST_NAME&&!sess.viewedTests){sess.viewedTests=true;note("opened the existing test file")}
+        renderRail();
       };
       [...day.files.map(f=>f.name),TEST_NAME,"my-tests.js"].forEach(n=>{
         const b=el("button","",n+(n===TEST_NAME?" 🔒":n==="my-tests.js"?" ✎":""));btns[n]=b;b.onclick=()=>{show(n);ed.focus()};tabs.appendChild(b);
       });
       show(openFile);setTimeout(()=>ed.refresh(),0);
+      if(lastRes)renderResults(res,lastRes);
       async function doRun(){
         if(running)return;
         running=true;run.disabled=true;stop.hidden=false;res.textContent="Running…";con.textContent="";
-        sess.runs++;
+        sess.runs++;renderRail();
         const r=await runAp(files(),apCombine(day.tests.visible,"",mineDoc.getValue()),s=>{con.textContent+=s});
         running=false;run.disabled=false;stop.hidden=true;
+        const total=r.names.length,passed=r.cases.filter(c=>c&&c.pass).length;
+        lastRes=r;lastRun=total?{passed,total}:null;renderRail();
         if(!res.isConnected)return;
         renderResults(res,r);
-        const total=r.names.length,passed=r.cases.filter(c=>c&&c.pass).length;
         note("ran the tests: "+passed+"/"+total+" passing"+(r.fatal?" (setup failed)":""));save();
       }
       run.onclick=()=>doRun();stop.onclick=stopRun;fmtBtn.onclick=()=>formatCode(ed);
       // A CodeMirror Doc can only belong to one editor, so detach ours before this editor is thrown away.
-      return {leave:()=>{ed.swapDoc(CodeMirror.Doc(""));ed=null},showFile:n=>{if(btns[n])show(n)},aiRender:ai&&ai.renderList,aiUpdate:ai&&ai.updateLive};
+      return {leave:()=>{ed.swapDoc(CodeMirror.Doc(""));ed=null},showFile:(n,focus)=>{if(!btns[n])return;show(n);if(focus){host.scrollIntoView({behavior:"smooth",block:"nearest"});ed.focus()}},showResults:()=>res.scrollIntoView({behavior:"smooth",block:"start"}),aiRender:ai&&ai.renderList,aiUpdate:ai&&ai.updateLive};
     }
 
     function handoffView(){
@@ -823,7 +842,9 @@
       const list=el("div","dy-msgs"),comp=el("form","dy-comp"),ta=el("textarea"),row=el("div","row"),hint=el("span","hint"),send=el("button","","Send");
       ta.placeholder="Ask about the code, or for a fix or a test… (Enter to send)";ta.maxLength=8000;send.type="submit";
       ta.value=sess.aiDraft||"";ta.oninput=()=>{sess.aiDraft=ta.value;saveSoon()};
-      row.append(hint,send);comp.append(ta,row);box.append(ttl,list,comp);into.appendChild(box);
+      const vi=typeof voiceInput==="function"?voiceInput(ta):null;
+      row.append(...(vi?[vi.mic]:[]),hint,send);comp.append(ta,row);box.append(ttl,list,comp);into.appendChild(box);
+      if(vi&&!vi.mic.disabled)vi.note.textContent="";if(vi)comp.appendChild(vi.note);
       if(sess.result)comp.hidden=true;
       const AI={name:"AI assistant"};
       const bubble=(who,body)=>{const d=el("div","dy-msg"),bd=el("div","bd"),w=el("div","who");w.appendChild(el("b","",who===AI?AI.name:"You"));bd.append(w,body);d.append(who===AI?el("span","dy-av ai","✦"):avatar(null),bd);return d};
@@ -851,7 +872,7 @@
         if(aiLive){liveEl.classList.remove("typing");renderMd(liveEl,aiLive)}else{liveEl.classList.add("typing");liveEl.textContent="thinking…"}
         if(list.scrollHeight-list.scrollTop-list.clientHeight<200)list.scrollTop=list.scrollHeight;
       }
-      comp.onsubmit=ev=>{ev.preventDefault();const t=ta.value.trim();if(!t||aiBusy||sess.result)return;ta.value="";sess.aiDraft="";askAI(t)};
+      comp.onsubmit=ev=>{ev.preventDefault();const t=ta.value.trim();if(!t||aiBusy||sess.result)return;if(vi)vi.stop();ta.value="";sess.aiDraft="";askAI(t)};
       ta.onkeydown=ev=>{if(ev.key==="Enter"&&!ev.shiftKey&&!ev.isComposing){ev.preventDefault();comp.requestSubmit()}};
       renderList();list.scrollTop=list.scrollHeight;
       return {renderList,updateLive};
@@ -923,6 +944,7 @@
         const T=day.tests;
         const r=await runAp(files(),apSuites([["",T.visible],["[feature] ",T.feature],["[incident] ",T.incident]]),()=>{});
         const tests={visible:suiteOf(r,""),feature:suiteOf(r,"[feature] "),incident:suiteOf(r,"[incident] ")};
+        sess.hidden={feature:hiddenCases(r,"[feature] "),incident:hiddenCases(r,"[incident] ")};
         const n=mineCount(),mineSrc=apCombine("","",mineDoc.getValue());
         const zero={passed:0,total:0,failed:[]};
         const ms=n?suiteOf(await runAp(starter,mineSrc,()=>{}),"[mine] "):zero,mf=n?suiteOf(await runAp(files(),mineSrc,()=>{}),"[mine] "):zero;
@@ -944,7 +966,17 @@
       const r=sess.result;
       if(!r){main.appendChild(el("div","dy-busy","No review yet."));return {}}
       header("Manager review","Your end-of-day review. Reviewed by "+r.model+". It is also kept under Past days on the list of days.");
-      main.appendChild(reviewPane(r,labelsOf(day),timelineOf(day,sess)));
+      const lab=labelsOf(day),pane=reviewPane(r,lab,timelineOf(day,sess));main.appendChild(pane);
+      // The hidden checks from the end of the day: what failed, why, and the test code, so the misses can be understood.
+      const H=sess.hidden;
+      if(H&&(H.feature.length||H.incident.length)){
+        pane.appendChild(el("h3","","Hidden checks"));
+        pane.appendChild(el("p","dy-meta","These ran when you ended the day. Open a failing check to see the test."));
+        [[lab.feature+" checks",H.feature,day.tests.feature],["Incident checks",H.incident,day.tests.incident]].forEach(([t,cases,src])=>{
+          if(!cases.length)return;
+          const box=el("div","dy-res");box.appendChild(el("h4","",t));renderHidden(box,cases,[src],"checks");pane.appendChild(box);
+        });
+      }
       return {};
     }
 

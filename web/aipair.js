@@ -10,7 +10,7 @@
   const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 
   const css=`
-.ap{max-width:1400px;margin:0 auto;padding:16px}
+.ap{max-width:1500px;margin:0 auto;padding:16px}
 .ap h2{margin:0 0 4px;font-size:20px}.ap .sub{color:var(--muted);margin:0 0 14px}
 .ap-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .ap-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
@@ -18,13 +18,20 @@
 .ap-card .act{margin-top:auto;padding-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .ap-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 -16px 12px;padding:8px 16px;position:sticky;top:var(--nav-h);z-index:2;background:var(--bg);border-bottom:1px solid var(--line)}
 .ap-top h2{margin:0;flex:1;min-width:160px}.ap-timer{font-variant-numeric:tabular-nums;color:var(--muted)}
-.ap-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
-@media(max-width:900px){.ap-grid{grid-template-columns:minmax(0,1fr)}}
+.ap-grid{display:grid;grid-template-columns:200px minmax(0,1fr) 340px;gap:14px;align-items:start}
+.ap-rail{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 8px;position:sticky;top:calc(var(--nav-h) + var(--ap-top-h,62px));max-height:calc(100vh - var(--nav-h) - var(--ap-top-h,62px) - 18px);overflow:auto}
+.ap-rail h4{margin:10px 8px 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ap-rail h4:first-child{margin-top:2px}
+.ap-rail button.it{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:5px 8px;border-radius:var(--radius-sm);color:var(--fg);font:inherit;font-size:14px;cursor:pointer;box-shadow:none}
+.ap-rail button.it:hover{background:var(--head)}.ap-rail button.it.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.ap-rail button.it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-rail button.it>span:first-child{flex:none;width:18px;text-align:center;font:12px ui-monospace,Menlo,monospace;color:var(--muted)}
+.ap-badge{font-size:11px;font-weight:700;min-width:18px;padding:0 6px;border-radius:99px;background:var(--hard);color:#fff;text-align:center}
+.ap-pass{font-size:11px;font-weight:700;padding:0 6px;border-radius:99px;background:var(--head);color:var(--muted)}.ap-pass.ok{background:var(--easy-bg);color:var(--easy)}.ap-pass.no{background:var(--hard-bg);color:var(--hard)}
+@media(max-width:1180px){.ap-grid{grid-template-columns:180px minmax(0,1fr)}.ap-side{grid-column:1/-1;position:static}}
+@media(max-width:760px){.ap-grid{grid-template-columns:minmax(0,1fr)}.ap-rail{display:flex;flex-wrap:wrap;gap:2px;padding:6px;max-height:none;z-index:1}.ap-rail h4{display:none}.ap-rail button.it{width:auto}}
 .ap-brief{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:12px;overflow:hidden}
-.ap-brief summary{cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:600;list-style:none;user-select:none}
-.ap-brief summary::-webkit-details-marker{display:none}
-.ap-brief summary::before{content:"▸";color:var(--muted);transition:transform .15s}.ap-brief[open] summary::before{transform:rotate(90deg)}
-.ap-brief summary:hover{background:var(--head)}
+.ap-brief>.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;font-weight:600}
 .ap-brief .chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--head);color:var(--muted)}
 .ap-brief .chip.hi{background:var(--accent-soft);color:var(--accent)}
 .ap-brief .bd{border-top:1px solid var(--line)}
@@ -36,13 +43,14 @@
 .ap-brief li{counter-increment:req;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);line-height:1.5}
 .ap-brief li::before{content:counter(req);flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
 .ap-brief li code{font:12px ui-monospace,Menlo,monospace;background:var(--head);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
-.ap-files{display:flex;gap:4px;margin-bottom:6px}
-.ap-files button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-.ap-ed .CodeMirror{height:400px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px}
-.ap-res{margin-top:12px}.ap-res .sum{font-weight:600;margin-bottom:6px}
+.ap-ed{scroll-margin-top:calc(var(--nav-h) + var(--ap-top-h,62px) + 10px)}
+.ap-ed .CodeMirror{height:calc(100vh - var(--nav-h) - 150px);min-height:320px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px}
+.ap-res{margin-top:12px;scroll-margin-top:calc(var(--nav-h) + var(--ap-top-h,62px) + 10px)}.ap-res .sum{font-weight:600;margin-bottom:6px}
 .ap-res .row{padding:4px 0;border-bottom:1px solid var(--line)}.ap-res .row.ok::before{content:"✓ ";color:var(--easy);font-weight:700}.ap-res .row.no::before{content:"✗ ";color:var(--hard)}
 .ap-res pre,.ap-con{background:var(--head);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:4px 0 0;overflow-x:auto;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap}
 .ap-con:empty{display:none}
+.ap-res details.src{margin:4px 0 2px}.ap-res details.src summary{cursor:pointer;color:var(--accent);font-size:13px}
+.ap-res pre.code{white-space:pre;max-height:360px;overflow:auto}
 .ap-eval{background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px}
 .ap-eval h4{margin:14px 0 6px}.ap-eval .ehd{display:flex;justify-content:space-between;align-items:center}.ap-eval h3{margin:0}
 .ap-eval .erow{display:flex;flex-direction:column;margin:6px 0}.ap-eval .erow span,.ap-eval .hint{color:var(--muted);font-size:13px}
@@ -50,7 +58,7 @@
 .ap-eval .badge{font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line)}
 .ap-eval .badge.caught{color:var(--easy)}.ap-eval .badge.shipped{color:var(--hard)}.ap-eval .badge.fixed_late,.ap-eval .badge.unchallenged{color:var(--med)}
 .ap-eval.busy{color:var(--muted)}
-.ap-side{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;position:sticky;top:calc(var(--nav-h) + 72px)}
+.ap-side{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;position:sticky;top:calc(var(--nav-h) + var(--ap-top-h,62px) + 10px)}
 .ap-side .hint{color:var(--muted);font-size:12px;margin:2px 0 8px}.ap-side .chat{margin-top:0;padding-top:0;border-top:0}
 .ap-side .chat>div:not([class]){max-height:calc(100vh - 440px);min-height:120px}
 .ap-side .chat .m.warn{color:var(--hard)}
@@ -158,10 +166,14 @@
     const finish=el("button","","Finish & get feedback");
     top.append(back,el("h2","",sc.title),timer,run,stop,fmtBtn,finish,reset,abandon);
     wrap.appendChild(top);
+    // The bar wraps on narrow screens; the sticky rail and chat sit just below whatever height it has.
+    const topH=()=>wrap.style.setProperty("--ap-top-h",top.offsetHeight+12+"px");
+    topH();new ResizeObserver(topH).observe(top);
 
     const grid=el("div","ap-grid");wrap.appendChild(grid);
-    const main=el("div","ap-main"),side=el("div","ap-side");
-    grid.append(main,side);
+    // Left rail: the brief, the files and the test results, always in reach while the page scrolls.
+    const rail=el("nav","ap-rail"),main=el("div","ap-main"),side=el("div","ap-side");
+    grid.append(rail,main,side);
     side.appendChild(el("b","","AI assistant"));
     side.appendChild(el("p","hint",(lld?"It sees the brief, your design.md, your current files and the test file. Ask it to review your design too. Treat its answers like a teammate's: verify them.":sc.incident?"It sees your brief, your current files and the test file, but not the incident page: paste in the logs or trace you want it to look at. Treat its answers like a teammate's: verify them.":sc.pr?"It sees the PR, your current files, the PR's tests and your review.md. Treat its answers like a teammate's: verify them.":sc.visibleTests?"It sees your brief, your current files and the test file. Treat its answers like a teammate's: verify them.":"It sees your brief and current files, not the tests. Treat its answers like a teammate's: verify them.")));
     const chatRoot=el("div","chat"),chatLog=el("div"),chatForm=el("form"),chatIn=el("textarea"),chatBtn=el("button","","Send");
@@ -173,8 +185,8 @@
 
     const evalBox=el("div","ap-eval");evalBox.hidden=true;
     main.appendChild(evalBox);
-    const brief=el("details","ap-brief");brief.open=true;
-    const bsum=el("summary","","Brief and requirements");
+    const brief=el("div","ap-brief");
+    const bsum=el("div","hd","Brief and requirements");
     bsum.append(el("span","chip hi",sc.requirements.length+" requirements"),el("span","chip",sc.difficulty+" · ~"+sc.minutes+" min"));
     brief.appendChild(bsum);
     const bd=el("div","bd"),goal=el("div","goal");
@@ -196,9 +208,9 @@
       li.appendChild(span);into.appendChild(li);
     });
     // The follow-up requirement, shown once revealed (same look as the brief).
-    const fuBox=el("details","ap-brief ap-fu");fuBox.open=true;fuBox.hidden=true;
+    const fuBox=el("div","ap-brief ap-fu");fuBox.hidden=true;
     if(lld&&sc.followup){
-      const fs=el("summary","","New requirement: "+sc.followup.title);fs.appendChild(el("span","chip hi",sc.followup.requirements.length+" requirements"));
+      const fs=el("div","hd","New requirement: "+sc.followup.title);fs.appendChild(el("span","chip hi",sc.followup.requirements.length+" requirements"));
       const fb=el("div","bd"),fg=el("div","goal"),fr=el("div","reqs"),fol=el("ol");
       fg.append(el("h4","","Follow-up"),el("p","",sc.followup.brief));
       fr.appendChild(el("h4","","Requirements"));reqList(sc.followup.requirements,fol);fr.appendChild(fol);
@@ -209,10 +221,10 @@
     const gateMsg=el("span"),gateBtn=el("button","","Start coding");
     gate.append(gateMsg,gateBtn);main.appendChild(gate);
 
-    const tabs=el("div","ap-files"),host=el("div","ap-ed"),results=el("div","ap-res"),con=el("pre","ap-con");
+    const host=el("div","ap-ed"),results=el("div","ap-res"),con=el("pre","ap-con");
     // Review scenarios: the PR page (description, diff, bot comment) is a rendered view shown in place of the editor.
     const prView=el("div","ap-pr");prView.hidden=true;
-    main.append(tabs,prView,host,results,con);
+    main.append(prView,host,results,con);
     if(sc.pr||sc.incident){
       renderMd(prView,sc.pr||sc.incident);
       prView.querySelectorAll("p").forEach(p=>{const t=p.firstChild;if(t&&t.nodeType===3&&t.data.startsWith("> ")){t.data=t.data.slice(2);p.classList.add("quote")}});
@@ -229,8 +241,6 @@
     const ed=makeEditor(host,{doc:docs[sc.files[0].name],run:()=>doRun()});
 
     const prName=sc.pr?"pull request":sc.incident?"incident":null,reviewName=sc.pr?"review.md":null,designName=lld?"design.md":null;
-    let open=prName||(lld&&!sess.coding?designName:sc.files[0].name);
-    const tabBtns={};
     // Some scenarios show their test file: a read-only tab that is never saved, applied to or reset.
     const testName=sc.visibleTests?sc.id+".test.js":null;
     const FU_HEAD="\n\n// ---- Follow-up: "+(sc.followup?sc.followup.title:"")+" ----\n\n";
@@ -241,42 +251,51 @@
     const reviewDoc=reviewName?CodeMirror.Doc(sess.review,"text/plain"):null;
     const designDoc=designName?CodeMirror.Doc(sess.design,"text/plain"):null;
     const locked=name=>lld&&!sess.coding&&!!docs[name];
+    let running=false;
+    const BRIEF="brief",FU="followup";
+    const tabs=[BRIEF,FU,prName,designName,...sc.files.map(f=>f.name),testName,mineName,reviewName].filter(Boolean);
+    // Reopens the last tab; a fresh attempt starts on the brief.
+    let open=tabs.includes(sess.open)&&(sess.open!==FU||sess.followup)?sess.open:!sess.elapsed?BRIEF:prName||(lld&&!sess.coding?designName:sc.files[0].name);
+    const isView=name=>name===BRIEF||name===FU||name===prName;
     const showTab=name=>{
-      open=name;const isTest=name===testName,isPr=name===prName;
+      open=sess.open=name;const isTest=name===testName,isPr=name===prName;
       if(isTest)sess.viewedTests=true;
-      prView.hidden=!isPr;host.hidden=isPr;
-      if(!isPr){ed.swapDoc(isTest?testDoc:name===mineName?mineDoc:name===reviewName?reviewDoc:name===designName?designDoc:docs[name]);ed.setOption("readOnly",isTest||locked(name));ed.refresh()}
-      Object.keys(tabBtns).forEach(n=>tabBtns[n].classList.toggle("on",n===open));
+      if(name===FU)sess.fuSeen=true;
+      brief.hidden=name!==BRIEF;fuBox.hidden=name!==FU;prView.hidden=!isPr;host.hidden=isView(name);
+      if(!isView(name)){ed.swapDoc(isTest?testDoc:name===mineName?mineDoc:name===reviewName?reviewDoc:name===designName?designDoc:docs[name]);ed.setOption("readOnly",isTest||locked(name));ed.refresh()}
+      renderRail();
     };
-    if(designName){
-      const b=el("button","",designName+" ✎");b.title="Your design: classes, what each owns, interfaces, states. Write it before coding; it is sent to the assistant and graded.";tabBtns[designName]=b;
-      b.onclick=()=>{showTab(designName);ed.focus()};
-      tabs.appendChild(b);
-    }
-    if(prName){
-      const b=el("button","",prName+" 🔒");b.title=sc.incident?"The incident ticket: what is known, what was tried, the job log and the support ticket. The assistant cannot see it.":"The PR you are reviewing: description, diff and the review bot's comment.";tabBtns[prName]=b;
-      b.onclick=()=>showTab(prName);
-      tabs.appendChild(b);
-    }
-    sc.files.forEach(f=>{
-      const b=el("button","",f.name+(locked(f.name)?" 🔒":""));tabBtns[f.name]=b;
-      b.onclick=()=>{showTab(f.name);ed.focus()};
-      tabs.appendChild(b);
-    });
-    if(testName){
-      const b=el("button","",testName+" 🔒");b.title="Read-only: the tests you can see. Hidden edge cases run when you finish. Add your own in my-tests.js.";tabBtns[testName]=b;
-      b.onclick=()=>{showTab(testName);ed.focus()};
-      tabs.appendChild(b);
-    }
-    {
-      const b=el("button","",mineName+" ✎");b.title="Your own tests. They run with the visible tests each time you press Run.";tabBtns[mineName]=b;
-      b.onclick=()=>{showTab(mineName);ed.focus()};
-      tabs.appendChild(b);
-    }
-    if(reviewName){
-      const b=el("button","",reviewName+" ✎");b.title="Your review: one finding per item, with where, why it matters and severity. Graded when you finish.";tabBtns[reviewName]=b;
-      b.onclick=()=>{showTab(reviewName);ed.focus()};
-      tabs.appendChild(b);
+    const TITLES={[designName]:"Your design: classes, what each owns, interfaces, states. Write it before coding; it is sent to the assistant and graded.",
+      [prName]:sc.incident?"The incident ticket: what is known, what was tried, the job log and the support ticket. The assistant cannot see it.":"The PR you are reviewing: description, diff and the review bot's comment.",
+      [testName]:"Read-only: the tests you can see. Hidden edge cases run when you finish. Add your own in my-tests.js.",
+      [mineName]:"Your own tests. They run with the visible tests each time you press Run.",
+      [reviewName]:"Your review: one finding per item, with where, why it matters and severity. Graded when you finish."};
+    function renderRail(){
+      rail.textContent="";
+      const item=(icon,label,on,onclick,extra)=>{
+        const b=el("button","it"+(on?" on":""));b.append(el("span","",icon),el("span","nm",label));if(extra)b.appendChild(extra);
+        b.onclick=onclick;rail.appendChild(b);return b;
+      };
+      const tab=(name,icon,label,extra)=>{
+        const b=item(icon,label||name,open===name,()=>{showTab(name);save();if(isView(name))main.scrollIntoView({block:"nearest"});else{host.scrollIntoView({behavior:"smooth",block:"nearest"});ed.focus()}},extra);
+        if(TITLES[name])b.title=TITLES[name];
+      };
+      rail.appendChild(el("h4","","Scenario"));
+      tab(BRIEF,"📋","Brief");
+      if(sess.followup)tab(FU,"✦","New requirement",sess.fuSeen?null:el("span","ap-badge","new"));
+      if(prName)tab(prName,sc.incident?"🚨":"🔀",sc.incident?"Incident":"Pull request");
+      if(designName)tab(designName,"✎");
+      rail.appendChild(el("h4","","Files"));
+      sc.files.forEach(f=>tab(f.name,locked(f.name)?"🔒":"{}"));
+      if(testName)tab(testName,"🔒");
+      tab(mineName,"✎");
+      if(reviewName)tab(reviewName,"✎");
+      rail.appendChild(el("h4","","Tests"));
+      const L=sess.last,chip=running?el("span","ap-pass","…"):L?el("span","ap-pass "+(L.passed===L.total?"ok":"no"),L.passed+"/"+L.total):null;
+      item("✓","Test results",false,()=>results.scrollIntoView({behavior:"smooth",block:"start"}),chip).title="Jump to the latest test run";
+      const H=sess.result&&sess.hidden&&sess.hidden.length?sess.hidden:null,hp=H&&H.filter(c=>c.pass).length;
+      if(H)item("◌","Hidden tests",false,()=>{evalBox.hidden=false;(hidHead||evalBox).scrollIntoView({behavior:"smooth",block:"start"})},el("span","ap-pass "+(hp===H.length?"ok":"no"),hp+"/"+H.length)).title="The hidden tests from your last finish, with the code of each";
+      if(sess.result)item("★","Feedback",false,()=>{evalBox.hidden=false;evalBox.scrollIntoView({behavior:"smooth",block:"start"})});
     }
     showTab(open);
 
@@ -289,7 +308,7 @@
     function renderGate(){
       if(!lld)return;
       gate.hidden=!!sess.coding;
-      if(sess.coding){sc.files.forEach(f=>{tabBtns[f.name].textContent=f.name});showTab(open);return}
+      if(sess.coding){showTab(open);return}
       const n=designWords(),need=30;
       gateMsg.textContent=n<need?"Design first: write your classes, what each owns and their interfaces in design.md. The code files unlock after about "+need+" words ("+n+" so far).":"Design written. Start coding when you are ready; you can keep editing design.md.";
       gateBtn.disabled=n<need;
@@ -302,11 +321,9 @@
       if(!lld||!sc.followup||sess.followup)return;
       sess.followup={at:sess.elapsed,files:state.files()};
       if(testDoc&&sc.followupVisibleTests)testDoc.setValue(sc.visibleTests+FU_HEAD+sc.followupVisibleTests);
-      fuBox.hidden=false;fuBox.open=true;save();
-      fuBox.scrollIntoView({behavior:"smooth",block:"start"});
+      sess.fuSeen=false;save();renderRail(); // the rail item carries a "new" badge until it is opened
     }
-    if(sess.followup)fuBox.hidden=false;
-    const save=()=>dead||writeSession(sc.id,{id:sess.id,msgs:sess.msgs,files:state.files(),custom:mineDoc.getValue(),review:reviewDoc?reviewText():undefined,design:designDoc?designText():undefined,coding:sess.coding||undefined,followup:sess.followup||undefined,runs:sess.runs,viewedTests:sess.viewedTests,elapsed:sess.elapsed,last:sess.last,result:sess.result});
+    const save=()=>dead||writeSession(sc.id,{id:sess.id,msgs:sess.msgs,files:state.files(),custom:mineDoc.getValue(),review:reviewDoc?reviewText():undefined,design:designDoc?designText():undefined,coding:sess.coding||undefined,followup:sess.followup||undefined,fuSeen:sess.fuSeen||undefined,open:sess.open,hidden:sess.hidden||undefined,runs:sess.runs,viewedTests:sess.viewedTests,elapsed:sess.elapsed,last:sess.last,result:sess.result});
     let saveT=0;
     ed.on("change",()=>{clearTimeout(saveT);saveT=setTimeout(save,500)});
     // A test() call outside a comment counts as a written test; the untouched starter has none.
@@ -406,12 +423,11 @@
     chatForm.onsubmit=ev=>{ev.preventDefault();sendChat()};
     chatIn.onkeydown=ev=>{if(ev.key==="Enter"&&!ev.shiftKey&&!ev.isComposing){ev.preventDefault();chatForm.requestSubmit()}};
 
-    let running=false;
     // full = visible and hidden tests together (used by Finish); a normal run only uses what the learner can see.
     async function doRun(full){
       if(running)return null;
       running=true;run.disabled=true;stop.hidden=false;
-      results.textContent="Running…";con.textContent="";
+      results.textContent="Running…";con.textContent="";renderRail();
       if(!full)sess.runs++;
       const mine=mineDoc.getValue();
       const fu=lld&&sess.followup;
@@ -422,6 +438,7 @@
       WS.renderResults(results,res);
       const total=res.names.length,passed=res.cases.filter(c=>c&&c.pass).length;
       if(total){sess.last={passed,total};save()}
+      renderRail();
       // Every visible test passing (the candidate's own tests aside) brings the follow-up in early.
       if(lld&&!full&&!sess.followup&&sess.coding&&res.names.length&&res.names.every((n,i)=>n.startsWith("[mine] ")||(res.cases[i]&&res.cases[i].pass)))revealFollowup();
       return res;
@@ -430,6 +447,7 @@
     const AREA={design:"Design",review:"Review findings",decomposition:"Task breakdown",prompting:"Prompting",verification:"Verification",flaw_detection:"Catching AI mistakes",correctness:"Correctness",communication:"Communication"};
     const OUTCOME={caught:"Caught",fixed_late:"Fixed late",shipped:"Shipped",unchallenged:"Not challenged",unclear:"Unclear"};
     const ISSUE={found_fixed:"Found and fixed",found:"Found, not fixed",fixed_silently:"Fixed, not written up",missed:"Missed",unclear:"Unclear"};
+    let hidHead=null;
     function renderEval(r){
       evalBox.hidden=false;evalBox.textContent="";
       const hd=el("div","ehd"),close=el("button","","Hide");
@@ -443,6 +461,13 @@
         row.appendChild(el("span","",x.evidence));sc_.appendChild(row);
       });
       evalBox.appendChild(sc_);
+      // The hidden tests from this finish: what failed, why, and the test code, so the misses can be understood.
+      if(sess.hidden&&sess.hidden.length){
+        hidHead=el("h4","","Hidden tests");evalBox.appendChild(hidHead);
+        evalBox.appendChild(el("div","hint","These ran with your visible tests when you finished. Open a failing one to see the test."));
+        const box=el("div","ap-res");WS.renderHidden(box,sess.hidden,[sc.tests,sess.followup&&sc.followupTests]);evalBox.appendChild(box);
+      }
+      else if(sc.visibleTests&&!sess.hidden){evalBox.appendChild(el("h4","","Hidden tests"));evalBox.appendChild(el("div","hint","This feedback is from before hidden test results were kept. Press Finish & get feedback again to see which hidden tests failed and their code."))}
       if(r.issues){
         evalBox.appendChild(el("h4","","Bugs in the PR"));
         r.issues.forEach(x=>{
@@ -492,12 +517,13 @@
         const res=await doRun(true);
         if(!res)throw new Error("Could not run the tests. Try again.");
         const failed=res.names.filter((n,i)=>!(res.cases[i]&&res.cases[i].pass)).map(n=>n.slice(0,200));
+        sess.hidden=WS.hiddenCases(res,"[hidden] ");
         const total=res.names.length,passed=res.cases.filter(c=>c&&c.pass).length;
         if(!total)failed.push("(tests could not run: "+(res.fatal||res.err.trim().split("\n")[0]||"unknown error").slice(0,150)+")");
         const resp=await apiFetch("/api/ap/evaluate",{method:"POST",body:JSON.stringify({scenario:sc.id,session:sess.id,transcript:sess.msgs,files:state.files(),tests:{passed,total,failed:failed.slice(0,100)},activity:{runs:sess.runs,viewedTests:!!sess.viewedTests,customTests:mineCount(),customSource:mineCount()?mineDoc.getValue().slice(0,4000):""},review:reviewText().slice(0,6000),...(lld?{design:designText().slice(0,8000),followup:sess.followup||null}:{}),elapsed:sess.elapsed})});
         const data=await resp.json();
         if(!resp.ok)throw new Error(data.error||"Request failed");
-        sess.result=data;save();renderEval(data);
+        sess.result=data;save();renderEval(data);renderRail();
       }catch(err){evalBox.textContent=err.message||"Request failed"}
       finally{evalBox.classList.remove("busy");finishing=false;finish.disabled=false}
     };
@@ -515,7 +541,7 @@
       clearTimeout(armed);armed=0;reset.textContent="Reset";
       sc.files.forEach(f=>docs[f.name].setValue(f.code));
       mineDoc.setValue(MINE_STARTER);if(reviewDoc)reviewDoc.setValue(REVIEW_STARTER);sess.runs=0;sess.viewedTests=false;
-      results.textContent="";con.textContent="";sess.last=null;
+      results.textContent="";con.textContent="";sess.last=null;sess.hidden=null;renderRail();
       if(ac)ac.abort();
       sess.id=crypto.randomUUID();sess.msgs=[];sess.elapsed=0;timer.textContent=fmt(0);sess.result=null;evalBox.hidden=true;evalBox.textContent="";chatLog.textContent="";save(); // a new attempt gets a clean flaw log too
       if(lld){designDoc.setValue(DESIGN_STARTER);sess.coding=false;sess.followup=null;save();openWork(sc)} // rebuilds the gate, tabs and follow-up card

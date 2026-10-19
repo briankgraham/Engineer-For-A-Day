@@ -123,6 +123,7 @@ textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(
 #pcust .crow input:first-child{flex:3}#pcust .crow input:nth-child(2){flex:2}
 #pcust .cadd{margin-top:8px;display:flex;gap:10px;align-items:center}
 #pchint{color:var(--muted);font-size:12px}
+#pask{padding:8px 14px;border-bottom:1px solid var(--line)}#pask summary{cursor:pointer;color:var(--muted)}#pask .meta{margin:6px 0 0;font-size:12px}#pask .chat{border-top:0;margin-top:8px;padding-top:0}#pask .chat>div:not([class]){max-height:40vh}
 #pcon:empty{display:none}
 #pres{padding:8px 14px 14px}
 #prev-out{margin:0 18px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--head);white-space:pre-wrap;font-size:13px;line-height:1.5}#prev-out .warn{color:var(--med)}#prev-out h4{margin:0 0 6px;font-size:12px;color:var(--muted)}
@@ -434,7 +435,7 @@ dialog.app-dlg{width:min(640px,94vw)}
 <div id="tab-jobs" hidden></div>
 <dialog id="sddlg"><div class="hd"><b id="sdt"></b><span><select class="mdl"></select> <button id="sdregen" hidden>Regenerate</button> <button id="sdx">Close</button></span></div><div id="sdb"></div></dialog>
 <dialog id="ldlg"><div class="hd"><b id="lt"></b><span><select class="mdl"></select> <button id="lregen" hidden>Regenerate</button> <button id="lx">Close</button></span></div><div id="lb"></div></dialog>
-<dialog id="pdlg"><div class="hd"><b id="pt"></b><span><select class="mdl"></select> <button id="pregen" hidden>Regenerate</button> <button id="px">Close</button></span></div><div id="pstmt"></div><div id="pbar"><button id="prun">▶ Run tests (⌘/Ctrl+Enter)</button><button id="pstop" hidden>Stop</button><button id="preset">Reset</button><button id="pfmt" data-tip="Format your code with Prettier (Shift-Alt-F)">Format</button><button id="preview" data-tip="Ask AI for its thoughts on your code, whether or not the tests pass">🤖 Review with AI</button><span id="pstat"></span></div><div id="ped"></div><details id="pcust"><summary>Custom tests <span id="pccount"></span></summary><div id="pclist"></div><div class="cadd"><button id="pcnew">+ Add test</button><span id="pchint"></span></div></details><pre id="pcon"></pre><div id="pres"></div><div id="prev-out" hidden></div></dialog>
+<dialog id="pdlg"><div class="hd"><b id="pt"></b><span><select class="mdl"></select> <button id="pregen" hidden>Regenerate</button> <button id="px">Close</button></span></div><div id="pstmt"></div><div id="pbar"><button id="prun">▶ Run tests (⌘/Ctrl+Enter)</button><button id="pstop" hidden>Stop</button><button id="preset">Reset</button><button id="pfmt" data-tip="Format your code with Prettier (Shift-Alt-F)">Format</button><button id="preview" data-tip="Ask AI for its thoughts on your code, whether or not the tests pass">🤖 Review with AI</button><button id="paskb" data-tip="Ask the interviewer clarifying questions about the problem (constraints, edge cases, expected output)">💬 Ask a question</button><span id="pstat"></span></div><div id="ped"></div><details id="pcust"><summary>Custom tests <span id="pccount"></span></summary><div id="pclist"></div><div class="cadd"><button id="pcnew">+ Add test</button><span id="pchint"></span></div></details><details id="pask"><summary>Ask the interviewer <span id="paskn"></span></summary><p class="meta">Clarify anything the problem leaves out: input sizes, edge cases, what to return. The AI sees the statement, the tests and your current code, and won't hand you the approach unless you ask for a hint. <button id="paskclr" class="cbtn" type="button">Clear chat</button></p><div class="chat"><div id="pasklog"></div><form id="paskf"><input id="paskin" type="text" maxlength="1000" autocomplete="off" placeholder="e.g. can the array be empty? can I modify the input?"><button type="submit">Send</button></form></div></details><pre id="pcon"></pre><div id="pres"></div><div id="prev-out" hidden></div></dialog>
 <dialog id="ndlg"><div class="hd"><b id="nt"></b><button id="nx">Close</button></div><div class="sb" style="flex-direction:column"><textarea id="nta" rows="7" placeholder="Approach, pitfalls, complexity…"></textarea><button id="nsave">Save note</button></div></dialog>
 <dialog id="dlg"><div class="hd"><b id="dt"></b><button id="dx">Close</button></div><div class="sb"><input type="search" id="dq" placeholder="Search companies…"><select id="ds"><option value="freq">Most frequent</option><option value="alpha">Alphabetical</option></select></div><ul id="dl"></ul><p id="dn" hidden>No matching companies.</p></dialog>
 <script>
@@ -1362,14 +1363,14 @@ function showExercise(doc){
   pCustom=loadCustom(slug);renderCustom();
   $("pchint").textContent=pDoc.exercise.kind==="class"?"input: {\"ops\":[…],\"args\":[…]}":"input: a JSON array of the arguments";
   pEd.setValue(readDraft(slug)??ex.starter_code);pEd.clearHistory();
-  $("prun").disabled=false;$("preset").disabled=false;$("preview").disabled=false;$("pregen").hidden=false;
+  $("prun").disabled=false;$("preset").disabled=false;$("preview").disabled=false;$("pregen").hidden=false;$("paskb").disabled=false;$("paskin").disabled=false;
   pEd.refresh();pEd.focus();
   checkTests(doc,slug);
 }
 async function loadExercise(url,opts){
   const slug=pSlug;
   $("pstmt").replaceChildren(el("p","meta busy","Generating exercise and tests… the first time takes up to a minute; it's cached afterwards."));
-  $("prun").disabled=true;$("preset").disabled=true;$("preview").disabled=true;$("pregen").hidden=true;
+  $("prun").disabled=true;$("preset").disabled=true;$("preview").disabled=true;$("pregen").hidden=true;$("paskb").disabled=true;$("paskin").disabled=true;
   try{
     const res=await apiFetch(url,opts);
     if(slug!==pSlug)return;
@@ -1382,10 +1383,72 @@ async function loadExercise(url,opts){
     const retry=el("button",null,"Retry");retry.onclick=()=>loadExercise(url,opts);$("pstmt").appendChild(retry);
   }
 }
+// ---- Ask the interviewer: clarifying questions while solving. Saved per problem; the server adds the statement, tests and current code. ----
+let askMsgs=[],askBusy=false,askGen=0,askAbort=null,askVi=null;
+// Dictation (voiceInput, from sysdesign.js, which loads after this script) only fills the box; nothing is sent until Send.
+function askMic(){
+  if(askVi||typeof voiceInput!=="function")return;
+  askVi=voiceInput($("paskin"));$("paskf").insertBefore(askVi.mic,$("paskf").lastChild);
+  if(!askVi.mic.disabled)askVi.note.textContent="";$("pask").querySelector(".chat").appendChild(askVi.note);
+}
+const askKey=slug=>`leetcode-ask-${slug}`;
+function loadAsk(slug){
+  try{const v=JSON.parse(localStorage.getItem(askKey(slug))||"[]");return Array.isArray(v)&&v.every((m,i)=>m&&m.role===(i%2?"assistant":"user")&&typeof m.content==="string")&&v.length%2===0?v:[]}catch(e){return[]}
+}
+const saveAsk=slug=>{try{if(askMsgs.length)localStorage.setItem(askKey(slug),JSON.stringify(askMsgs));else localStorage.removeItem(askKey(slug))}catch(e){}};
+function resetAsk(){if(askVi)askVi.stop();askGen++;if(askAbort)askAbort.abort();askAbort=null;askBusy=false;if(askMsgs.length%2)askMsgs.pop()}
+function renderAsk(){
+  const log=$("pasklog");log.replaceChildren();
+  askMsgs.forEach(m=>{if(m.role==="user")log.appendChild(el("div","m u",m.content));else{const d=el("div","m");renderMd(d,m.content);log.appendChild(d)}});
+  $("paskn").textContent=askMsgs.length?`(${askMsgs.length/2})`:"";
+  log.scrollTop=log.scrollHeight;
+}
+async function sendAsk(text){
+  if(!text||askBusy||!pDoc)return;
+  askBusy=true;
+  const slug=pSlug,gen=askGen,ac=askAbort=new AbortController(),log=$("pasklog");
+  askMsgs.push({role:"user",content:text});
+  log.appendChild(el("div","m u",text));
+  const out=el("div","m busy","Thinking…");log.appendChild(out);log.scrollTop=log.scrollHeight;
+  let answer="";
+  try{
+    // The server allows 30 messages; an odd-length tail of a user-first list still starts with the learner.
+    const res=await apiFetch("/api/practice/chat",{method:"POST",body:JSON.stringify({slug,code:pEd?pEd.getValue():"",messages:askMsgs.slice(-29)}),signal:ac.signal});
+    if(!res.ok){const d=await res.json();throw new Error(d.error||"Request failed")}
+    await readStream(res,t=>{if(gen!==askGen)return;answer=t;out.classList.remove("busy");renderMd(out,t);if(log.scrollHeight-log.scrollTop-log.clientHeight<160)log.scrollTop=log.scrollHeight});
+    if(gen!==askGen)return;
+    askMsgs.push({role:"assistant",content:answer||"(no answer)"});saveAsk(slug);
+    $("paskn").textContent=`(${askMsgs.length/2})`;
+  }catch(err){
+    if(gen!==askGen)return;
+    askMsgs.pop();
+    out.classList.remove("busy");out.textContent=errMsg(err);out.classList.add("warn");
+  }
+  askAbort=null;askBusy=false;
+}
+// Same "data: {t}" stream reader as the other chats (workspace.js is not loaded on this tab).
+async function readStream(res,onText){
+  const rd=res.body.getReader(),dec=new TextDecoder();let buf="",text="";
+  for(;;){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    const parts=buf.split("\n\n");buf=parts.pop();
+    for(const p of parts){
+      if(!p.startsWith("data: "))continue;
+      const ev=JSON.parse(p.slice(6));
+      if(ev.error)throw new Error(ev.error);
+      if(ev.t){text+=ev.t;onText(text)}
+    }
+  }
+  return text;
+}
+$("paskf").onsubmit=ev=>{ev.preventDefault();const t=$("paskin").value.trim();if(!t||askBusy||!pDoc)return;if(askVi)askVi.stop();$("paskin").value="";sendAsk(t)};
+$("paskb").onclick=()=>{$("pask").open=true;$("pask").scrollIntoView({block:"nearest",behavior:"smooth"});$("paskin").focus()};
+$("paskclr").onclick=()=>{if(askMsgs.length&&!confirm("Clear this conversation?"))return;resetAsk();askMsgs=[];saveAsk(pSlug);renderAsk()};
 async function openPractice(slug){
   const r=DATA.find(x=>x[6]===slug);
   if(pRunning&&pKill)pKill();
-  pSlug=slug;pDoc=null;pCustom=[];pLast="";pLastKey="";pRevGen++;$("preview").disabled=true;$("prev-out").hidden=true;$("pclist").replaceChildren();$("pccount").textContent="";
+  pSlug=slug;pDoc=null;pCustom=[];pLast="";pLastKey="";pRevGen++;askMic();resetAsk();askMsgs=loadAsk(slug);renderAsk();$("paskb").disabled=true;$("paskin").disabled=true;$("preview").disabled=true;$("prev-out").hidden=true;$("pclist").replaceChildren();$("pccount").textContent="";
   $("pt").textContent=`${r[2]} · ${DN[r[1]]}`;
   $("pcon").replaceChildren();$("pres").replaceChildren();$("pstat").textContent="";$("pstmt").replaceChildren();
   $("pdlg").showModal();
@@ -1407,9 +1470,9 @@ $("preview").onclick=reviewCode;
 $("pstop").onclick=()=>{if(pKill)pKill()};
 $("pfmt").onclick=()=>{if(pEd)formatCode(pEd)};
 $("preset").onclick=()=>{if(pEd&&pDoc&&confirm("Reset to the starter code? Your draft will be lost.")){pEd.setValue(pDoc.exercise.starter_code);writeDraft(pSlug,pEd.getValue())}};
-$("pregen").onclick=()=>{if(confirm("Regenerate this exercise and its tests? This uses API credits and replaces the starter code (your draft is kept until you Reset).")){pDoc=null;loadExercise("/api/practice/regenerate",{method:"POST",body:JSON.stringify({slug:pSlug})})}};
+$("pregen").onclick=()=>{if(confirm("Regenerate this exercise and its tests? This uses API credits and replaces the starter code (your draft is kept until you Reset).")){pDoc=null;resetAsk();askMsgs=[];saveAsk(pSlug);renderAsk();loadExercise("/api/practice/regenerate",{method:"POST",body:JSON.stringify({slug:pSlug})})}};
 $("px").onclick=()=>$("pdlg").close();
-$("pdlg").addEventListener("close",()=>{if(pRunning&&pKill)pKill()});
+$("pdlg").addEventListener("close",()=>{if(pRunning&&pKill)pKill();resetAsk();renderAsk()});
 $("lx").onclick=()=>$("ldlg").close();
 $("ldlg").addEventListener("close",()=>{resetChat();cancelWalk()});
 $("lregen").onclick=()=>{if(confirm("Regenerate this walkthrough? This uses API credits.")){resetChat();loadWalk("/api/walkthrough/regenerate",{method:"POST",body:JSON.stringify({slug:learnSlug,lang:learnLang})})}};

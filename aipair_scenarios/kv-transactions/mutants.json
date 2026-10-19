@@ -1,0 +1,40 @@
+{
+  "delete-removes-entry": [
+    {
+      "file": "store.js",
+      "from": "    else this._top.set(key, TOMBSTONE);",
+      "to": "    else this._top.delete(key);"
+    }
+  ],
+  "commit-all-levels": [
+    {
+      "file": "store.js",
+      "from": "    const changes = this.layers.pop();\n    const parent = this._top;\n    for (const [k, v] of changes) {\n      if (v === TOMBSTONE && this.depth === 0) parent.delete(k);\n      else parent.set(k, v); // a tombstone must stay a tombstone in an outer transaction\n    }",
+      "to": "    const merged = this._view();\n    this.layers = [merged];"
+    }
+  ],
+  "nullish-lookup": [
+    {
+      "file": "store.js",
+      "from": "      if (this.layers[i].has(key)) return this.layers[i].get(key);",
+      "to": "      if (this.layers[i].get(key) != null) return this.layers[i].get(key);"
+    }
+  ],
+  "count-index-not-rolled-back": [
+    { "file": "store.js", "fromFile": "mutants/count-index.js" }
+  ],
+  "keys-ignore-tombstones": [
+    {
+      "file": "store.js",
+      "from": "    return [...this._view().keys()].filter(k => k.startsWith(prefix)).sort();",
+      "to": "    const all = new Set(this.layers.flatMap(layer => [...layer.keys()]));\n    return [...all].filter(k => k.startsWith(prefix)).sort();"
+    }
+  ],
+  "rollback-without-tx": [
+    {
+      "file": "store.js",
+      "from": "    if (this.depth === 0) throw new Error(\"no transaction to roll back\");",
+      "to": "    if (this.depth === 0) return;"
+    }
+  ]
+}
