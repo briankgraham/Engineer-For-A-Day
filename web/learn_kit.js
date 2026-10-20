@@ -150,6 +150,8 @@
 .vz-e.tree{stroke:var(--accent);opacity:.95;stroke-width:.9}
 .vz-e.act{stroke:var(--med);opacity:1;stroke-width:1.2}
 .vz-e.gone{opacity:.13;stroke-dasharray:1.2 1}
+.vz-e.off{opacity:0}
+.vz-n.off{opacity:0}
 .vz-w{font:600 2.6px ui-sans-serif,system-ui;fill:var(--fg);paint-order:stroke;stroke:var(--surface);stroke-width:1.2;text-anchor:middle;dominant-baseline:central}
 .vz-n circle{fill:var(--surface);stroke:var(--muted);stroke-width:.5;transition:fill .25s,stroke .25s}
 .vz-n text{font:700 3px ui-sans-serif,system-ui;fill:var(--fg);text-anchor:middle;dominant-baseline:central;pointer-events:none}

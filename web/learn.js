@@ -53,6 +53,7 @@
       nodes.push({g:gr,lb});
     }
     return {svg,nodes,edges,
+      setText:(i,t)=>{nodes[i].g.querySelector("text.v").textContent=t},
       setNode:(i,cls,label)=>{nodes[i].g.setAttribute("class","vz-n"+(cls?" "+cls:""));nodes[i].lb.textContent=label==null?"":label},
       setEdge:(i,cls)=>edges[i].line.setAttribute("class","vz-e"+(cls?" "+cls:""))};
   }
@@ -64,11 +65,48 @@
     return adj;
   };
 
+  // ---------- trees and heaps ----------
+  // treeGraph: level-order array (LeetCode style, null = no node) -> graph {n, edges (parent, child), pos, labels, val, left[], right[]}.
+  // Vertex ids follow level order, so id 0 is the root. Layout: x by in-order position, y by depth.
+  function treeGraph(arr){
+    const val=[],left=[],right=[],depth=[],edges=[];
+    const mk=(v,d)=>{val.push(v);left.push(-1);right.push(-1);depth.push(d);return val.length-1};
+    if(arr.length&&arr[0]!=null){
+      const q=[mk(arr[0],0)];let i=1;
+      while(q.length&&i<arr.length){
+        const u=q.shift();
+        for(const side of [left,right]){
+          if(i<arr.length&&arr[i]!=null){const c=mk(arr[i],depth[u]+1);side[u]=c;edges.push([u,c]);q.push(c)}
+          i++;
+        }
+      }
+    }
+    const n=val.length,ino=new Array(n).fill(0);let k=0;
+    const walk=u=>{if(u<0)return;walk(left[u]);ino[u]=k++;walk(right[u])};
+    if(n)walk(0);
+    const maxD=Math.max(0,...depth),dy=Math.min(16,44/Math.max(maxD,1));
+    const pos=val.map((_,u)=>[n>1?6+ino[u]*(88/(n-1)):50,8+depth[u]*dy]);
+    return {n,edges,pos,labels:val.map(String),val,left,right};
+  }
+  // heapGraph: array-backed complete binary tree. `extra` reserves room for a value about to be pushed.
+  function heapGraph(arr,extra){
+    const n=arr.length+(extra||0),edges=[],pos=[];
+    const maxD=n?Math.floor(Math.log2(n)):0,dy=Math.min(16,44/Math.max(maxD,1));
+    for(let i=0;i<n;i++){
+      const d=Math.floor(Math.log2(i+1)),w=Math.pow(2,d),kk=i+1-w;
+      pos.push([100*(kk+.5)/w,8+d*dy]);
+      if(i>0)edges.push([(i-1)>>1,i]);
+    }
+    return {n,edges,pos,labels:arr.map(String).concat(new Array(extra||0).fill("")),arr};
+  }
+  const graphFor=b=>b.tree?treeGraph(b.tree):b.heap?heapGraph(b.heap,b.viz==="heapPush"?1:0):b.graph;
+
   // Step generators: each returns a list of frames {cls[], lab[], tree:Set, gone:Set, act, ds:{t, items, hot}, out:{t, items}, say}.
   function stepper(g){
     const frames=[],cls=new Array(g.n).fill(""),lab=new Array(g.n).fill(""),tree=new Set(),gone=new Set();
-    const snap=(say,act,ds,out)=>frames.push({cls:[...cls],lab:[...lab],tree:new Set(tree),gone:new Set(gone),act:act==null?-1:act,ds,out,say});
-    return {frames,cls,lab,tree,gone,snap};
+    const S={frames,cls,lab,tree,gone,val:null}; // val: optional per-node text (heaps move values between nodes)
+    S.snap=(say,act,ds,out)=>frames.push({cls:[...cls],lab:[...lab],tree:new Set(tree),gone:new Set(gone),val:S.val&&[...S.val],act:act==null?-1:act,ds,out,say});
+    return S;
   }
   const GEN={
     dfs(g,s){
@@ -179,13 +217,157 @@
       S.snap("The heap is empty. Every label is a shortest distance, and the highlighted edges form the shortest-path tree.",null,ds(),out());
       return S.frames;
     },
+    // ----- trees (g from treeGraph) -----
+    preorder:g=>travGen(g,"pre"),
+    inorder:g=>travGen(g,"in"),
+    postorder:g=>travGen(g,"post"),
+    levelorder(g){
+      const S=stepper(g),q=[0],levels=[];let head=0;
+      const ds=()=>({t:"Queue (front on the left)",items:q.slice(head).map(u=>g.val[u]),hot:0}),out=()=>({t:"Levels",items:levels.map(l=>"["+l.map(u=>g.val[u]).join(",")+"]")});
+      S.cls[0]="fr";
+      S.snap("Start: put the root in the queue. Each pass of the outer loop will empty exactly one level.",null,ds(),out());
+      while(head<q.length){
+        const size=q.length-head,level=[];
+        S.snap(`New level: the queue holds ${size} node${size===1?"":"s"}, so take exactly ${size} off before touching anything that is enqueued meanwhile.`,null,ds(),out());
+        for(let i=0;i<size;i++){
+          const u=q[head++];level.push(u);S.cls[u]="cur";S.lab[u]="L"+levels.length;
+          S.snap(`Dequeue ${g.val[u]} and add it to this level.`,null,ds(),out());
+          for(const c of [g.left[u],g.right[u]])if(c>=0){
+            q.push(c);S.cls[c]="fr";S.tree.add(edgeIndex(g,u,c));
+            S.snap(`Enqueue child ${g.val[c]}. It belongs to the next level.`,edgeIndex(g,u,c),ds(),out());
+          }
+          S.cls[u]="done";
+        }
+        levels.push(level);
+        S.snap(`Level ${levels.length} is done: [${level.map(u=>g.val[u]).join(", ")}].`,null,ds(),out());
+      }
+      S.snap(`The queue is empty. ${levels.length} levels, collected top to bottom.`,null,ds(),out());
+      return S.frames;
+    },
+    bstSearch(g,t){
+      const S=stepper(g),path=[];let u=0;
+      const out=()=>({t:"Nodes compared",items:path.map(x=>g.val[x])});
+      S.snap(`Search for ${t}. At each node one comparison throws away a whole subtree.`,null,null,out());
+      for(;;){
+        path.push(u);S.cls[u]="cur";
+        if(t===g.val[u]){S.snap(`${t} equals ${g.val[u]}: found it after ${path.length} comparison${path.length===1?"":"s"}.`,null,null,out());break}
+        const left=t<g.val[u],nx=left?g.left[u]:g.right[u];
+        S.snap(`${t} ${left?"<":">"} ${g.val[u]}, so ${t} can only be in the ${left?"left":"right"} subtree.`,null,null,out());
+        S.cls[u]="done";
+        if(nx<0){S.snap(`There is no ${left?"left":"right"} child, so ${t} is not in the tree. This empty spot is exactly where it would be inserted.`,null,null,out());break}
+        S.tree.add(edgeIndex(g,u,nx));u=nx;
+      }
+      return S.frames;
+    },
+    bstInsert(g,v){
+      // g already contains v (so the picture has its final shape); the new node stays hidden until it is attached.
+      const S=stepper(g),nw=g.val.indexOf(v),L=u=>g.left[u]===nw?-1:g.left[u],R=u=>g.right[u]===nw?-1:g.right[u];
+      let u=0;S.cls[nw]="off";
+      S.snap(`Insert ${v}. Walk down exactly as a search would, until you fall off the tree.`,null,null,null);
+      for(;;){
+        S.cls[u]="cur";
+        const left=v<g.val[u],nx=left?L(u):R(u);
+        S.snap(`${v} ${left?"<":">"} ${g.val[u]}, so go ${left?"left":"right"}.`,null,null,null);
+        S.cls[u]="done";
+        if(nx<0){
+          S.cls[nw]="cur";S.tree.add(edgeIndex(g,u,nw));
+          S.snap(`The ${left?"left":"right"} child of ${g.val[u]} is empty, so ${v} goes there. No existing node moves.`,edgeIndex(g,u,nw),null,null);
+          break;
+        }
+        S.tree.add(edgeIndex(g,u,nx));u=nx;
+      }
+      S.cls[nw]="done";
+      S.snap("Done. Insertion cost one comparison per level, so O(height). Insert sorted input and the height becomes n.",null,null,null);
+      return S.frames;
+    },
+    // ----- heaps (g from heapGraph) -----
+    heapPush:(g,v)=>heapGen(g,"push",v),
+    heapPop:g=>heapGen(g,"pop"),
+    heapify:g=>heapGen(g,"heapify"),
   };
 
+  // Pre/in/post-order DFS over a treeGraph: the call stack, the output so far and a visit number on each node.
+  function travGen(g,kind){
+    const S=stepper(g),stack=[],order=[],name=kind+"order";
+    const rule={pre:"visit the node, then the left subtree, then the right",in:"left subtree, then visit the node, then the right subtree",post:"left subtree, then right subtree, then visit the node"}[kind];
+    const ds=()=>({t:"Call stack (top on the right)",items:stack.map(u=>g.val[u]),hot:stack.length-1}),out=()=>({t:"Output so far",items:order.map(u=>g.val[u])});
+    const say=(m,act)=>{
+      for(let u=0;u<g.n;u++)S.cls[u]=u===stack[stack.length-1]?"cur":order.includes(u)?"done":stack.includes(u)?"fr":"";
+      S.snap(m,act==null?null:act,ds(),out());
+    };
+    const visit=u=>{order.push(u);S.lab[u]="#"+order.length;say(`Visit ${g.val[u]}: add it to the output.`)};
+    const go=(u,from)=>{
+      stack.push(u);
+      say(`Call ${name}(${g.val[u]}).`,from==null?null:edgeIndex(g,from,u));
+      if(kind==="pre")visit(u);
+      if(g.left[u]>=0)go(g.left[u],u);else say(`${g.val[u]} has no left child, so there is nothing to do on that side.`);
+      if(kind==="in")visit(u);
+      if(g.right[u]>=0)go(g.right[u],u);else say(`${g.val[u]} has no right child.`);
+      if(kind==="post")visit(u);
+      stack.pop();
+      say(stack.length?`Done with ${g.val[u]}: return to ${g.val[stack[stack.length-1]]}.`:`Done with ${g.val[u]}. The stack is empty, so the traversal is finished.`);
+    };
+    say(`${name}: ${rule}. The recursion order is the only thing that changes between the three.`);
+    go(0,null);
+    return S.frames;
+  }
+
+  // Min-heap push (sift up), pop (sift down) and build-heap, shown as a tree and as the array that really stores it.
+  function heapGen(g,mode,v){
+    const S=stepper(g),a=g.arr.slice(),popped=[];let size=a.length;
+    S.val=new Array(g.n).fill(null);
+    const ds=hot=>({t:"Array form (index = position in the tree)",items:a.slice(0,size),hot:hot==null?-1:hot});
+    const out=()=>mode==="pop"?{t:"Popped (smallest first)",items:[...popped]}:null;
+    const show=(say,hi,lo,act)=>{
+      for(let k=0;k<g.n;k++){S.val[k]=k<size?a[k]:null;S.cls[k]=k>=size?"off":k===hi?"cur":k===lo?"fr":""}
+      S.snap(say,act,ds(hi),out());
+    };
+    const up=i=>{
+      while(i>0){
+        const p=(i-1)>>1;
+        if(a[p]<=a[i]){show(`${a[i]} is not smaller than its parent ${a[p]}, so the heap rule holds. Stop.`,i,p,edgeIndex(g,p,i));return}
+        show(`${a[i]} is smaller than its parent ${a[p]}, which breaks the min-heap rule. Swap them.`,i,p,edgeIndex(g,p,i));
+        [a[p],a[i]]=[a[i],a[p]];i=p;
+        show(`Swapped. ${a[i]} is now at index ${i}.`,i);
+      }
+      show(`${a[0]} reached the root, so it's the new minimum. Stop.`,0);
+    };
+    const down=i=>{
+      for(;;){
+        const l=2*i+1,r=l+1;let m=i;
+        if(l<size&&a[l]<a[m])m=l;
+        if(r<size&&a[r]<a[m])m=r;
+        if(m===i){show(l>=size?`${a[i]} has no children, so it stays here.`:`${a[i]} is no larger than its children, so the heap rule holds. Stop.`,i);return}
+        const kids=[l,r].filter(k=>k<size).map(k=>a[k]).join(" and ");
+        show(`Compare ${a[i]} with its children ${kids}. Swap with the smaller child, ${a[m]}.`,i,m,edgeIndex(g,i,m));
+        [a[i],a[m]]=[a[m],a[i]];i=m;
+        show(`Swapped. ${a[i]} is now at index ${i}.`,i);
+      }
+    };
+    if(mode==="push"){
+      show(`A min-heap: every parent is no larger than its children. Push ${v}.`,-1);
+      a.push(v);size++;
+      show(`Put ${v} in the next free slot, index ${size-1}. The tree stays complete, but the heap rule may now be broken. Sift it up.`,size-1);
+      up(size-1);
+    }else if(mode==="pop"){
+      show("A min-heap: the smallest value is always at the root. Pop it.",-1);
+      popped.push(a[0]);
+      show(`Remove the root, ${a[0]}. That is the answer. Now fill the hole with the last element, ${a[size-1]}, which keeps the tree complete.`,0);
+      a[0]=a[size-1];size--;
+      if(size>0){show(`${a[0]} moved to the root. It's probably too big for that spot, so sift it down.`,0);down(0)}
+    }else{
+      show("Build a heap from an unordered array. Go backwards from the last parent and sift each node down. Leaves are already valid heaps.",-1);
+      for(let i=(size>>1)-1;i>=0;i--){show(`Sift down index ${i} (${a[i]}).`,i);down(i)}
+    }
+    show(mode==="push"?"Done. A push swaps at most once per level, so it costs O(log n).":mode==="pop"?"Done. A pop also costs at most one swap per level, so O(log n).":"Done. Every parent is no larger than its children. Building this way costs O(n), not O(n log n).",-1);
+    return S.frames;
+  }
+
   function vizBlock(b){
-    const g=b.graph,box=el("div","lr-viz"),head=el("div","vt",b.title||"");box.appendChild(head);
+    const g=graphFor(b),box=el("div","lr-viz"),head=el("div","vt",b.title||"");box.appendChild(head);
     const body=el("div","vb");box.appendChild(body);
     const G=drawGraph(g);body.appendChild(G.svg);
-    if(b.viz==="graph"){body.style.gridTemplateColumns="1fr";return box}
+    if(b.viz==="graph"||b.viz==="tree"||b.viz==="heap"){body.style.gridTemplateColumns="1fr";return box}
     const side=el("div","side");body.appendChild(side);
     if(b.viz==="adj"){
       const adj=adjOf(g),listBox=el("div"),mxBox=el("div"),edBox=el("div");
@@ -211,7 +393,7 @@
       });
       return box;
     }
-    const frames=GEN[b.viz](g,b.start||0),dsBox=el("div"),outBox=el("div");
+    const frames=GEN[b.viz](g,b.value!==undefined?b.value:b.start||0),dsBox=el("div"),outBox=el("div");
     side.append(dsBox,outBox);
     const cap=el("div","cap");box.appendChild(cap);
     const ctl=el("div","ctl");box.appendChild(ctl);
@@ -225,7 +407,8 @@
     const draw=()=>{
       const f=frames[k];
       f.cls.forEach((c,i)=>G.setNode(i,c,f.lab[i]));
-      G.edges.forEach((e,i)=>G.setEdge(i,i===f.act?"act":f.gone.has(i)?"gone":f.tree.has(i)?"tree":""));
+      if(f.val)f.val.forEach((x,i)=>G.setText(i,x==null?"":x));
+      G.edges.forEach((e,i)=>G.setEdge(i,f.cls[e.u]==="off"||f.cls[e.v]==="off"?"off":i===f.act?"act":f.gone.has(i)?"gone":f.tree.has(i)?"tree":""));
       chips(dsBox,f.ds);chips(outBox,f.out);
       cap.textContent=f.say;head.lastChild.textContent=`Step ${k+1} / ${frames.length}`;
       range.value=k;play.textContent=timer?"❚❚ Pause":k===frames.length-1?"↺ Replay":"▶ Play";
@@ -341,7 +524,7 @@
       c.appendChild(bot);cards.appendChild(c);
     });
     const soon=el("div","lr-card soon");
-    soon.append(el("div","ic","🌱"),el("h3",null,"More tracks coming"),el("p",null,"Trees, heaps and priority queues, dynamic programming: the same learn → practice → LeetCode path."));
+    soon.append(el("div","ic","🌱"),el("h3",null,"More tracks coming"),el("p",null,"Dynamic programming is next: the same learn → practice → LeetCode path."));
     cards.appendChild(soon);
     return w;
   }
@@ -523,7 +706,7 @@
   function codePart(ctx,p,k){
     const {t,l}=ctx,{card,pb,st,n}=partShell(p,k,p.kind==="class"?"Code · build a class":"Code · exercise"),s=pp(t,l,p);
     const dkey=`learn-draft-${t.id}-${l.id}-${p.id}`;
-    const ex={function_name:p.fn,kind:p.kind||"function",compare:p.compare||"exact",arg_types:[],return_type:"plain",
+    const ex={function_name:p.fn,kind:p.kind||"function",compare:p.compare||"exact",arg_types:p.argTypes||[],return_type:p.returnType||"plain",
       tests:p.tests.map(([name,inp,exp])=>({name,input_json:JSON.stringify(inp),expected_json:JSON.stringify(exp)}))};
     const status=()=>{
       const bits=[];
