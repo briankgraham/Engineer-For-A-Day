@@ -1,25 +1,23 @@
 """Live job openings for the companies in data/jobs_boards.json (see scripts/build_jobs_boards.py).
 
 Pulls public Greenhouse / Lever / Ashby / Workday job boards on the server, trims each posting to a few fields
-(the raw responses are megabytes of descriptions), caches them for an hour, and answers filtered,
-paginated queries for the Jobs tab. Board tokens come only from jobs_boards.json, never from a request,
+(the raw responses are megabytes of descriptions), caches them on disk, and answers filtered,
+paginated queries for the Jobs tab. A watchdog thread (start_watchdog) refetches every board once a day; requests only read the cache. Board tokens come only from jobs_boards.json, never from a request,
 and only the fixed API hosts below (plus validated *.myworkdayjobs.com tenants) are ever contacted.
 Workday is one generic connector: a board is {"ats": "workday", "host", "tenant", "site"}, plus an optional "search"
 term (sent as Workday's searchText, default WORKDAY_DEFAULT_SEARCH) so only matching roles are ever requested, and optional
 "max", "concurrency" and "facets" (Workday appliedFacets) overrides. Workday pages are fetched in parallel.
 Greenhouse / Lever / Ashby answers are cached with their ETag, so an unchanged board costs one 304 and no download.
 """
-import functools, json, os, re, threading, time, urllib.error, urllib.request
+import functools, json, os, re, sys, threading, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
-from ..config import JOBS_BOARDS_FILE as BOARDS_FILE, JOBS_CACHE_DIR as CACHE_DIR
+from ..config import JOBS_BOARDS_FILE as BOARDS_FILE, JOBS_CACHE_DIR as CACHE_DIR, JOBS_META_FILE as META_FILE
 
-COOLDOWN = 300    # seconds before a board may be fetched again (protects the public APIs from repeated clicks)
-RETRY = 60        # seconds before a board that failed may be fetched again
+REFRESH_EVERY = 24 * 3600  # seconds between the watchdog's full fetches of every board
 MAX_BYTES = 40 * 1024 * 1024
 WORKERS = 6
-WAIT = 90         # seconds a refresh request waits for the boards before answering
 URLS = {
     "greenhouse": "https://boards-api.greenhouse.io/v1/boards/{}/jobs",
     "lever": "https://api.lever.co/v0/postings/{}?mode=json",
@@ -89,6 +87,29 @@ def level_of(title):
         if rx.search(title or ""):
             return key
     return "mid"
+
+
+ROLES = (("software", "Software / backend"), ("frontend", "Frontend / full-stack"), ("mobile", "Mobile"), ("ml", "ML & AI"), ("data", "Data"),
+         ("infra", "Infrastructure & SRE"), ("security", "Security"), ("other", "Other"))
+_ROLE_RX = tuple((key, re.compile(rx, re.I)) for key, rx in (
+    ("security", r"\b(security|appsec|infosec|cryptograph\w*|trust (and|&) safety|red team|detection)\b"),
+    ("mobile", r"\b(ios|android|mobile|react native)\b"),
+    ("frontend", r"\b(front-?end|full[- ]?stack|web|ui|ux)\b"),
+    ("software", r"\b(back-?end)\b"),
+    ("ml", r"\b(machine learning|ml|ai|deep learning|llm|nlp|computer vision|research (scientist|engineer)|applied scientist|data scientist|inference|gpu)\b"),
+    ("data", r"\b(data|analytics|analyst|etl|database|dba)\b"),
+    ("infra", r"\b(infrastructure|infra|sre|site reliability|devops|devsecops|reliability|kubernetes|observability|networking|cloud)\b"),
+    ("software", r"\b(software|swe|sde|developer|programmer|engineer|engineering|api|services?)\b"),
+))
+
+
+@functools.lru_cache(maxsize=20000)
+def role_of(title):
+    """Role family from a job title (first match wins, most specific first); titles that match none are 'other'."""
+    for key, rx in _ROLE_RX:
+        if rx.search(title or ""):
+            return key
+    return "other"
 
 
 # The Jobs tab only lists Remote roles, the SF Bay Area (SF plus cities within roughly 30 miles, through Santa Clara / San Jose) and Austin.
@@ -296,7 +317,8 @@ def _dedupe(jobs):
 # ---------- board cache ----------
 _lock = threading.Lock()
 _mem = {}          # company -> {"at": epoch, "jobs": [...], "error": str}
-_worker = None     # background refresh thread
+_running = False   # the watchdog is fetching right now
+_stop = threading.Event()
 _boards = None
 
 
@@ -482,30 +504,59 @@ def fetch_more(company):
             _more_busy.discard(company)
 
 
-def _refresh(companies):
-    with ThreadPoolExecutor(WORKERS) as ex:
-        list(ex.map(_fetch, companies))
+def _read_last_run():
+    try:
+        with open(META_FILE, encoding="utf-8") as f:
+            return float(json.load(f)["last_run"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return 0.0
 
 
-def refresh():
-    """Fetch the boards that are due (older than COOLDOWN, or failed more than RETRY ago) and wait for them.
+def _write_last_run(t):
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        tmp = META_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"last_run": t}, f)
+        os.replace(tmp, META_FILE)
+    except OSError:
+        pass
 
-    This is the only code path that contacts the job boards, and it runs only when the user clicks Refresh.
-    """
-    global _worker
-    with _lock:
-        now = time.time()
-        entries = {c: _entry(c) for c in boards()}
-        due = [c for c, e in entries.items() if e is None or now - e["at"] >= (RETRY if e.get("error") else COOLDOWN)]
-        if not due and not (_worker is not None and _worker.is_alive()):
-            wait = min((COOLDOWN - (now - e["at"]) for e in entries.values() if e), default=0)
-            return {"refreshed": 0, "cooldown": max(1, int(wait)), "done": True}
-        if due and (_worker is None or not _worker.is_alive()):
-            _worker = threading.Thread(target=_refresh, args=(due,), daemon=True)
-            _worker.start()
-        w = _worker
-    w.join(WAIT)
-    return {"refreshed": len(due), "cooldown": 0, "done": not w.is_alive()}
+
+def refresh_all():
+    """Fetch every board (in parallel) and record when. The only code path that contacts the job boards besides fetch_more."""
+    global _running
+    _running = True
+    try:
+        with ThreadPoolExecutor(WORKERS) as ex:
+            list(ex.map(_fetch, boards()))
+        _write_last_run(time.time())
+    finally:
+        _running = False
+
+
+def _watchdog():
+    # last_run lives in a file, so a restart does not reset the 24 h clock; it only fetches if a day has passed (or never ran).
+    while not _stop.is_set():
+        due = _read_last_run() + REFRESH_EVERY - time.time()
+        if due <= 0:
+            try:
+                refresh_all()
+            except Exception as ex:  # never let the thread die; try again next day
+                print(f"jobs watchdog: refresh failed: {type(ex).__name__}", file=sys.stderr, flush=True)
+                _write_last_run(time.time())
+            continue
+        _stop.wait(min(due, 3600))
+
+
+def start_watchdog():
+    threading.Thread(target=_watchdog, name="jobs-watchdog", daemon=True).start()
+
+
+def status():
+    last = _read_last_run()
+    return {"running": _running, "last_run": datetime.fromtimestamp(last, timezone.utc).isoformat() if last else "",
+            "next_run": datetime.fromtimestamp(last + REFRESH_EVERY, timezone.utc).isoformat() if last else ""}
 
 
 # ---------- query ----------
@@ -521,6 +572,67 @@ def _int(q, key, default, lo, hi):
         return default
 
 
+def _pool(eng):
+    """Every cached US posting (engineering titles only when eng), deduped, plus how many boards loaded / failed and which have more."""
+    all_us, ok, failed, more = [], 0, 0, {}
+    for c in boards():
+        e = _entry(c)
+        if e is None:
+            continue
+        if e.get("error"):
+            failed += 1
+        else:
+            ok += 1
+        if e.get("more"):
+            more[c] = True
+        all_us.extend(j for j in e["jobs"] if j["us"] and (j["eng"] or not eng))
+    return _dedupe(all_us), ok, failed, more  # same role listed on two boards
+
+
+def stats(q):
+    """Aggregates for the dashboard over the same postings the list shows (Remote / SF Bay Area / Austin), from the cache only."""
+    eng = _one(q, "eng", "1") == "1"
+    days = _int(q, "days", 0, 0, 365)
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=days)).strftime("%Y-%m-%d") if days else ""
+    pool, ok, failed, _ = _pool(eng)
+    roles, levels, areas, companies, weeks = {}, {}, {}, {}, {}
+    total = remote = new7 = 0
+    week7 = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+    for j in pool:
+        ja = areas_of(j)
+        if not ja or (cutoff and j["posted"] < cutoff):
+            continue
+        total += 1
+        r, lv = role_of(j["title"]), level_of(j["title"])
+        roles[r] = roles.get(r, 0) + 1
+        levels[lv] = levels.get(lv, 0) + 1
+        for a in ja:
+            areas[a] = areas.get(a, 0) + 1
+        remote += "remote" in ja
+        new7 += bool(j["posted"]) and j["posted"] >= week7
+        co = companies.setdefault(j["company"], {"total": 0, "roles": {}})
+        co["total"] += 1
+        co["roles"][r] = co["roles"].get(r, 0) + 1
+        if j["posted"]:
+            try:  # bucket by the Monday of the posting's week
+                d = datetime.strptime(j["posted"], "%Y-%m-%d")
+                k = (d - timedelta(days=d.weekday())).strftime("%Y-%m-%d")
+                weeks[k] = weeks.get(k, 0) + 1
+            except ValueError:
+                pass
+    top = sorted(companies.items(), key=lambda kv: (-kv[1]["total"], kv[0].lower()))
+    times = [e["at"] for e in (_entry(c) for c in boards()) if e]
+    return {"total": total, "remote": remote, "new7": new7, "companies": len(companies),
+            "roles": [[k, roles[k]] for k, _ in ROLES if k in roles],
+            "levels": [[k, levels[k]] for k, _ in LEVELS if k in levels],
+            "areas": [[k, areas[k]] for k, _ in AREAS if k in areas],
+            "top": [{"company": n, "total": c["total"], "roles": c["roles"]} for n, c in top[:12]],
+            "weeks": sorted(weeks.items())[-16:],
+            "updated_at": datetime.fromtimestamp(min(times), timezone.utc).isoformat() if times else "",
+            "boards": {"total": len(boards()), "ok": ok, "failed": failed, "loaded": ok + failed}, "refresh": status()}
+
+
 def query(q):
     """q: parsed query-string dict. Returns one page of filtered jobs from the cache; never contacts the job boards."""
     text = _one(q, "q").strip().lower()[:80]
@@ -533,19 +645,8 @@ def query(q):
     days = _int(q, "days", 0, 0, 365)
     limit, offset = _int(q, "limit", 50, 1, 100), _int(q, "offset", 0, 0, 10 ** 6)
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d") if days else ""
-    all_us, rows, ok, failed, more = [], [], 0, 0, {}
-    for c in boards():
-        e = _entry(c)
-        if e is None:
-            continue
-        if e.get("error"):
-            failed += 1
-        else:
-            ok += 1
-        if e.get("more"):
-            more[c] = True
-        all_us.extend(j for j in e["jobs"] if j["us"] and (j["eng"] or not eng))
-    all_us = _dedupe(all_us)  # same role listed on two boards
+    all_us, ok, failed, more = _pool(eng)
+    rows = []
     counts, areas, levels = {}, {}, {}
     for j in all_us:
         ja = areas_of(j)
@@ -572,4 +673,4 @@ def query(q):
     return {"total": len(rows), "jobs": [{k: j[k] for k in ("company", "title", "location", "remote", "url", "posted")} for j in rows[offset:offset + limit]],
             "companies": sorted(counts.items(), key=lambda kv: kv[0].lower()), "areas": [[k, areas[k]] for k, _ in AREAS if k in areas], "levels": levels,
             "updated_at": datetime.fromtimestamp(min(times), timezone.utc).isoformat() if times else "",
-            "boards": {"total": len(boards()), "ok": ok, "failed": failed, "loaded": ok + failed}, "more": more}
+            "boards": {"total": len(boards()), "ok": ok, "failed": failed, "loaded": ok + failed}, "more": more, "refresh": status()}

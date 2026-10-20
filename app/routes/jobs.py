@@ -9,9 +9,9 @@ def listings(h, q):
     h.send(200, jobs.query(q))
 
 
-@post("/api/jobs/refresh")
-def refresh(h, body):
-    h.send(200, jobs.refresh())
+@get("/api/jobs/stats")
+def stats(h, q):
+    h.send(200, jobs.stats(q))
 
 
 @post("/api/jobs/more")

@@ -443,7 +443,7 @@ dialog.app-dlg{width:min(640px,94vw)}
 <script>
 (function(){
   const tabs=[...document.querySelectorAll("nav.tabs button[data-tab]")];
-  // The Jobs tab's scripts (applications.js, then jobs.js) and data are fetched only the first time the tab is opened.
+  // The Jobs tab's scripts (applications.js, jobs_dash.js, then jobs.js) and data are fetched only the first time the tab is opened.
   let jobsLoading=false;
   const openJobs=()=>{
     if(window.jobsInit)return jobsInit();
@@ -451,7 +451,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     jobsLoading=true;
     const fail=()=>{jobsLoading=false;document.getElementById("tab-jobs").textContent="Jobs need the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     const add=(src,next)=>{const sc=document.createElement("script");sc.src=src;sc.onload=next;sc.onerror=fail;document.head.appendChild(sc)};
-    add("applications.js",()=>add("jobs.js",()=>jobsInit()));
+    add("applications.js",()=>add("jobs_dash.js",()=>add("jobs.js",()=>jobsInit())));
   };
   // workspace.js (window.WS: test harness, runner, apply helpers) is shared by the AI Pairing and Engineer for a Day tabs.
   let wsCbs=null;

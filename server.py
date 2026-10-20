@@ -23,6 +23,7 @@ import os, shutil, socket, threading
 from http.server import ThreadingHTTPServer
 
 from app.config import BACKEND_NAME, CLAUDE_BIN, MODEL, PORT, check_env_file_safety
+from app.features import jobs
 from app.routes.http import Handler
 
 
@@ -44,6 +45,7 @@ def main():
         pass  # no IPv6 loopback on this machine
     for extra in servers[1:]:
         threading.Thread(target=extra.serve_forever, daemon=True).start()
+    jobs.start_watchdog()  # refetches the job boards once a day (see app/features/jobs.py)
     print(f"Serving on http://localhost:{PORT}  (Ctrl+C to stop)")
     try:
         servers[0].serve_forever()

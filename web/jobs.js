@@ -1,4 +1,4 @@
-// Jobs tab: live software openings (Remote, SF Bay Area, Austin) from /api/jobs, each with a Track button into My applications (applications.js). Loaded on first visit to the tab (see openJobs in index.html).
+// Jobs tab: live software openings (plus a Dashboard view, jobs_dash.js) (Remote, SF Bay Area, Austin) from /api/jobs, each with a Track button into My applications (applications.js). Loaded on first visit to the tab (see openJobs in index.html).
 (() => {
 const root = document.getElementById("tab-jobs");
 const PAGE = 50;
@@ -25,10 +25,13 @@ function build() {
   // Openings (the job boards) and My applications (window.Apps, applications.js) share the tab.
   const top = ce("header", "jobs-top"), seg = ce("div", "jobs-seg");
   top.append(ce("h1", null, "Jobs"), seg);
-  ui.vOpen = ce("button", null, "Openings"); ui.vApps = ce("button", null, "My applications");
-  ui.vOpen.onclick = () => setView("open"); ui.vApps.onclick = () => setView("apps");
-  seg.append(ui.vOpen, ui.vApps);
-  ui.openEl = ce("div"); ui.appsEl = ce("div"); ui.appsEl.hidden = true; Apps.mount(ui.appsEl);
+  ui.vOpen = ce("button", null, "Openings"); ui.vDash = ce("button", null, "Dashboard"); ui.vApps = ce("button", null, "My applications");
+  ui.vOpen.onclick = () => setView("open"); ui.vDash.onclick = () => setView("dash"); ui.vApps.onclick = () => setView("apps");
+  seg.append(ui.vOpen, ui.vDash, ui.vApps);
+  ui.openEl = ce("div"); ui.dashEl = ce("div"); ui.appsEl = ce("div"); ui.dashEl.hidden = ui.appsEl.hidden = true; Apps.mount(ui.appsEl);
+  JobsDash.mount(ui.dashEl, { onCompany: name => {  // a company name on the dashboard opens its openings
+    f.company = name; ui.company.value = name; setView("open"); apply();
+  } });
   const header = ce("header"), main = ce("main");
   ui.stats = ce("div", "stats"); header.appendChild(ui.stats);
   const bar = ce("div", "controls");
@@ -53,8 +56,8 @@ function build() {
   bar.append(ui.q, ui.company, ui.colist, ui.area, ui.level, ui.days,
     check("Engineering roles", "eng", "Only software, data, ML, security and infrastructure titles"));
   ui.refresh = ce("button", null, "Refresh");
-  ui.refresh.title = "Fetch the latest postings from the company job boards (at most once every 5 minutes)";
-  ui.refresh.onclick = doRefresh;
+  ui.refresh.title = "Reload from the server. The server itself re-checks the company job boards once a day.";
+  ui.refresh.onclick = () => load("reloaded");
   bar.appendChild(ui.refresh);
   header.appendChild(bar);
 
@@ -73,7 +76,7 @@ function build() {
   ui.note = ce("p"); ui.note.style.cssText = "color:var(--muted);font-size:12px;max-width:80ch;margin:16px auto 0;text-align:center";
   main.append(table, pager, ui.more, ui.note);
   ui.openEl.append(header, main);
-  root.replaceChildren(top, ui.openEl, ui.appsEl);
+  root.replaceChildren(top, ui.openEl, ui.dashEl, ui.appsEl);
   Apps.onChange(() => { if (last) markTracked(); });
 
   let deb = null;
@@ -100,8 +103,9 @@ const apply = () => { page = 0; load(); };
 
 function setView(v) {
   view = v;
-  ui.vOpen.classList.toggle("on", v === "open"); ui.vApps.classList.toggle("on", v === "apps");
-  ui.openEl.hidden = v !== "open"; ui.appsEl.hidden = v !== "apps";
+  ui.vOpen.classList.toggle("on", v === "open"); ui.vDash.classList.toggle("on", v === "dash"); ui.vApps.classList.toggle("on", v === "apps");
+  ui.openEl.hidden = v !== "open"; ui.dashEl.hidden = v !== "dash"; ui.appsEl.hidden = v !== "apps";
+  if (v === "dash") JobsDash.show();
   if (v === "apps") Apps.show(ui.appsEl);
 }
 
@@ -159,7 +163,7 @@ function render(d) {
     ui.rows.appendChild(tr);
   });
   if (!d.jobs.length) {
-    const tr = ce("tr"), td = ce("td", null, d.boards.loaded ? "No openings match these filters." : "No openings loaded yet. Click Refresh to fetch them from the company job boards.");
+    const tr = ce("tr"), td = ce("td", null, d.boards.loaded ? "No openings match these filters." : (d.refresh && d.refresh.running ? "The server is fetching the company job boards for the first time. Click Refresh in a minute." : "No openings loaded yet. The server fetches the company job boards once a day."));
     td.colSpan = 5; td.style.cssText = "text-align:center;color:var(--muted);padding:28px"; tr.appendChild(td); ui.rows.appendChild(tr);
   }
   const pages = Math.max(1, Math.ceil(d.total / PAGE));
@@ -179,7 +183,8 @@ function render(d) {
   ui.stats.className = "stats";
   ui.stats.textContent = b.loaded
     ? `${d.companies.length} companies hiring · updated ${age}` + (b.failed ? ` · ${b.failed} boards unavailable` : "")
-    : "Nothing loaded yet";
+    : d.refresh && d.refresh.running ? "Server is fetching the job boards…" : "Nothing loaded yet";
+  if (d.refresh && d.refresh.running && b.loaded) ui.stats.textContent += " · refreshing in the background";
   markTracked();
   ui.note.textContent = `Covers the ${b.total} companies from this tracker that publish on Greenhouse, Lever, Ashby or Workday. Google, Amazon, Meta, Microsoft and Apple run their own sites: `;
   NOT_COVERED.forEach(([n, u], i) => {
@@ -225,26 +230,6 @@ async function load(flash) {
   }
 }
 
-// The only request that contacts the company job boards (through the server), and only when the Refresh button is clicked.
-async function doRefresh() {
-  if (ui.refresh.disabled) return;
-  ui.refresh.disabled = true; ui.refresh.classList.add("busy");
-  ++gen;  // ignore any cache read still in flight
-  showLoading("Fetching the latest openings from company job boards… this can take up to a minute");
-  let flash = "";
-  try {
-    const res = await fetch("/api/jobs/refresh", { method: "POST", headers: { "X-Requested-With": "walkthrough", "Content-Type": "application/json" }, body: "{}" });
-    const d = await res.json();
-    if (!res.ok) throw new Error(d.error || "Request failed");
-    if (d.cooldown) flash = `already refreshed recently, try again in ${Math.ceil(d.cooldown / 60)} min`;
-    else if (!d.done) flash = "some boards are still loading, click Refresh again shortly";
-  } catch (err) {
-    flash = err instanceof TypeError ? "server not reachable" : err.message;
-  }
-  await load(flash);
-  ui.refresh.disabled = false; ui.refresh.classList.remove("busy");
-}
-
 // One more capped batch for the company currently filtered on (Workday boards only; see fetch_more in jobs.py).
 async function doFetchMore() {
   if (ui.more.disabled) return;
@@ -267,6 +252,7 @@ async function doFetchMore() {
 window.jobsInit = () => {
   if (!built) { build(); setView("open"); }
   if (view === "apps") return Apps.show(ui.appsEl);
+  if (view === "dash") return JobsDash.show();
   page = 0; load();
   Apps.load().catch(() => {});  // to mark rows already tracked
 };

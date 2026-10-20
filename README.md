@@ -194,7 +194,7 @@ The same script embeds `data/senior_favs.json`, a hand-curated list of problems 
 <details>
 <summary><b>Jobs data sources</b></summary>
 
-Selecting the tab and filtering only read the local server's cache. The **Refresh** button is the only thing that contacts the public Greenhouse, Lever, Ashby and Workday job boards (through `server.py`, at most once every 5 minutes). Only companies on those systems are covered (about a third of the tracker). Google, Amazon, Meta, Microsoft and Apple run their own career sites, so the tab links to them instead.
+Selecting the tab, filtering and the **Refresh** button only read the local server's cache. A watchdog thread in `server.py` fetches the public Greenhouse, Lever, Ashby and Workday job boards once every 24 hours (the last-fetch time is saved in `var/jobs_cache/_meta.json`, so restarting the server does not reset the clock; delete that file to force a fetch on next start). Only companies on those systems are covered (about a third of the tracker). Google, Amazon, Meta, Microsoft and Apple run their own career sites, so the tab links to them instead.
 
 `python3 scripts/build_jobs_boards.py` rebuilds `data/jobs_boards.json`, the company-to-board mapping. Workday is one generic connector configured per company as `{"ats": "workday", "host", "tenant", "site"}`. Add one with `python3 scripts/build_jobs_boards.py --workday "CrowdStrike" crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers`, or let the script probe for the tenant.
 
@@ -285,7 +285,7 @@ The server uses only the Python standard library, and there's no `npm install`. 
 | [CodeMirror 5.65.16](https://codemirror.net/5/) | yes, loaded in the browser | code editor in LeetCode Practice, Assessment, AI Pairing and Engineer for a Day. Loaded on demand from `cdnjs.cloudflare.com`, so these editors need an internet connection |
 | [Prettier 2.8.8](https://prettier.io/) (standalone) | optional, loaded in the browser | the **Format** button and Shift-Alt-F in the code editors. Loaded from `cdnjs.cloudflare.com` the first time you format, with an SRI hash |
 | [Node.js](https://nodejs.org/) | optional | only for `scripts/verify_aipair.js`, `scripts/verify_day.js` and `scripts/verify_learn.js` when writing content |
-| Greenhouse, Lever, Ashby and Workday public job boards | optional | fetched only when you click **Refresh** in the Jobs tab |
+| Greenhouse, Lever, Ashby and Workday public job boards | optional | fetched by the server once a day in the background |
 
 ## Credits
 
