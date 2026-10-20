@@ -1,0 +1,33 @@
+{
+ "L1": {
+  "day numbers increase by one per calendar day": [
+   1
+  ],
+  "a bad date format throws RangeError": [
+   1
+  ],
+  "no activity gives a streak of zero": [
+   10
+  ],
+  "activity today alone gives a streak of one": [
+   2,
+   9
+  ],
+  "consecutive days count without any grace": [
+   4,
+   9
+  ],
+  "a missed day breaks the streak with no grace": [
+   5
+  ],
+  "one grace day bridges a single missed day": [
+   5
+  ],
+  "the same day logged twice only counts once": [
+   3
+  ],
+  "a streak gone cold is zero, even if it was long": [
+   6
+  ]
+ }
+}

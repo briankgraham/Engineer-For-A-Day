@@ -1,0 +1,39 @@
+{
+ "L1": {
+  "a new editor starts with the cursor at the end": [
+   9
+  ],
+  "type inserts at the cursor and moves it": [
+   9
+  ],
+  "moveTo rejects a position outside the text": [
+   9
+  ],
+  "backspace deletes the character before the cursor, and does nothing at the start": [
+   9
+  ],
+  "keymap types characters, Enter, and moves with the arrows": [
+   9
+  ],
+  "keymap returns false for keys it does not know": [
+   9
+  ],
+  "undo reverses a backspace and redo applies it again": [
+   1,
+   2,
+   4
+  ],
+  "undo and redo return false when there is nothing to do": [
+   1
+  ],
+  "a run of typing is one undo step": [
+   3
+  ],
+  "batch groups several edits into one step": [
+   6
+  ],
+  "ctrl+z undoes and ctrl+y redoes through the keymap": [
+   8
+  ]
+ }
+}

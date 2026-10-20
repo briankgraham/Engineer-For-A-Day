@@ -8,8 +8,8 @@
   "requirements": [
     "items.js works: subtotalCents(items) for items like { name, priceCents, qty }. Leave it alone.",
     "computeBill(items, { taxBps = 0, tipPercent = 0 }) returns { subtotalCents, taxCents, tipCents, totalCents }. taxBps is tax in basis points (1000 = 10%).",
-    "Tax is round-half-up(subtotal * taxBps / 10000). This already works.",
-    "The tip is charged on the subtotal before tax: tipCents = round-half-up(subtotal * tipPercent / 100). totalCents = subtotal + tax + tip.",
+    "Tax is Math.round(subtotal * taxBps / 10000), so halves round up. This already works.",
+    "The tip is charged on the subtotal before tax, not on the subtotal plus tax: tipCents = Math.round(subtotal * tipPercent / 100), so halves round up. totalCents is the subtotal plus tax plus tip.",
     "tipPercent must be an integer from 0 to 100, otherwise RangeError.",
     "splitEvenly(totalCents, people) returns an array of length people whose entries add up to exactly totalCents. No two shares differ by more than 1 cent, and the extra cents go to the first people in the list (so 100 split 3 ways is [34, 33, 33]).",
     "people must be an integer of at least 1, and totalCents a non-negative integer, otherwise RangeError."

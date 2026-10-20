@@ -1,0 +1,31 @@
+{
+ "L1": {
+  "rejects a bad capacity": [
+   1
+  ],
+  "works with the default clock": [
+   1
+  ],
+  "stores falsy values": [
+   4
+  ],
+  "per-entry ttl overrides the default": [
+   2
+  ],
+  "evicts the least recently used entry": [
+   8
+  ],
+  "purges expired entries before evicting a live one": [
+   8
+  ],
+  "has ignores hits and misses; respects expiry": [
+   5
+  ],
+  "size counts only live entries": [
+   7
+  ],
+  "capacity 1 keeps only the latest entry": [
+   8
+  ]
+ }
+}

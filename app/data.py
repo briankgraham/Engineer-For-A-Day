@@ -70,6 +70,12 @@ def load_ap_scenarios():
                         level["visibleTests"] = f.read()
                     with open(os.path.join(d, f"level{k}_tests.js"), encoding="utf-8") as f:
                         level["tests"] = f.read()
+            req_tests = {}
+            try:
+                with open(os.path.join(d, "req_tests.json"), encoding="utf-8") as f:
+                    req_tests = json.load(f)
+            except FileNotFoundError:
+                pass
             files = []
             for fn in sc["files"]:
                 if not re.fullmatch(r"[A-Za-z0-9_-]+\.js", fn):
@@ -79,7 +85,7 @@ def load_ap_scenarios():
         except (OSError, ValueError, KeyError) as e:
             print(f"aipair scenario {name} skipped: {e}", file=sys.stderr)
             continue
-        out.append({**sc, "id": name, "files": files, "tests": tests, **({"visibleTests": visible} if visible is not None else {}), **({"pr": pr} if pr is not None else {}), **({"incident": incident} if incident is not None else {}), **followup})
+        out.append({**sc, "id": name, "reqTests": req_tests, "files": files, "tests": tests, **({"visibleTests": visible} if visible is not None else {}), **({"pr": pr} if pr is not None else {}), **({"incident": incident} if incident is not None else {}), **followup})
     out.sort(key=lambda s: (s.get("order", 100), s["id"]))
     return out
 

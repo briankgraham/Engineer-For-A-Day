@@ -1,0 +1,30 @@
+{
+ "L1": {
+  "set, get, has and delete": [
+   1,
+   2
+  ],
+  "rejects bad keys and undefined values": [
+   1
+  ],
+  "rollback discards only the innermost transaction": [
+   5
+  ],
+  "commit merges only the innermost transaction": [
+   6
+  ],
+  "a delete inside a transaction hides the key until rollback": [
+   8
+  ],
+  "count sees uncommitted changes": [
+   4,
+   9
+  ],
+  "keys filters by prefix and sorts": [
+   10
+  ],
+  "commit and rollback need an open transaction": [
+   7
+  ]
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "L1": {
+  "results helpers build the settled shape": [
+   6
+  ],
+  "limit and fn are validated synchronously": [
+   1
+  ],
+  "empty input resolves to []; plain return values are fine": [
+   2,
+   3
+  ],
+  "fn receives the item and its index": [
+   3
+  ],
+  "results are in input order even when calls finish out of order": [
+   2
+  ],
+  "never more than limit calls in flight": [
+   3
+  ],
+  "sliding window: a fast call frees a slot without waiting for a slow one": [
+   3
+  ],
+  "first rejection rejects with that error and starts nothing new": [
+   5
+  ]
+ }
+}

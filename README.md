@@ -24,7 +24,7 @@ That's all the setup. Pick a tab and start.
 | 🏗️ **System Design Prep** | Fundamentals, timed mock interviews, and a whiteboard |
 | 🎤 **Behavioral** | STAR stories, plus an AI interviewer that asks follow-ups until it gets specifics |
 | 🧩 **LeetCode** | Company-tagged problems with walkthroughs and an in-browser editor |
-| 📚 **Learning** | The fundamentals behind the problems, starting with graphs: lessons, visualizers, drills and practice |
+| 📚 **Learning** | The fundamentals behind the problems and behind full-stack screens: algorithm tracks (graphs, trees, heaps) plus JavaScript/TypeScript, HTTP, auth and security, browser and frontend, and SQL |
 | ⏱️ **Assessment** | Timed online-assessment (OA) style tests with hidden test cases |
 | 💼 **Jobs** | Live openings from the companies you're prepping for |
 
@@ -50,7 +50,7 @@ Five days to choose from:
 
 More and more interviews hand you an AI assistant and watch how you use it. Here you build small JavaScript projects with an assistant that is helpful most of the time, but some of its replies contain flaws planted on purpose. At the end you're graded on the code and on how well you worked with it: whether you caught its mistakes, checked its claims, and ran the tests.
 
-18 scenarios from Easy to Hard: URL slugs for a blog, an LRU cache with TTL, a token-bucket rate limiter, a key-value store with nested transactions, offline sync, an Express-style middleware router, a **PR review** round, a **debug-from-an-incident-ticket** round, an **elevator object-design** round where the requirements change partway through, and more.
+27 scenarios from Easy to Hard: URL slugs for a blog, an LRU cache with TTL, a token-bucket rate limiter, a key-value store with nested transactions, offline sync, an Express-style middleware router, a **PR review** round, a **debug-from-an-incident-ticket** round, an **elevator object-design** round where the requirements change partway through, and more.
 
 ## 🏗️ System Design Prep
 
@@ -111,6 +111,8 @@ Each track is a path of short lessons. The first one, **Graphs**, goes from "wha
 - **Practice.** Code exercises run against real tests in your browser. Quick checks explain the answer. Written answers (like "should this use Neo4j?") get feedback from the AI tutor, and the AI can review your code too.
 - **Track it.** Mark lessons complete, flag ones to revisit, and keep notes. Completed lessons come back for review after 3, 7 and 21 days. An **Ask the tutor** panel knows the lesson you're reading.
 - **Ready for LeetCode.** Each track ends with real problems from the LeetCode tab, in order, each linked to the lesson that prepares you for it.
+
+**Full-stack fundamentals.** Five more tracks cover what screens and phone interviews open with: **JavaScript and TypeScript** (closures, `this`, the event loop, coercion, the type system), **HTTP and the web platform** (methods, caching, CORS, API styles, URL-to-page), **Auth and web security** (sessions vs JWTs, OAuth and PKCE, XSS, CSRF, injection, passwords), **Browser and frontend** (rendering, events, React, performance, accessibility) and **SQL and data** (joins and NULLs, window functions, indexes, transactions, schema design). Each lesson is a short read, quick checks that explain every answer, and an "explain it" question the AI tutor reviews. They have no LeetCode checkpoint, but they use the same notes, review dates and tutor.
 
 ## ⏱️ Assessment
 

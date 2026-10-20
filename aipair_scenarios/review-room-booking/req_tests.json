@@ -1,0 +1,31 @@
+{
+ "L1": {
+  "book returns increasing ids": [
+   2
+  ],
+  "a booking that starts inside another is rejected": [
+   3
+  ],
+  "a booking that ends inside another is rejected": [
+   3
+  ],
+  "back-to-back bookings are allowed": [
+   3
+  ],
+  "different rooms never clash": [
+   2
+  ],
+  "list is sorted by start time": [
+   5
+  ],
+  "cancel removes the booking": [
+   6
+  ],
+  "end before start throws": [
+   4
+  ],
+  "bad time format throws": [
+   1
+  ]
+ }
+}

@@ -1,0 +1,41 @@
+{
+ "L1": {
+  "rejects bad drivers": [
+   2
+  ],
+  "rejects bad deliveries": [
+   3
+  ],
+  "a delivery costs the hourly rate times its length": [
+   4
+  ],
+  "each delivery is rounded to the cent on its own": [
+   4
+  ],
+  "totals add up across drivers": [
+   5
+  ],
+  "a pay run pays the deliveries that have ended": [
+   6
+  ],
+  "a pay run never pays a delivery twice": [
+   6,
+   9
+  ]
+ },
+ "followup": {
+  "follow-up: a new rate applies to deliveries that start at or after it": [
+   1,
+   2
+  ],
+  "follow-up: a delivery is paid at the rate when it started": [
+   2
+  ],
+  "follow-up: a delivery recorded before the change but starting after it gets the new rate": [
+   3
+  ],
+  "follow-up: a paid period is closed": [
+   5
+  ]
+ }
+}

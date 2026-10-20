@@ -1,0 +1,41 @@
+{
+ "L1": {
+  "cart merges the same sku and adds up quantity": [
+   1
+  ],
+  "cart subtotal is price times quantity, summed": [
+   1
+  ],
+  "cart rejects a bad price or quantity": [
+   1
+  ],
+  "no coupon and no tax: total equals the subtotal": [
+   2
+  ],
+  "a percent coupon reduces the subtotal": [
+   3,
+   4
+  ],
+  "fixed coupons stack, and apply after the percent coupon": [
+   4
+  ],
+  "tax is charged on the discounted amount": [
+   6
+  ],
+  "only the largest percent coupon applies": [
+   4
+  ],
+  "available reports stock on hand, 0 for unknown skus": [
+   7
+  ],
+  "reserve takes units out of available stock": [
+   8
+  ],
+  "reserve is all-or-nothing when one line is short": [
+   8
+  ],
+  "release puts the reserved units back and returns the lines": [
+   9
+  ]
+ }
+}

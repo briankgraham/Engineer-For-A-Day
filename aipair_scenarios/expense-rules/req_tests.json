@@ -1,0 +1,47 @@
+{
+ "L1": {
+  "level 1: deny rejects every expense it applies to": [
+   3
+  ],
+  "level 1: max_amount allows exactly the limit and rejects anything over it": [
+   4
+  ],
+  "level 1: a rule applies only when every field in where matches": [
+   2
+  ],
+  "level 1: a rule with no where applies to every expense": [
+   2
+  ],
+  "level 1: violations come in rule order, then expense order": [
+   5
+  ],
+  "level 1: a policy with an unknown type or a duplicate id is rejected": [
+   6
+  ]
+ },
+ "level2": {
+  "level 2: a trip over its total is one violation listing all its expenses": [
+   1
+  ],
+  "level 2: exactly the trip limit is allowed": [
+   2
+  ],
+  "level 2: where narrows which expenses of a trip are added up": [
+   1
+  ],
+  "level 2: trip rules and expense rules together, in rule order": [
+   5
+  ]
+ },
+ "level3": {
+  "level 3: an employee's meals are added up per day": [
+   1
+  ],
+  "level 3: the day is the local date written in spentAt, not the UTC date": [
+   2
+  ],
+  "level 3: each employee has their own daily allowance": [
+   3
+  ]
+ }
+}

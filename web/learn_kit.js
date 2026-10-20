@@ -385,7 +385,7 @@
     if(vi){vi.note.textContent=vi.mic.disabled?vi.note.textContent:"Dictate it, edit if needed, then Get feedback.";pb.appendChild(vi.note)}
     const ai=el("div","lr-ai");ai.hidden=true;pb.appendChild(ai);
     const words=()=>{const c=(ta.value.trim().match(/\S+/g)||[]).length;cnt.textContent=c?`${c} words`:""};
-    let tm=0;ta.oninput=()=>{words();clearTimeout(tm);tm=setTimeout(()=>{s.text=ta.value;save()},400)};words();
+    let tm=0;ta.oninput=()=>{words();clearTimeout(tm);tm=setTimeout(()=>{s.text=ta.value;ctx.save()},400)};words();
     const showFb=text=>{ai.hidden=false;ai.replaceChildren(el("div","hd","Tutor feedback"),mdEl(text))};
     if(s.fb)showFb(s.fb);
     if(s.ok){card.classList.add("ok");n.textContent="✓";st.textContent="✓ Reviewed"}

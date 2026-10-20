@@ -1,0 +1,38 @@
+{
+ "L1": {
+  "words splits a title into clean lowercase words": [
+   1
+  ],
+  "a single word is lowercased": [
+   2
+  ],
+  "accented letters become plain letters": [
+   1
+  ],
+  "spaces become dashes": [
+   2
+  ],
+  "a run of spaces and punctuation becomes one dash": [
+   2
+  ],
+  "no dash at the start or end": [
+   2,
+   3
+  ],
+  "a title with nothing usable is untitled": [
+   4
+  ],
+  "long slugs are cut to maxLength": [
+   3
+  ],
+  "a free slug is used as is": [
+   6
+  ],
+  "a taken slug gets -2": [
+   6
+  ],
+  "it keeps counting until it finds a free one": [
+   6
+  ]
+ }
+}

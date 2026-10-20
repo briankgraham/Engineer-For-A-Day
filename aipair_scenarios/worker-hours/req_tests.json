@@ -1,0 +1,31 @@
+{
+ "L1": {
+  "addWorker rejects bad and duplicate workers": [
+   1
+  ],
+  "clock in and out, with the usual mistakes rejected": [
+   1
+  ],
+  "onShift lists who is clocked in, sorted": [
+   1
+  ],
+  "minutesWorked totals the shifts in a range": [
+   4
+  ],
+  "a night shift is split at midnight": [
+   4
+  ],
+  "addShift records a forgotten shift and rejects one that overlaps": [
+   3
+  ],
+  "weeklyPay pays the week's hours at the hourly rate": [
+   6
+  ],
+  "hours past 40 in a week are paid at 1.5x": [
+   6
+  ],
+  "pay is rounded once for the week, not per shift": [
+   7
+  ]
+ }
+}

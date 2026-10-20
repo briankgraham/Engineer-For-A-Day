@@ -1,0 +1,42 @@
+{
+ "L1": {
+  "rejects a bad building": [
+   1
+  ],
+  "cars start idle at floor 0 with doors closed": [
+   2
+  ],
+  "a car moves one floor per tick, opens, then closes": [
+   4
+  ],
+  "finishes the sweep before turning around (LOOK)": [
+   5
+  ],
+  "a car going down passes an up call and comes back for it": [
+   6
+  ],
+  "the nearest idle car takes a hall call": [
+   8
+  ],
+  "a hall call is not given out twice": [
+   9
+  ],
+  "rejects bad buttons": [
+   3
+  ]
+ },
+ "followup": {
+  "follow-up: a car out of service is never given a call": [
+   2
+  ],
+  "follow-up: its hall calls go to another car": [
+   2
+  ],
+  "follow-up: it drops its in-car stops and does not move": [
+   1
+  ],
+  "follow-up: setInService makes it usable again": [
+   3
+  ]
+ }
+}

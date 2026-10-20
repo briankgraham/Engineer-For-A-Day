@@ -507,7 +507,7 @@
   function viewHome(){
     const w=el("div","lr lr-home");
     w.appendChild(el("h1",null,"Learning"));
-    w.appendChild(el("p","lede","The fundamentals behind interview problems, taught step by step and practiced until they're automatic. Each track ends with the LeetCode problems and system design questions it prepares you for."));
+    w.appendChild(el("p","lede","The fundamentals behind interview problems, taught step by step and practiced until they're automatic. Algorithm tracks end with the LeetCode problems they prepare you for. Web and language tracks are quick checks and explain-it answers on the questions that open full-stack screens."));
     const recent=LEARN_TRACKS.map(t=>[t,t.lessons.find(l=>prog.last===lkey(t,l))]).find(x=>x[1]);
     if(recent){
       const [t,l]=recent,c=el("div","lr-cont"),tx=el("div","t");
@@ -538,7 +538,7 @@
     const nl=nextLesson(t),acts=el("div");acts.style.cssText="display:flex;gap:10px;flex-wrap:wrap;align-items:center";
     if(nl){const i=t.lessons.indexOf(nl);acts.appendChild(btn(s.done||prog.last?`Continue: ${i+1}. ${nl.title} →`:`Start lesson 1: ${nl.title} →`,()=>go(`#learn/${t.id}/${nl.id}`),"cta"))}
     else acts.appendChild(el("span","pill ok","✓ Every lesson complete"));
-    acts.appendChild(btn("Ready for LeetCode ↓",()=>readyBox.scrollIntoView({behavior:"smooth",block:"start"}),"ghost"));
+    if(t.ready.length)acts.appendChild(btn("Ready for LeetCode ↓",()=>readyBox.scrollIntoView({behavior:"smooth",block:"start"}),"ghost"));
     L.appendChild(acts);
     const R=el("div","lr-ring");R.appendChild(ring(s.done,t.lessons.length));
     const st=el("div","stats");
@@ -579,9 +579,9 @@
       step(n,c,x.done?"done":l===nl?"cur":"");
     });
 
-    const readyBox=el("div");w.appendChild(readyBox);
-    readyBox.appendChild(el("div","lr-sec","Ready for LeetCode"));
-    readyBox.appendChild(el("p","sub",`Work through these in order once lessons 1–${t.lessons.filter(l=>!l.system).length} feel solid. Each one opens the same editor and walkthrough as the LeetCode tab, and solving it there marks it here.`));
+    const readyBox=el("div");if(t.ready.length)w.appendChild(readyBox);
+    if(t.ready.length)readyBox.appendChild(el("div","lr-sec","Ready for LeetCode"));
+    if(t.ready.length)readyBox.appendChild(el("p","sub",`Work through these in order once lessons 1–${t.lessons.filter(l=>!l.system).length} feel solid. Each one opens the same editor and walkthrough as the LeetCode tab, and solving it there marks it here.`));
     const grid=el("div","lr-ready");readyBox.appendChild(grid);
     t.ready.forEach(([slug,lid],i)=>{
       const r=DATA.find(x=>x[6]===slug);if(!r)return;

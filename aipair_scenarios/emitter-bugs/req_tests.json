@@ -1,0 +1,33 @@
+{
+ "L1": {
+  "calls listeners in order with all arguments, and on() chains": [
+   1,
+   2
+  ],
+  "emit returns whether anyone was listening": [
+   2
+  ],
+  "off removes only the most recently added registration": [
+   6
+  ],
+  "once fires exactly one time": [
+   5
+  ],
+  "once is removed before it runs": [
+   5
+  ],
+  "removing a listener during emit does not skip the next one": [
+   4
+  ],
+  "emit uses a snapshot: removed still runs, added does not": [
+   4
+  ],
+  "a once listener that throws is still removed": [
+   5,
+   7
+  ],
+  "eventNames lists only events with listeners": [
+   10
+  ]
+ }
+}

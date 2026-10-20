@@ -1,0 +1,22 @@
+{
+ "L1": {
+  "sums each user's units across their events": [
+   2
+  ],
+  "cost is in whole cents at 25 cents per 1,000 units on the pro plan": [
+   2
+  ],
+  "rows are sorted by cost, highest first, ties by name": [
+   3
+  ],
+  "a free plan costs nothing": [
+   2
+  ],
+  "an unknown plan throws RangeError": [
+   3
+  ],
+  "runNightly returns a report for a tenant and logs it": [
+   6
+  ]
+ }
+}

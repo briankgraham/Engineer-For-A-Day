@@ -1,0 +1,45 @@
+{
+ "L1": {
+  "debounce: rejects bad arguments": [
+   1
+  ],
+  "debounce: every call restarts the wait": [
+   2
+  ],
+  "debounce: trailing call keeps the latest this": [
+   2
+  ],
+  "debounce: leading + trailing with a single call fires exactly once": [
+   4
+  ],
+  "debounce: returns the result of the latest fn call": [
+   5
+  ],
+  "debounce: flush runs the pending call now": [
+   7
+  ],
+  "debounce: a wait of zero": [
+   1,
+   2
+  ],
+  "retry: success on the first try calls back once, right away": [
+   10
+  ],
+  "retry: attempts is the total number of tries; the last error is returned without waiting": [
+   10,
+   11
+  ],
+  "retry: maxMs caps the wait": [
+   11
+  ],
+  "retry: shouldRetry can stop early and sees the try number": [
+   11
+  ],
+  "retry: works with an asynchronous task": [
+   9
+  ],
+  "retry: cancel while a try is in flight ignores its late answer": [
+   13
+  ]
+ }
+}

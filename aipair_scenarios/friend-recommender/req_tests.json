@@ -1,0 +1,58 @@
+{
+ "L1": {
+  "level 1: suggests friends of friends, most mutual friends first": [
+   2,
+   3
+  ],
+  "level 1: never suggests the user or their current friends": [
+   2
+  ],
+  "level 1: returns at most k suggestions": [
+   1
+  ],
+  "level 1: an unknown user gets no suggestions": [
+   4
+  ],
+  "level 1: ties are ordered by id": [
+   3
+  ],
+  "level 1: opening PYMK does not change anyone's friends": [
+   4
+  ],
+  "level 1: a deactivated friend does not count as a mutual friend": [
+   2
+  ]
+ },
+ "level2": {
+  "level 2: a dismissed suggestion is not shown again": [
+   2
+  ],
+  "level 2: dismissing still fills the list up to k": [
+   3
+  ],
+  "level 2: a blocked user is not suggested to the blocker": [
+   1
+  ],
+  "level 2: blocking ends the friendship": [
+   1
+  ],
+  "level 2: block and dismiss return false for an unknown user or the same user twice": [
+   1,
+   2
+  ]
+ },
+ "level3": {
+  "level 3: asking again with nothing changed does not read the graph": [
+   1
+  ],
+  "level 3: a new friendship shows up in the user's next suggestions": [
+   2
+  ],
+  "level 3: a smaller k and then a bigger k": [
+   4
+  ],
+  "level 3: a dismissal takes effect on the next call": [
+   2
+  ]
+ }
+}

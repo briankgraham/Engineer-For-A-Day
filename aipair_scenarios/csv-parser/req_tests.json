@@ -1,0 +1,38 @@
+{
+ "L1": {
+  "simple rows": [
+   2,
+   3,
+   4,
+   5
+  ],
+  "quoted fields may contain the delimiter and escaped quotes": [
+   6
+  ],
+  "CRLF ends a record without leaving a stray CR": [
+   3
+  ],
+  "a blank line in the middle is a record with one empty field": [
+   3
+  ],
+  "empty fields, leading and trailing": [
+   5
+  ],
+  "junk after a closing quote is an error with its line": [
+   8
+  ],
+  "a leading BOM is ignored": [
+   9
+  ],
+  "bad arguments": [
+   1
+  ],
+  "header mode fills short records and rejects long ones": [
+   10
+  ],
+  "header mode with quoted names and multi-line values": [
+   6,
+   10
+  ]
+ }
+}

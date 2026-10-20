@@ -1,0 +1,35 @@
+{
+ "L1": {
+  "GET /books lists every book in catalog order": [
+   1
+  ],
+  "GET /books/:id returns the book, or 404": [],
+  "q matches the title": [
+   2
+  ],
+  "genre filters by one genre": [
+   3
+  ],
+  "minYear keeps books published that year or later": [
+   4
+  ],
+  "page and limit pick a slice of the results": [
+   6
+  ],
+  "ticket #412: searching \"dune\" finds nothing (search must ignore case)": [
+   2
+  ],
+  "ticket #415: searching by author finds nothing": [
+   2
+  ],
+  "ticket #419: genre=fantasy,scifi returns no books (it should return either genre)": [
+   3
+  ],
+  "ticket #423: maxYear=1969 leaves out books from 1969": [
+   4
+  ],
+  "ticket #431: total shows 5 when there are 12 results": [
+   1
+  ]
+ }
+}

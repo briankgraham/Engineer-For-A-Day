@@ -1,0 +1,39 @@
+{
+ "L1": {
+  "POST /tasks creates a task with status open by default": [
+   8
+  ],
+  "POST /tasks rejects a blank title": [
+   8
+  ],
+  "GET /tasks/:id returns the task, or 404": [
+   8
+  ],
+  "PATCH /tasks/:id updates title and status": [
+   8
+  ],
+  "GET /tasks lists tasks in creation order": [
+   8
+  ],
+  "GET /tasks?status= filters, and rejects an unknown status": [
+   3
+  ],
+  "the list body carries page, limit, total and totalPages": [
+   2
+  ],
+  "page and limit pick a slice of the list": [
+   1,
+   2
+  ],
+  "DELETE returns 204 and the task disappears from the list and from GET": [
+   4,
+   5
+  ],
+  "DELETE stamps deletedAt but keeps the record around": [
+   4
+  ],
+  "POST /tasks/:id/restore brings a deleted task back": [
+   6
+  ]
+ }
+}

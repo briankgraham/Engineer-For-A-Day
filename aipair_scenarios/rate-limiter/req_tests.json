@@ -1,0 +1,33 @@
+{
+ "L1": {
+  "rejects bad constructor options": [
+   1
+  ],
+  "a denied call reports remaining and retryAfterMs": [
+   3,
+   4
+  ],
+  "one token comes back per interval": [
+   5
+  ],
+  "leftover time is kept when a token is credited": [
+   5
+  ],
+  "a denied call consumes nothing": [
+   4
+  ],
+  "refill is capped at capacity": [
+   5,
+   6
+  ],
+  "a backwards clock adds nothing and re-bases": [
+   7
+  ],
+  "reset makes a key full again": [
+   9
+  ],
+  "prune never hands a throttled key a fresh bucket": [
+   11
+  ]
+ }
+}

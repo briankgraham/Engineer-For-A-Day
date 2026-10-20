@@ -1,0 +1,32 @@
+{
+ "L1": {
+  "build order puts every dependency before the targets that use it": [
+   2
+  ],
+  "deps are visited in sorted order": [
+   2
+  ],
+  "an unknown target throws BuildError": [
+   2
+  ],
+  "a cycle throws BuildError naming the loop": [
+   3
+  ],
+  "a target that depends on itself is a cycle": [
+   3
+  ],
+  "a clean build compiles every target in order": [
+   4
+  ],
+  "a second build with nothing changed is all cache hits": [
+   4,
+   5
+  ],
+  "changing the root's own sources rebuilds only the root": [
+   5
+  ],
+  "changing a direct dependency rebuilds it and the root": [
+   5
+  ]
+ }
+}

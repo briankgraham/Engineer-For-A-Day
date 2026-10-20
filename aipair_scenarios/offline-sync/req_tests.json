@@ -1,0 +1,38 @@
+{
+ "L1": {
+  "add puts the item in the local list and on the server, and returns its id": [
+   1
+  ],
+  "toggle flips done locally and on the server": [
+   1
+  ],
+  "remove drops the item locally and marks it deleted on the server": [
+   1
+  ],
+  "items() lists in creation order": [
+   1
+  ],
+  "toggle and remove of an unknown id reject": [
+   1
+  ],
+  "offline: add resolves with an id and shows up locally at once": [
+   1
+  ],
+  "offline: toggle and remove also resolve, and are queued": [
+   1
+  ],
+  "sync while offline reports { ok: false, pending } and keeps the edits": [
+   3,
+   4
+  ],
+  "after reconnecting, sync sends the queue and reports { ok: true, pending: 0 }": [
+   3
+  ],
+  "queued edits are sent oldest first": [
+   3
+  ],
+  "sync brings in items another client added": [
+   8
+  ]
+ }
+}

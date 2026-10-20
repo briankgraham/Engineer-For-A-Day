@@ -1,0 +1,31 @@
+{
+ "L1": {
+  "a successful charge credits the account and records the charge": [
+   1
+  ],
+  "a refund debits the charge's account and adds to its refunded total": [
+   1
+  ],
+  "ledger entries carry the event id as their ref": [
+   1
+  ],
+  "event types we don't handle are acknowledged and ignored": [
+   7
+  ],
+  "a malformed event gets a 400 and changes nothing": [
+   6
+  ],
+  "a redelivered event is acknowledged but applied only once": [
+   2
+  ],
+  "if the ledger write fails the event gets a 500, and the provider's retry applies it": [
+   3
+  ],
+  "a refund that arrives before its charge gets a 409, then applies when retried after the charge": [
+   5
+  ],
+  "a redelivery that arrives while the first copy is still being applied gets a 409": [
+   4
+  ]
+ }
+}

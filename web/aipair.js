@@ -54,6 +54,7 @@
 .ap-brief ol{list-style:none;margin:0;padding:0;counter-reset:req}
 .ap-brief li{counter-increment:req;display:flex;gap:10px;align-items:flex-start;padding:8px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);line-height:1.5}
 .ap-brief li::before{content:counter(req);flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ap-brief li>span:first-of-type{flex:1;min-width:0}.req-mark{flex:none;width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}.req-mark:empty{display:none}.req-mark.ok{background:var(--easy-bg);color:var(--easy)}.req-mark.no{background:var(--hard-bg);color:var(--hard)}
 .ap-brief li code{font:12px ui-monospace,Menlo,monospace;background:var(--head);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
 .ap-ed{scroll-margin-top:calc(var(--nav-h) + var(--ap-top-h,62px) + 10px)}
 .ap-ed .CodeMirror{height:calc(100vh - var(--nav-h) - 150px);min-height:320px;border:1px solid var(--line);border-radius:var(--radius-sm);font-size:13px}
@@ -253,26 +254,40 @@
     const reqs=el("div","reqs"),ol=el("ol");
     reqs.appendChild(el("h4","","Requirements"));
     // Identifiers, calls like on(event, fn) and quoted names like 'error' render as inline code.
-    const CODE=/(\b[A-Za-z_]\w*(?:\.\w+)*\([^()]*\)|'[^']*'|"[^"]*"|\b\w+\.\w+\b)/g;
-    sc.requirements.forEach(t=>{
-      const li=el("li"),span=el("span");
-      t.split(CODE).forEach((part,i)=>span.appendChild(i%2?el("code","",part):document.createTextNode(part)));
-      li.appendChild(span);ol.appendChild(li);
-    });
+    const CODE=/(\b[A-Za-z_][\w-]*(?:\.\w+)*\([^()]*\)|'[^']*'|"[^"]*"|\b\w+\.\w+\b)/g;
+    // Each requirement gets a status mark from the last test run: sec ("L1", "followup", "level2"...) picks the
+    // test-name -> requirement-number map in sc.reqTests. No mapped test has run yet (or none exists) leaves it neutral.
+    const reqMarks={};
+    const reqList=(sec,items,into)=>{
+      reqMarks[sec]=items.map(t=>{
+        const li=el("li"),span=el("span"),mark=el("span","req-mark");
+        t.split(CODE).forEach((part,i)=>span.appendChild(i%2?el("code","",part):document.createTextNode(part)));
+        li.append(span,mark);into.appendChild(li);return mark;
+      });
+    };
+    function paintReqs(){
+      const seen=(sess.last&&sess.last.tests)||{};
+      Object.entries(reqMarks).forEach(([sec,marks])=>{
+        const map=(sc.reqTests&&sc.reqTests[sec])||{};
+        marks.forEach((mark,i)=>{
+          const t=Object.keys(map).filter(n=>map[n].includes(i+1)&&n in seen);
+          const st=!t.length?"":t.every(n=>seen[n])?"ok":"no";
+          mark.className="req-mark"+(st?" "+st:"");
+          mark.textContent=st==="ok"?"✓":st==="no"?"✗":"";
+          mark.title=st==="ok"?"Every visible test for this requirement passed on the last run":st==="no"?"A visible test for this requirement failed on the last run: "+t.filter(n=>!seen[n]).join("; "):"No visible test for this requirement has run yet";
+        });
+      });
+    }
+    reqList("L1",sc.requirements,ol);
     reqs.appendChild(ol);bd.append(goal,reqs);brief.appendChild(bd);
     main.appendChild(brief);
-    const reqList=(items,into)=>items.forEach(t=>{
-      const li=el("li"),span=el("span");
-      t.split(CODE).forEach((part,i)=>span.appendChild(i%2?el("code","",part):document.createTextNode(part)));
-      li.appendChild(span);into.appendChild(li);
-    });
     // The follow-up requirement, shown once revealed (same look as the brief).
     const fuBox=el("div","ap-brief ap-fu");fuBox.hidden=true;
     if(lld&&sc.followup){
       const fs=el("div","hd","New requirement: "+sc.followup.title);fs.appendChild(el("span","chip hi",sc.followup.requirements.length+" requirements"));
       const fb=el("div","bd"),fg=el("div","goal"),fr=el("div","reqs"),fol=el("ol");
       fg.append(el("h4","","Follow-up"),el("p","",sc.followup.brief));
-      fr.appendChild(el("h4","","Requirements"));reqList(sc.followup.requirements,fol);fr.appendChild(fol);
+      fr.appendChild(el("h4","","Requirements"));reqList("followup",sc.followup.requirements,fol);fr.appendChild(fol);
       fb.append(fg,fr);fuBox.append(fs,fb);main.appendChild(fuBox);
     }
     // One card per later level, shown from its rail tab once unlocked.
@@ -281,7 +296,7 @@
       const hd=el("div","hd","Level "+(i+2)+": "+lv.title);hd.appendChild(el("span","chip hi",lv.requirements.length+" requirements"));
       const b=el("div","bd"),g=el("div","goal"),rq=el("div","reqs"),o=el("ol");
       g.append(el("h4","","Level "+(i+2)+" of "+(LV.length+1)),el("p","",lv.brief));
-      rq.appendChild(el("h4","","Requirements"));reqList(lv.requirements,o);rq.appendChild(o);
+      rq.appendChild(el("h4","","Requirements"));reqList("level"+(i+2),lv.requirements,o);rq.appendChild(o);
       b.append(g,rq);box.append(hd,b);main.appendChild(box);return box;
     });
     // What a still-locked level's tab shows: its title and how it unlocks, but not its brief.
@@ -387,7 +402,7 @@
       if(H)item("◌","Hidden tests",false,()=>{evalBox.hidden=false;(hidHead||evalBox).scrollIntoView({behavior:"smooth",block:"start"})},el("span","ap-pass "+(hp===H.length?"ok":"no"),hp+"/"+H.length)).title="The hidden tests from your last finish, with the code of each";
       if(sess.result)item("★","Feedback",false,()=>{evalBox.hidden=false;evalBox.scrollIntoView({behavior:"smooth",block:"start"})});
     }
-    showTab(open);
+    showTab(open);paintReqs();
 
     const state={files:()=>Object.fromEntries(sc.files.map(f=>[f.name,docs[f.name].getValue()]))};
     let dead=false; // set by Abandon so the leave-time save cannot recreate the session
@@ -539,7 +554,12 @@
       running=false;run.disabled=false;stop.hidden=true;
       WS.renderResults(results,res);
       const total=res.names.length,passed=res.cases.filter(c=>c&&c.pass).length;
-      if(total){sess.last={passed,total};save()}
+      if(total){
+        const tests={};
+        res.names.forEach((n,i)=>{if(!n.startsWith("[mine] "))tests[n]=!!(res.cases[i]&&res.cases[i].pass)});
+        sess.last={passed,total,tests};save();
+      }
+      paintReqs();
       if(lvTabs.includes(open))showTab(open);else renderRail(); // a locked level's card shows the latest count
       // Every visible test passing (the candidate's own tests aside) brings the follow-up in early.
       const allVisible=res.names.length&&res.names.every((n,i)=>n.startsWith("[mine] ")||(res.cases[i]&&res.cases[i].pass));
@@ -648,7 +668,7 @@
       clearTimeout(armed);armed=0;reset.textContent="Reset";
       sc.files.forEach(f=>docs[f.name].setValue(f.code));
       mineDoc.setValue(MINE_STARTER);if(reviewDoc)reviewDoc.setValue(REVIEW_STARTER);sess.runs=0;sess.viewedTests=false;
-      results.textContent="";con.textContent="";sess.last=null;sess.hidden=null;renderRail();
+      results.textContent="";con.textContent="";sess.last=null;sess.hidden=null;paintReqs();renderRail();
       if(ac)ac.abort();
       sess.id=crypto.randomUUID();sess.msgs=[];sess.elapsed=0;timer.textContent=fmt(0);sess.result=null;evalBox.hidden=true;evalBox.textContent="";chatLog.textContent="";save(); // a new attempt gets a clean flaw log too
       if(lld){designDoc.setValue(DESIGN_STARTER);sess.coding=false;sess.followup=null;save();openWork(sc)} // rebuilds the gate, tabs and follow-up card

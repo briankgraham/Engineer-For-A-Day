@@ -11,7 +11,7 @@ const WEB = path.join(__dirname, "..", "web");
 const html = fs.readFileSync(path.join(WEB, "index.html"), "utf8");
 const harness = html.slice(html.indexOf("function harness(spec){"), html.indexOf("// Runs `code` against the exercise's tests"));
 // Track files after learn_data.js push onto LEARN_TRACKS (same load order as the page).
-const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js"];
+const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_fundamentals.js"];
 const LEARN_TRACKS = vm.runInNewContext(LEARN_FILES.map(f => fs.readFileSync(path.join(WEB, f), "utf8")).join("\n") + ";LEARN_TRACKS");
 const slugs = new Set([...html.matchAll(/,"([a-z0-9-]+)","[^"]*"\]/g)].map(m => m[1]));
 
@@ -83,14 +83,14 @@ for (const track of LEARN_TRACKS) {
   console.log(`Track ${track.id}`);
   const lessonIds = new Set(track.lessons.map(l => l.id));
   if (lessonIds.size !== track.lessons.length) bad("duplicate lesson ids");
-  for (const [slug, lesson] of track.ready) {
+  for (const [slug, lesson] of track.ready || []) {
     if (!slugs.has(slug)) bad(`ready: unknown LeetCode slug ${slug}`);
     if (!lessonIds.has(lesson)) bad(`ready: ${slug} points at unknown lesson ${lesson}`);
   }
   for (const lesson of track.lessons) {
     console.log(` ${lesson.id}`);
     const ids = new Set();
-    for (const s of lesson.leetcode) if (!slugs.has(s)) bad(`unknown LeetCode slug ${s}`);
+    for (const s of lesson.leetcode || []) if (!slugs.has(s)) bad(`unknown LeetCode slug ${s}`);
     for (const b of lesson.blocks) {
       if (!b.viz) continue;
       if (b.tree || b.heap) { checkArrayViz(b); continue; }
@@ -103,6 +103,12 @@ for (const track of LEARN_TRACKS) {
       ids.add(part.id);
       if (part.type === "quiz") {
         if (!(part.answer >= 0 && part.answer < part.options.length)) bad(`${part.id}: answer out of range`);
+        if (part.options.length < 2) bad(`${part.id}: fewer than two options`);
+        if (!part.q || !part.why) bad(`${part.id}: missing question or explanation`);
+        continue;
+      }
+      if (part.type === "explain") {
+        if (!part.title || !part.prompt || !part.rubric) bad(`${part.id}: explain part needs title, prompt and rubric`);
         continue;
       }
       if (part.type !== "code") continue;

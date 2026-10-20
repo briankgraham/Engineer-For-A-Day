@@ -1,0 +1,54 @@
+{
+ "L1": {
+  "level 1: pushBack then popFront is first in, first out": [
+   2
+  ],
+  "level 1: pushFront then popFront is last in, first out": [
+   2
+  ],
+  "level 1: grows past its capacity and keeps the order": [
+   1
+  ],
+  "level 1: peeks and pops on an empty deque return undefined": [
+   2
+  ],
+  "level 1: keeps first-in-first-out order when it grows after wrapping around": [
+   1
+  ],
+  "level 1: popBack and peekBack work after wrapping around": [
+   2
+  ],
+  "level 1: polling an empty deque does not break it": [
+   2,
+   3
+  ]
+ },
+ "level2": {
+  "level 2: the example from the brief": [
+   1
+  ],
+  "level 2: k = 1 gives the array back, k = length gives one max": [
+   1
+  ],
+  "level 2: a window larger than the array gives []": [
+   2
+  ],
+  "level 2: reads each element a constant number of times (O(n), not O(n * k))": [
+   3
+  ]
+ },
+ "level3": {
+  "level 3: a single element that is enough": [
+   1
+  ],
+  "level 3: -1 when no subarray reaches k": [
+   1
+  ],
+  "level 3: negative numbers: the examples from the brief": [
+   1
+  ],
+  "level 3: reads each element a constant number of times (O(n))": [
+   2
+  ]
+ }
+}

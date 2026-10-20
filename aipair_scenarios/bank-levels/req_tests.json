@@ -1,0 +1,68 @@
+{
+ "L1": {
+  "level 1: createAccount returns true, and false for an id that already exists": [
+   2
+  ],
+  "level 1: deposit returns the new balance": [
+   3
+  ],
+  "level 1: deposit to an unknown account returns null": [
+   3
+  ],
+  "level 1: transfer returns the source balance and credits the target": [
+   4
+  ],
+  "level 1: transfer with an unknown account returns null": [
+   4
+  ],
+  "level 1: transfer without enough money returns null and changes nothing": [
+   4
+  ]
+ },
+ "level2": {
+  "level 2: ranks accounts by outgoing total, highest first": [
+   1,
+   2
+  ],
+  "level 2: returns at most n, and every account if there are fewer": [
+   1,
+   2
+  ],
+  "level 2: money received and failed transfers do not count": [
+   3
+  ]
+ },
+ "level3": {
+  "level 3: pay withdraws and returns payment ids counted across the bank": [
+   1
+  ],
+  "level 3: pay returns null for an unknown account or not enough money": [
+   1
+  ],
+  "level 3: 2% cashback arrives 24 hours after the payment": [
+   3,
+   4
+  ],
+  "level 3: payments count toward topSpenders": [
+   2
+  ]
+ },
+ "level4": {
+  "level 4: merging adds the balance and removes the second account": [
+   1,
+   2,
+   3
+  ],
+  "level 4: merge returns false for the same id or an unknown account": [
+   1
+  ],
+  "level 4: outgoing totals are combined and the merged account leaves topSpenders": [
+   2,
+   3
+  ],
+  "level 4: getBalance returns the balance at a past time": [
+   4,
+   5
+  ]
+ }
+}

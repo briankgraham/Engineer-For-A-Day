@@ -1,0 +1,35 @@
+{
+ "L1": {
+  "subtotal is price times quantity, summed": [
+   1
+  ],
+  "tax is charged on the subtotal": [
+   2,
+   3
+  ],
+  "no tip by default": [
+   2
+  ],
+  "tip is a percent of the subtotal": [
+   2,
+   4
+  ],
+  "tip is charged before tax, not on the taxed amount": [
+   4
+  ],
+  "every amount is a whole number of cents": [
+   2,
+   3,
+   4
+  ],
+  "an even split gives everyone the same share": [
+   6
+  ],
+  "shares always add up to the total": [
+   6
+  ],
+  "extra cents go to the first people": [
+   6
+  ]
+ }
+}

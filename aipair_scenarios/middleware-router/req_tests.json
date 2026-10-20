@@ -1,0 +1,27 @@
+{
+ "L1": {
+  "use() middleware runs for every request, before route handlers, in registration order": [
+   1
+  ],
+  "get() and post() only run for the matching method and path": [
+   1
+  ],
+  "multiple handlers on one route run in order until one sends a response": [
+   1,
+   6
+  ],
+  "an unmatched route gets a default 404": [
+   7
+  ],
+  "next(err) skips remaining normal handlers and jumps to an error handler": [
+   2,
+   3
+  ],
+  "a synchronous throw is treated like next(err)": [
+   5
+  ],
+  "an async handler that rejects reaches the error handler too": [
+   5
+  ]
+ }
+}
