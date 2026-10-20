@@ -7,6 +7,12 @@
   const readSessions=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}};
   const writeSession=(id,s)=>{try{const all=readSessions();all[id]=s;localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
   const dropSession=id=>{try{const all=readSessions();delete all[id];localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
+  const DKEY="aipair-done-v1",SKEY="aipair-sort-v1";
+  const readDone=()=>{try{return JSON.parse(localStorage.getItem(DKEY))||{}}catch(e){return {}}};
+  const setDone=(id,v)=>{try{const all=readDone();if(v)all[id]=true;else delete all[id];localStorage.setItem(DKEY,JSON.stringify(all))}catch(e){}};
+  const SORTS={"":"Default order",todo:"Not completed first",done:"Completed first",easy:"Easiest first",hard:"Hardest first"};
+  const readSort=()=>{try{const v=localStorage.getItem(SKEY);return v in SORTS?v:""}catch(e){return ""}};
+  const DIFF={Easy:0,Medium:1,Hard:2};
   const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 
   const css=`
@@ -14,6 +20,9 @@
 .ap h2{margin:0 0 4px;font-size:20px}.ap .sub{color:var(--muted);margin:0 0 14px}
 .ap-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .ap-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
+.ap-card.done{border-left:3px solid var(--easy)}
+.ap-card .dn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;width:max-content}
+.ap-sort{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--muted);font-size:13px}
 .ap-card h3{margin:0;font-size:16px}.ap-card p{margin:0;color:var(--muted)}.ap-card .meta{font-size:12px;color:var(--muted)}
 .ap-card .act{margin-top:auto;padding-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .ap-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 -16px 12px;padding:8px 16px;position:sticky;top:var(--nav-h);z-index:2;background:var(--bg);border-bottom:1px solid var(--line)}
@@ -109,15 +118,27 @@
       }catch(e){wrap.appendChild(el("p","","Could not load scenarios. Run: python3 server.py — then open http://localhost:8000"));return}
     }
     const sessions=readSessions();
+    let sort=readSort();
+    const bar=el("label","ap-sort","Sort by ");const sel=el("select");
+    Object.entries(SORTS).forEach(([v,t])=>{const o=el("option","",t);o.value=v;sel.appendChild(o)});
+    sel.value=sort;bar.appendChild(sel);wrap.appendChild(bar);
     const grid=el("div","ap-cards");wrap.appendChild(grid);
-    scenarios.forEach(sc=>{
+    const render=()=>{
+      grid.textContent="";
+      const done=readDone();
+      // Array.sort is stable, so ties keep the default (server) order.
+      const rank=sc=>sort==="todo"?+!!done[sc.id]:sort==="done"?+!done[sc.id]:sort==="easy"?(DIFF[sc.difficulty]??1):sort==="hard"?-(DIFF[sc.difficulty]??1):0;
+      [...scenarios].sort((a,b)=>rank(a)-rank(b)).forEach(sc=>{
       const s=sessions[sc.id];
-      const card=el("div","ap-card");
+      const card=el("div","ap-card"+(done[sc.id]?" done":""));
       card.appendChild(el("h3","",sc.title));
       card.appendChild(el("p","",sc.blurb));
       const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="debug"?["Debugging"]:sc.kind==="lld"?["Object design"]:sc.kind==="levels"?[sc.levels.length+1+" levels"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
       if(s){bits.push("in progress · "+fmt(s.elapsed||0));if(s.last)bits.push(s.last.passed+"/"+s.last.total+" tests passing");if(s.followup)bits.push("follow-up revealed");if(sc.kind==="levels")bits.push("on level "+(1+(s.levels||[]).length))}
       card.appendChild(el("div","meta",bits.join(" · ")));
+      const dn=el("label","dn");const cb=el("input");cb.type="checkbox";cb.checked=!!done[sc.id];
+      cb.onchange=()=>{setDone(sc.id,cb.checked);render()};
+      dn.append(cb,"Completed");card.appendChild(dn);
       const b=el("button","",s?"Resume":"Start");
       b.onclick=()=>openWork(sc);
       const act=el("div","act");card.appendChild(act);act.appendChild(b);
@@ -130,7 +151,10 @@
         act.appendChild(d);
       }
       grid.appendChild(card);
-    });
+      });
+    };
+    sel.onchange=()=>{sort=sel.value;try{localStorage.setItem(SKEY,sort)}catch(e){}render()};
+    render();
   }
 
   let openGen=0;

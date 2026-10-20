@@ -1,5 +1,6 @@
 // System Design Prep tab. Content lives in sysdesign_data.js (const SD); this file is the UI.
-// Relies on globals from index.html: $, el, apiFetch, today, isDue, NO_SERVER, INTERVALS.
+// Relies on globals from index.html: $, el, apiFetch, today, isDue, NO_SERVER, INTERVALS; LK (learn_kit.js) for the lesson pages;
+// SD_LESSONS (sysdesign_lessons.js) for the practice steps.
 (()=>{
 const KEY="sysdesign-progress-v1",MKEY="sysdesign-mocks-v1",AKEY="sysdesign-active-mock-v1";
 const rd=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
@@ -7,7 +8,8 @@ const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let prog=rd(KEY,{}),mocks=rd(MKEY,[]),active=rd(AKEY,null);
 const T=Object.fromEntries(SD.topics.map(t=>[t.id,t])),P=Object.fromEntries(SD.problems.map(p=>[p.id,p]));
 const gp=k=>prog[k]||{done:false,times:0};
-const setp=(k,p)=>{if(p.done||p.times||p.note)prog[k]=p;else delete prog[k];wr(KEY,prog)};
+const hasParts=p=>!!(p.parts&&Object.keys(p.parts).length);
+const setp=(k,p)=>{if(p.done||p.times||p.note||p.revisit||hasParts(p))prog[k]=p;else delete prog[k];wr(KEY,prog)};
 const kt=id=>"t:"+id,kp=id=>"p:"+id;
 const isDone=k=>!!gp(k).done;
 const DIFF={E:"Easy",M:"Medium",H:"Hard"};
@@ -193,7 +195,7 @@ $("sdregen").onclick=()=>{if(walkId){walkMsgs=[];loadWalk("/api/sd/walkthrough/r
 
 // ---- views ----
 const view=()=>$("sdview");
-const TABS=[["start","Start here"],["topics","Topics"],["problems","Problems"],["mock","Mock interview"]];
+const TABS=[["start","Course"],["topics","Topics"],["problems","Problems"],["mock","Mock interview"]];
 let curTab="start";
 function paintNav(){
   const n=$("sdnav");n.textContent="";
@@ -209,31 +211,111 @@ function dueList(){
   return out;
 }
 
+// ---- course path (Start here) and topic lessons: built from the shared Learning kit (learn_kit.js, .lr-* styles) ----
+const LESSONS=typeof SD_LESSONS==="undefined"?{}:SD_LESSONS;
+const LASTKEY="sysdesign-last-v1";
+const lastItem=()=>rd(LASTKEY,null);
+const setLast=(kind,id)=>wr(LASTKEY,{kind,id});
+const lrReady=(()=>{let on=false;return()=>{if(on||!window.LK)return;on=true;LK.injectCss();const st=document.createElement("style");st.textContent=SDCSS;document.head.appendChild(st)}})();
+const SDCSS=`
+.lr .sdp{display:flex;flex-direction:column;gap:2px;margin-top:12px}
+.lr .sdp-i{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--fg);background:none;border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
+.lr .sdp-i:hover{background:var(--head)}
+.lr .sdp-i .st{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.lr .sdp-i.done .st{background:var(--easy);border-color:var(--easy)}
+.lr .sdp-i.cur .st{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.lr .sdp-i .m{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.lr .sdp-i .m .E{color:var(--easy)}.lr .sdp-i .m .M{color:var(--med)}.lr .sdp-i .m .H{color:var(--hard)}
+`;
+
+// The path flattened to the steps that can be completed, in order.
+const STEPS=[];
+SD.path.forEach((st,si)=>st.items.forEach(([k,i])=>{if(k==="topic"||k==="problem")STEPS.push({kind:k,id:i,stage:si})}));
+const stepKey=s=>s.kind==="topic"?kt(s.id):kp(s.id);
+const stepName=s=>s.kind==="topic"?T[s.id].name:P[s.id].name;
+const stepPath=s=>s.kind+"/"+s.id;
+const partsOf=id=>(LESSONS[id]&&LESSONS[id].parts)||[];
+const partsDone=id=>{const r=gp(kt(id)).parts||{};return partsOf(id).filter(p=>r[p.id]&&r[p.id].ok).length};
+// Resume the topic or problem you last opened if it isn't finished, otherwise the first unfinished step.
+const nextStep=()=>{
+  const l=lastItem(),cur=l&&STEPS.find(s=>s.kind===l.kind&&s.id===l.id);
+  if(cur&&!isDone(stepKey(cur)))return cur;
+  return STEPS.find(s=>!isDone(stepKey(s)))||null;
+};
+const nodeBtn=(text,fn,cls)=>LK.btn(text,fn,cls);
+
+function stepRow(s,cur){
+  const done=isDone(stepKey(s)),b=h("button","sdp-i"+(done?" done":"")+(cur?" cur":""));
+  b.type="button";b.onclick=()=>go(stepPath(s));
+  const m=h("span","m");
+  if(s.kind==="topic"){
+    const n=partsOf(s.id).length;
+    m.textContent=n?`${partsDone(s.id)}/${n} practice`:"Read";
+  }else m.appendChild(diffSpan(P[s.id].diff));
+  add(b,h("span","st",done?"✓":""),h("span",null,stepName(s)),m);
+  return b;
+}
+
 function viewStart(v){
-  const td=SD.topics.filter(t=>isDone(kt(t.id))).length,pd=SD.problems.filter(p=>isDone(kp(p.id))).length;
-  add(v,h("h2",null,"System Design Prep"),h("p","sub","A guided path from fundamentals to full designs. Everything is clickable: open a topic or problem to dive in, track it, and take notes."));
-  add(v,h("div","stats",`${td}/${SD.topics.length} topics · ${pd}/${SD.problems.length} problems · ${mocks.length} mock${mocks.length===1?"":"s"}`),frac(td+pd,SD.topics.length+SD.problems.length));
-  const due=dueList();
-  if(due.length){const c=h("div","card");c.appendChild(h("b",null,"Due for review"));c.appendChild(h("div"));due.forEach(d=>c.lastChild.appendChild(d));v.appendChild(c)}
-  const fw=h("div","card");fw.id="framework";
-  const d=h("details");d.open=location.hash.endsWith("/framework");
-  d.appendChild(h("summary",null,"The interview framework (about 45 minutes)"));
-  SD.framework.forEach(s=>{d.appendChild(h("h3",null,s.name+" · ~"+s.mins+" min"));d.appendChild(h("div","meta",s.desc));d.appendChild(ul(s.tips))});
-  fw.appendChild(d);v.appendChild(fw);
-  SD.path.forEach(st=>{
-    const items=st.items.filter(([k])=>k==="topic"||k==="problem");
-    const n=items.filter(([k,i])=>isDone(k==="topic"?kt(i):kp(i))).length;
-    v.appendChild(h("h3",null,st.name+(items.length?`  (${n}/${items.length})`:"")));
-    v.appendChild(h("div","meta",st.desc));
-    const row=h("div");
-    st.items.forEach(([k,i])=>{
-      if(k==="framework"){const c=h("button","chip","Interview framework");c.onclick=()=>{d.open=true;fw.scrollIntoView({behavior:"smooth"})};row.appendChild(c)}
-      else if(k==="topic")row.appendChild(chip(T[i].name,"topic/"+i,isDone(kt(i))));
-      else if(k==="problem")row.appendChild(chip(P[i].name,"problem/"+i,isDone(kp(i))));
-      else row.appendChild(chip("Start a mock interview","mock",false));
+  lrReady();
+  const w=h("div","lr");v.appendChild(w);
+  const done=STEPS.filter(s=>isDone(stepKey(s))).length;
+  const practice=SD.topics.reduce((a,t)=>a+partsOf(t.id).length,0),practiceDone=SD.topics.reduce((a,t)=>a+partsDone(t.id),0);
+  const nx=nextStep(),started=done||lastItem();
+  const hero=h("div","lr-hero"),L=h("div");hero.appendChild(L);
+  L.append(h("h1",null,"🏗️ System Design"),h("p","tag","From the building blocks to full designs, then mock interviews under time pressure."));
+  const outs=h("ul");["Reason from numbers: estimate load before choosing components.","Explain the trade-offs of caches, queues, shards and replicas.","Walk a 45-minute interview from requirements to deep dive."].forEach(o=>outs.appendChild(h("li",null,o)));L.appendChild(outs);
+  const acts=h("div");acts.style.cssText="display:flex;gap:10px;flex-wrap:wrap;align-items:center";
+  if(nx)acts.appendChild(nodeBtn(started?`Continue: ${stepName(nx)} →`:`Start: ${stepName(nx)} →`,()=>go(stepPath(nx)),"cta"));
+  else acts.appendChild(h("span","pill ok","✓ Every step complete"));
+  acts.appendChild(nodeBtn("Interview framework ↓",()=>{fwDetails.open=true;fw.scrollIntoView({behavior:"smooth",block:"start"})},"ghost"));
+  L.appendChild(acts);
+  const R=h("div","lr-ring");R.appendChild(LK.ring(done,STEPS.length,0,"steps done"));
+  const st=h("div","stats");
+  if(practice)st.appendChild(h("span",null,`${practiceDone} of ${practice} practice steps done`));
+  st.appendChild(h("span",null,`${mocks.length} mock interview${mocks.length===1?"":"s"}`));
+  R.appendChild(st);hero.appendChild(R);w.appendChild(hero);
+
+  const due=STEPS.filter(s=>isDue(gp(stepKey(s))));
+  if(due.length){
+    const c=h("div","lr-cont"),tx=h("div","t");
+    tx.append(h("small",null,"Due for review"),h("b",null,due.map(stepName).join(" · ")));
+    c.append(tx,nodeBtn("Review now →",()=>go(stepPath(due[0])),"cta"));w.appendChild(c);
+  }
+
+  w.appendChild(h("div","lr-sec","The path"));
+  const path=h("div","lr-path");w.appendChild(path);
+  SD.path.forEach((stage,si)=>{
+    const items=STEPS.filter(s=>s.stage===si),n=items.filter(s=>isDone(stepKey(s))).length;
+    const complete=items.length&&n===items.length;
+    const isCur=nx&&nx.stage===si;
+    const r=h("div","lr-step"+(complete?" done":isCur?" cur":"")),rail=h("div","rail");
+    rail.appendChild(h("div","lr-node",complete?"✓":String(si+1)));
+    const c=h("div","lr-lc");
+    c.style.cursor="default";
+    const eb=h("div","eb","Stage "+(si+1));
+    if(complete)eb.appendChild(h("span","pill ok","Complete"));
+    c.append(eb,h("h3",null,stage.name.replace(/^\d+\.\s*/,"")),h("p",null,stage.desc));
+    if(items.length){
+      const meta=h("div","meta"),bar=h("div","lr-bar"),fill=h("i");fill.style.width=(100*n/items.length)+"%";bar.appendChild(fill);
+      meta.append(bar,h("span",null,`${n}/${items.length}`));c.appendChild(meta);
+    }
+    const list=h("div","sdp");
+    stage.items.forEach(([k,i])=>{
+      if(k==="topic"||k==="problem")list.appendChild(stepRow(STEPS.find(s=>s.kind===k&&s.id===i),!!nx&&nx.kind===k&&nx.id===i));
+      else if(k==="framework"){const b=h("button","sdp-i");b.type="button";b.onclick=()=>{fwDetails.open=true;fw.scrollIntoView({behavior:"smooth",block:"start"})};add(b,h("span","st","📋"),h("span",null,"The interview framework"),h("span","m","Read"));list.appendChild(b)}
+      else{const b=h("button","sdp-i");b.type="button";b.onclick=()=>go("mock");add(b,h("span","st","⏱"),h("span",null,"Start a mock interview"),h("span","m",mocks.length?mocks.length+" done":""));list.appendChild(b)}
     });
-    v.appendChild(row);
+    c.appendChild(list);r.append(rail,c);path.appendChild(r);
   });
+
+  const fw=h("div");fw.id="framework";w.appendChild(fw);
+  fw.appendChild(h("div","lr-sec","The interview framework"));
+  const fwDetails=h("details","card");fwDetails.open=location.hash.endsWith("/framework");
+  fwDetails.appendChild(h("summary",null,"About 45 minutes, six steps"));
+  SD.framework.forEach(s=>{fwDetails.appendChild(h("h3",null,s.name+" · ~"+s.mins+" min"));fwDetails.appendChild(h("div","meta",s.desc));fwDetails.appendChild(ul(s.tips))});
+  fw.appendChild(fwDetails);
+  if(fwDetails.open)requestAnimationFrame(()=>fw.scrollIntoView());
 }
 
 function viewTopics(v){
@@ -262,12 +344,112 @@ function viewTopics(v){
 
 function viewTopic(v,id){
   const t=T[id];if(!t){go("topics");return}
-  add(v,backBtn("All topics","topics"),h("h2",null,t.name),h("div","meta",t.group),h("p",null,t.summary));
-  v.appendChild(controls(kt(id)));
-  sect(v,"When to use it",t.use);sect(v,"Trade-offs",t.tradeoffs);sect(v,"Common pitfalls",t.pitfalls);
-  (t.deep||[]).forEach(([title,items])=>sect(v,title,items));
+  lrReady();setLast("topic",id);
+  const key=kt(id),lesson=LESSONS[id]||{},parts=lesson.parts||[];
+  const w=h("div","lr");v.appendChild(w);
+  const si=STEPS.findIndex(s=>s.kind==="topic"&&s.id===id),step=STEPS[si],stage=step&&SD.path[step.stage];
+  const rec=()=>prog[key]||(prog[key]={done:false,times:0});
+  const save=()=>{const r=prog[key];if(r&&!(r.done||r.times||r.note||r.revisit||hasParts(r)))delete prog[key];wr(KEY,prog)};
+
+  // Breadcrumbs with previous / next along the path
+  const cr=h("nav","crumbs"),crA=(text,path)=>{const a=h("a",null,text);a.onclick=()=>go(path);return a};
+  cr.append(crA("System Design","start"),document.createTextNode("›"));
+  if(stage)cr.append(crA(stage.name.replace(/^\d+\.\s*/,""),"start"),document.createTextNode("›"));
+  cr.appendChild(h("span",null,t.name));cr.appendChild(h("span","sp"));
+  const prev=STEPS[si-1],next=STEPS[si+1];
+  if(prev)cr.appendChild(nodeBtn("← Prev",()=>go(stepPath(prev)),"ghost"));
+  if(next)cr.appendChild(nodeBtn("Next →",()=>go(stepPath(next)),"ghost"));
+  w.appendChild(cr);
+
+  // Header: goal and completion controls
+  const head=h("div","lr-lhead");w.appendChild(head);
+  const goal=h("p","goal");LK.inline(goal,lesson.goal||t.summary.split(/(?<=\.)\s/)[0]);
+  head.append(h("div","no",`${t.group} · Step ${si+1} of ${STEPS.length}`),h("h1",null,t.name),goal);
+  const acts=h("div","acts");head.appendChild(acts);
+  const doneB=LK.btn("",null,"ghost lr-done-b"),flagB=LK.btn("",null,"ghost lr-flag"),info=h("span","info");
+  acts.append(doneB,flagB,info);
+  const syncHead=()=>{
+    const x=gp(key),due=isDue(x),all=parts.length&&partsDone(id)===parts.length;
+    doneB.textContent=due?"↻ Mark reviewed":x.done?"✓ Complete":"Mark complete";
+    doneB.classList.toggle("on",!!x.done&&!due);doneB.classList.toggle("nudge",(!x.done&&!!all)||due);
+    flagB.textContent=x.revisit?"⚑ Flagged to revisit":"⚑ Revisit later";flagB.classList.toggle("on",!!x.revisit);
+    const left=x.done&&x.last?Math.ceil(INTERVALS[Math.min(Math.max(x.times,1),3)-1]-(Date.parse(today())-Date.parse(x.last))/864e5):null;
+    info.textContent=(lesson.mins?`⏱ ${lesson.mins} min`:"Read it through")+(parts.length?` · ${partsDone(id)}/${parts.length} practice steps`:"")+
+      (x.done?(due?" · review due today":left!=null?` · next review in ${left} day${left===1?"":"s"}`:""):"")+(x.times>1?` · reviewed ${x.times-1}×`:"");
+  };
+  doneB.onclick=()=>{
+    const r=rec();
+    if(isDue(r)){r.times++;r.last=today();LK.toast("Reviewed. See you in "+INTERVALS[Math.min(r.times,3)-1]+" days.")}
+    else if(r.done){r.done=false;r.times=0;delete r.last}
+    else{r.done=true;r.times=Math.max(1,r.times||0);r.last=today();LK.toast("Complete 🎉 It'll come back for review in 3 days.")}
+    save();syncHead();paintNav();
+  };
+  flagB.onclick=()=>{const r=rec();r.revisit=!r.revisit;if(!r.revisit)delete r.revisit;save();syncHead()};
+
+  const grid=h("div","lr-grid"),main=h("div","lr-main"),aside=h("aside","lr-aside");grid.append(main,aside);w.appendChild(grid);
+
+  // Learn: the topic's own sections as markdown, then the lesson's extras
+  const learnH=h("h2","lr-h2","Learn");learnH.id="lr-learn";learnH.style.marginTop="0";main.appendChild(learnH);
+  const read=h("div","lr-read");main.appendChild(read);
+  const bullets=a=>a.map(x=>"- "+x).join("\n");
+  const sec=(title,items)=>items&&items.length?`### ${title}\n${bullets(items)}\n\n`:"";
+  read.appendChild(LK.md(t.summary+"\n\n"+sec("When to use it",t.use)+sec("Trade-offs",t.tradeoffs)+sec("Common pitfalls",t.pitfalls)+(t.deep||[]).map(([title,items])=>sec(title,items)).join("")));
+  (lesson.blocks||[]).forEach(b=>{
+    if(b.md)read.appendChild(LK.md(b.md));
+    else if(b.tip||b.warn){const c=h("div","lr-call "+(b.tip?"tip":"warn"));c.append(h("span","i",b.tip?"💡":"⚠️"),h("div",null,b.tip||b.warn));read.appendChild(c)}
+  });
+
+  // Practice
+  let prH=null;const dots={};
+  // fromUser: a practice step just passed. Only then may finishing the last one complete the topic (not on every render).
+  const onPartChange=fromUser=>{
+    const r=gp(key);
+    if(fromUser===true&&parts.length&&partsDone(id)===parts.length&&!r.done){const q=rec();q.done=true;q.times=Math.max(1,q.times||0);q.last=today();save();LK.toast("Topic complete 🎉 All practice steps passed.");paintNav()}
+    parts.forEach(p=>{const d=dots[p.id],ok=!!((gp(key).parts||{})[p.id]||{}).ok;if(d){d.classList.toggle("ok",ok);d.textContent=ok?"✓":""}});
+    syncHead();tocCount.textContent=parts.length?`${partsDone(id)}/${parts.length} done`:"";
+  };
+  const tocCount=h("span");
+  if(parts.length){
+    prH=h("h2","lr-h2","Practice");prH.id="lr-practice";main.appendChild(prH);
+    main.appendChild(h("p","sub","Quick checks are instant. Written answers get feedback from the AI tutor against a rubric, so say it the way you would in the interview."));
+    const list=h("div","lr-parts");main.appendChild(list);
+    const ctx={state:p=>{const r=rec();if(!r.parts)r.parts={};return r.parts[p.id]||(r.parts[p.id]={})},save,onChange:()=>onPartChange(true),
+      reviewBody:(p,answer)=>({kind:"explain",track:"System design",lesson:t.name,goal:lesson.goal||t.summary,prompt:p.prompt,rubric:p.rubric,answer})};
+    parts.forEach((p,k)=>list.appendChild(p.type==="quiz"?LK.quizPart(ctx,p,k):LK.explainPart(ctx,p,k)));
+  }
+
+  // Next up
+  const nxH=h("h2","lr-h2","Next up");nxH.id="lr-next";main.appendChild(nxH);
+  const nx=h("div","lr-next");main.appendChild(nx);
   const rel=SD.problems.filter(p=>p.topics.includes(id));
-  if(rel.length){v.appendChild(h("h3",null,"Practice with these designs"));rel.forEach(p=>v.appendChild(chip(p.name,"problem/"+p.id,isDone(kp(p.id)))))}
+  if(rel.length){
+    nx.appendChild(h("p","sub","Designs that use this building block. Try one once the practice steps feel easy."));
+    const row=h("div");rel.forEach(p=>row.appendChild(chip(p.name,"problem/"+p.id,isDone(kp(p.id)))));nx.appendChild(row);
+  }
+  if(next){
+    const b=h("button","lr-nextl");b.type="button";b.onclick=()=>go(stepPath(next));
+    const tx=h("div");tx.append(h("small",null,next.kind==="topic"?"Next topic":"Next design"),h("b",null,stepName(next)));
+    b.append(tx,h("span","ar","→"));nx.appendChild(b);
+  }else{
+    const b=h("button","lr-nextl");b.type="button";b.onclick=()=>go("mock");
+    const tx=h("div");tx.append(h("small",null,"Path complete"),h("b",null,"Put it together in a mock interview"));
+    b.append(tx,h("span","ar","⏱"));nx.appendChild(b);
+  }
+
+  // Aside: on this page, notes
+  const tocB=h("div","lr-box");tocCount.style.cssText="float:right;text-transform:none;letter-spacing:0;font-weight:600";
+  const h5=h("h5",null,"On this page");h5.appendChild(tocCount);tocB.appendChild(h5);
+  const toc=h("div","lr-toc");tocB.appendChild(toc);
+  const link=(text,target,dot)=>{const a=h("a");if(dot)a.appendChild(dot);a.appendChild(h("span",null,text));a.onclick=()=>target.scrollIntoView({behavior:"smooth",block:"start"});toc.appendChild(a)};
+  link("Learn",learnH);
+  if(prH){toc.appendChild(h("div","sub","Practice"));parts.forEach(p=>{const d=h("span","dot");dots[p.id]=d;link(p.type==="quiz"?(p.q.length>40?p.q.slice(0,38).trim()+"…":p.q):p.title,document.getElementById("lr-p-"+p.id),d)})}
+  link("Next up",nxH);aside.appendChild(tocB);
+  const noteB=h("div","lr-box lr-note");noteB.appendChild(h("h5",null,"Your notes"));
+  const ta=h("textarea"),ns=h("div","s");ta.placeholder="Trade-offs in your own words, numbers to remember…";ta.value=gp(key).note||"";
+  let nt=0;ta.oninput=()=>{ns.textContent="…";clearTimeout(nt);nt=setTimeout(()=>{const r=rec();if(ta.value.trim())r.note=ta.value;else delete r.note;save();ns.textContent="Saved"},400)};
+  noteB.append(ta,ns);aside.appendChild(noteB);
+  onPartChange();
+  scrollTo(0,0);
 }
 
 function viewProblems(v){
@@ -306,6 +488,7 @@ function viewProblems(v){
 
 function viewProblem(v,id){
   const p=P[id];if(!p){go("problems");return}
+  setLast("problem",id);
   add(v,backBtn("All problems","problems"),h("h2",null,p.name));
   const m=h("div","meta");m.appendChild(diffSpan(p.diff));v.appendChild(m);
   v.appendChild(h("p",null,p.blurb));
