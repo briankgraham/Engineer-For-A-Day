@@ -1283,9 +1283,40 @@ async function reviewCode(){
   }
   if(gen===pRevGen)btn.disabled=false;
 }
+// Confetti raining down the whole page: a click-through canvas that removes itself once every piece has fallen off screen.
+function confetti(){
+  try{if(matchMedia("(prefers-reduced-motion:reduce)").matches)return}catch(e){}
+  const old=document.getElementById("confetti");if(old)old.remove();
+  const cv=document.createElement("canvas");cv.id="confetti";
+  cv.style.cssText="position:fixed;inset:0;margin:0;padding:0;border:0;background:none;overflow:visible;width:100%;height:100%;pointer-events:none;z-index:9999";
+  const dpr=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;
+  // The practice editor is a modal <dialog> (top layer, with a blurred ::backdrop): a popover joins the top layer above it, so the confetti is not blurred.
+  cv.popover="manual";document.body.appendChild(cv);
+  try{cv.showPopover()}catch(e){}
+  const ctx=cv.getContext("2d");ctx.scale(dpr,dpr);
+  const colors=["#f43f5e","#f59e0b","#facc15","#22c55e","#06b6d4","#6366f1","#d946ef"];
+  const N=Math.min(260,Math.round(W/5)),rnd=(a,b)=>a+Math.random()*(b-a);
+  // Pieces start above the viewport at staggered heights, so they keep raining in rather than appearing all at once.
+  const ps=Array.from({length:N},()=>({x:rnd(0,W),y:rnd(-H*.8,-10),vx:rnd(-1.2,1.2),vy:rnd(2,5),w:rnd(6,11),h:rnd(4,7),rot:rnd(0,6.28),vr:rnd(-.2,.2),sw:rnd(0,6.28),c:colors[Math.floor(Math.random()*colors.length)]}));
+  (function frame(){
+    ctx.clearRect(0,0,W,H);let alive=0;
+    ps.forEach(p=>{
+      p.sw+=.06;p.x+=p.vx+Math.sin(p.sw)*.8;p.y+=p.vy;p.rot+=p.vr;
+      if(p.y>H+20)return;
+      alive++;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.c;
+      ctx.scale(1,Math.cos(p.sw)); // flutter: squash the piece as it flips over
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+    });
+    if(alive&&cv.isConnected)requestAnimationFrame(frame);else cv.remove();
+  })();
+}
+
+// Returns true when every graded test passed (and the run was not cut short), so the caller can celebrate.
 function renderResults(tests,r){
   const box=$("pres");box.replaceChildren();
-  if(r.fatal){box.appendChild(el("div","bad",r.fatal));return}
+  if(r.fatal){box.appendChild(el("div","bad",r.fatal));return false}
   const graded=tests.filter(t=>t.expected_json!=null).length;
   const passed=tests.filter((t,i)=>r.cases[i]&&r.cases[i].pass===true).length;
   box.appendChild(el("div",passed===graded?"sum ok":"sum",`${passed} / ${graded} tests passed`+(passed===graded&&graded?" 🎉":"")));
@@ -1304,6 +1335,7 @@ function renderResults(tests,r){
     }
     box.appendChild(d);
   });
+  return graded>0&&passed===graded&&!r.timedOut;
 }
 
 // Custom tests: the learner's own inputs, saved per problem. Input uses the same JSON shape as the built-in tests.
@@ -1338,7 +1370,7 @@ async function runEditor(){
   if(slug!==pSlug)return;
   setBusy(false);
   if(pDoc&&pDoc.exercise===ex){pLast=summarize(allTests(ex,custom),r);pLastKey=runKey(code,custom)}
-  renderResults(allTests(ex,custom),r);
+  if(renderResults(allTests(ex,custom),r))confetti();
 }
 
 // The model's expected outputs can be wrong, so run its own reference solution against them once per open.
