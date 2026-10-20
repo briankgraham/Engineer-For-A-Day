@@ -1,12 +1,13 @@
 """The HTTP request handler: guards, JSON in/out, route dispatch, and server-sent-event streaming for chat."""
 import json
+from itertools import chain
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from ..config import ALLOWED_HOSTS, ALLOWED_ORIGINS, API_HEADER
 from ..errors import ApiError
 from ..llm import BACKEND, take_budget, translate
-from . import aipair, applications, behavioral, day, jobs, practice, static, sysdesign, validate, walkthrough  # noqa: F401  (importing registers the routes)
+from . import aipair, applications, behavioral, day, jobs, learn, practice, static, sysdesign, validate, walkthrough  # noqa: F401  (importing registers the routes)
 from .router import GET, POST
 
 DEFAULT_BODY_CAP = 65536
@@ -93,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         try:
-            for t in (first, *chunks):
+            for t in chain((first,), chunks):
                 if t:
                     self.wfile.write(b"data: " + json.dumps({"t": t}).encode() + b"\n\n")
                     self.wfile.flush()

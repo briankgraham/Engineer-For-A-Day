@@ -1,0 +1,21 @@
+{
+  "regex-search": [
+    { "file": "search.js", "from": "if (q) results = results.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));", "to": "if (q) { const re = new RegExp(q, \"i\"); results = results.filter(b => re.test(b.title) || re.test(b.author)); }" }
+  ],
+  "lowercase-query-only": [
+    { "file": "search.js", "from": "b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)", "to": "b.title.includes(q) || b.author.includes(q)" }
+  ],
+  "genre-every": [
+    { "file": "search.js", "from": "b.genres.some(g => genres.includes(g))", "to": "genres.every(g => b.genres.includes(g))" }
+  ],
+  "available-truthy": [
+    { "file": "search.js", "from": "  if (query.available !== undefined && query.available !== \"true\" && query.available !== \"false\") return fail(400, \"bad available\");\n", "to": "" },
+    { "file": "search.js", "from": "if (query.available !== undefined) results = results.filter(b => (b.copies > 0) === (query.available === \"true\"));", "to": "if (query.available) results = results.filter(b => b.copies > 0);" }
+  ],
+  "bad-number-ignored": [
+    { "file": "search.js", "from": "const int = v => (v === undefined ? undefined : /^\\d+$/.test(v) ? Number(v) : NaN);", "to": "const int = v => (v === undefined || !/^\\d+$/.test(v) ? undefined : Number(v));" }
+  ],
+  "total-page-length": [
+    { "file": "search.js", "from": "  return ok({ items: results.slice(start, start + limit), total: results.length, page, limit });", "to": "  const items = results.slice(start, start + limit);\n  return ok({ items, total: items.length, page, limit });" }
+  ]
+}

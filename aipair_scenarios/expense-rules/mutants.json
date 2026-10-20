@@ -1,0 +1,63 @@
+{
+  "skip-unknown-rules": [
+    {
+      "file": "rules.js",
+      "from": "  const compiled = rules.map(r => compile(r, seen));",
+      "to": "  const compiled = rules.filter(r => !r || Object.hasOwn(TYPES, r.type)).map(r => compile(r, seen));"
+    }
+  ],
+  "limit-inclusive": [
+    {
+      "file": "rules.js",
+      "from": "rule.limit === null || cents > rule.limit",
+      "to": "rule.limit === null || cents >= rule.limit"
+    }
+  ],
+  "where-any": [
+    {
+      "file": "rules.js",
+      "from": "return Object.entries(where).every(",
+      "to": "return Object.entries(where).some("
+    }
+  ],
+  "float-sum": [
+    {
+      "file": "rules.js",
+      "from": "          acc.cents += toCents(e.amountUsd);",
+      "to": "          acc.cents += parseFloat(e.amountUsd);"
+    },
+    {
+      "file": "rules.js",
+      "from": "rule.limit === null || cents > rule.limit",
+      "to": "rule.limit === null || cents > rule.limit / 100"
+    }
+  ],
+  "tipping-expense-only": [
+    {
+      "file": "rules.js",
+      "from": "          acc.cents += toCents(e.amountUsd);\n          acc.expenseIds.push(e.id);",
+      "to": "          const before = acc.cents;\n          acc.cents += toCents(e.amountUsd);\n          if (g.key === e.id || (before <= rule.limit && acc.cents > rule.limit)) acc.expenseIds.push(e.id);"
+    }
+  ],
+  "exclude-violating": [
+    {
+      "file": "rules.js",
+      "from": "          if (!g) continue; // a trip rule and an expense with no trip",
+      "to": "          if (!g || (g.key !== e.id && violations.some(v => v.expenseIds.length === 1 && v.expenseIds[0] === e.id && v.tripId === undefined))) continue;"
+    }
+  ],
+  "utc-date": [
+    {
+      "file": "rules.js",
+      "from": "  const date = e.spentAt.slice(0, 10);",
+      "to": "  const date = new Date(e.spentAt).toISOString().slice(0, 10);"
+    }
+  ],
+  "daily-all-employees": [
+    {
+      "file": "rules.js",
+      "from": "key: e.employeeId + \" \" + date,",
+      "to": "key: date,"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "order": 25,
+  "title": "Fix the broken search filter in a book catalog API",
+  "blurb": "Debug and fix the search behind a small book catalog API, like Instacart's Backend Engineer AI pairing round: five bug tickets, filters that must combine, and query strings that are always strings.",
+  "difficulty": "Medium",
+  "minutes": 35,
+  "brief": "You join the team that owns a small book catalog API. catalog.js holds the books and router.js parses the URL and routes requests; both work. search.js powers GET /books, and support has filed five tickets against it: searches are case-sensitive, searching by author finds nothing, asking for two genres returns nothing, maxYear leaves out books from that year, and total is wrong once there is more than one page. The visible test file (a read-only tab) shows the behavior that works today, which must keep working, and one test per ticket, which fail. Fix search.js so it meets the requirements below. A few extra edge cases you cannot see run when you finish, so fix the requirements, not just the tickets.",
+  "requirements": [
+    "GET /books returns 200 with { items, total, page, limit }. items are books in catalog order. total counts every book that matches the filters, not just this page.",
+    "q (optional) is plain text, trimmed. A book matches when its title or its author contains q, ignoring case. A missing or blank q matches every book.",
+    "genre (optional) is a comma-separated list of genre names, each trimmed and compared ignoring case. A book matches when it has any of the listed genres.",
+    "minYear and maxYear (optional) are inclusive bounds on the publication year.",
+    "available (optional) is \"true\" (only books with copies > 0) or \"false\" (only books with copies 0). Any other value is a 400.",
+    "page (1-based, default 1) and limit (1 to 100, default 20) pick a slice of the filtered results. A page past the end is 200 with empty items.",
+    "minYear, maxYear, page and limit must be whole numbers written as plain digits. A malformed or out-of-range value is a 400 with { error }; it is never ignored or corrected.",
+    "All filters combine (a book must match every filter given). Searching never changes the catalog."
+  ],
+  "files": [
+    "catalog.js",
+    "router.js",
+    "search.js"
+  ]
+}

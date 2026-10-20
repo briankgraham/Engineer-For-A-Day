@@ -231,6 +231,17 @@
       rq.appendChild(el("h4","","Requirements"));reqList(lv.requirements,o);rq.appendChild(o);
       b.append(g,rq);box.append(hd,b);main.appendChild(box);return box;
     });
+    // What a still-locked level's tab shows: its title and how it unlocks, but not its brief.
+    const lvLockBox=el("div","ap-brief ap-fu");lvLockBox.hidden=true;main.appendChild(lvLockBox);
+    function renderLvLock(k){
+      lvLockBox.textContent="";
+      const hd=el("div","hd","Level "+k+": "+LV[k-2].title);hd.appendChild(el("span","chip","🔒 locked"));
+      const g=el("div","goal"),cur=sess.levels.length+1,L=sess.last;
+      g.append(el("h4","","Level "+k+" of "+(LV.length+1)),
+        // The count only while tests fail: right after an unlock the last run predates the new level's tests.
+        el("p","",k===cur+1?"Unlocks when every visible test passes"+(L&&L.passed<L.total?" (last run: "+L.passed+"/"+L.total+" passing).":"."):"Unlocks after level "+(k-1)+"."));
+      const b=el("div","bd");b.appendChild(g);lvLockBox.append(hd,b);
+    }
     // Design gate: code files stay read-only until design.md has some substance and the candidate starts coding.
     const gate=el("div","ap-gate");gate.hidden=true;
     const gateMsg=el("span"),gateBtn=el("button","","Start coding");
@@ -279,7 +290,9 @@
       if(isTest)sess.viewedTests=true;
       if(name===FU)sess.fuSeen=true;
       if(name===lvName(sess.levels.length+1))sess.lvSeen=true;
-      brief.hidden=name!==BRIEF;fuBox.hidden=name!==FU;lvBoxes.forEach((b,i)=>{b.hidden=name!==lvName(i+2)});prView.hidden=!isPr;host.hidden=isView(name);
+      const lvLocked=lvTabs.includes(name)&&!lvOpen(name);
+      if(lvLocked)renderLvLock(lvTabs.indexOf(name)+2);
+      brief.hidden=name!==BRIEF;fuBox.hidden=name!==FU;lvBoxes.forEach((b,i)=>{b.hidden=lvLocked||name!==lvName(i+2)});lvLockBox.hidden=!lvLocked;prView.hidden=!isPr;host.hidden=isView(name);
       if(!isView(name)){ed.swapDoc(isTest?testDoc:name===mineName?mineDoc:name===reviewName?reviewDoc:name===designName?designDoc:docs[name]);ed.setOption("readOnly",isTest||locked(name));ed.refresh()}
       renderRail();
     };
@@ -296,11 +309,16 @@
       };
       const tab=(name,icon,label,extra)=>{
         const b=item(icon,label||name,open===name,()=>{showTab(name);save();if(isView(name))main.scrollIntoView({block:"nearest"});else{host.scrollIntoView({behavior:"smooth",block:"nearest"});ed.focus()}},extra);
-        if(TITLES[name])b.title=TITLES[name];
+        if(TITLES[name])b.title=TITLES[name];else if(label)b.title=label; // level titles are often cut off by the rail width
       };
       rail.appendChild(el("h4","","Scenario"));
-      tab(BRIEF,"📋",multi?"Level 1":"Brief");
-      unlockedLv().forEach((lv,i)=>tab(lvName(i+2),"✦","Level "+(i+2),i===sess.levels.length-1&&!sess.lvSeen?el("span","ap-badge","new"):null));
+      tab(BRIEF,"📋",multi?"Level 1 · "+sc.levelTitle:"Brief");
+      // Every level is listed; locked ones show their title only, and open a "how it unlocks" card.
+      LV.forEach((lv,i)=>{
+        const name=lvName(i+2),label="Level "+(i+2)+" · "+lv.title;
+        if(lvOpen(name))tab(name,"✦",label,i===sess.levels.length-1&&!sess.lvSeen?el("span","ap-badge","new"):null);
+        else tab(name,"🔒",label);
+      });
       if(sess.followup)tab(FU,"✦","New requirement",sess.fuSeen?null:el("span","ap-badge","new"));
       if(prName)tab(prName,sc.incident?"🚨":"🔀",sc.incident?"Incident":"Pull request");
       if(designName)tab(designName,"✎");
@@ -347,7 +365,8 @@
       if(!multi||sess.levels.length>=LV.length)return;
       sess.levels.push(sess.elapsed);
       if(testDoc)testDoc.setValue(visibleText());
-      sess.lvSeen=false;save();renderRail(); // the rail item carries a "new" badge until it is opened
+      sess.lvSeen=false;save();
+      if(lvTabs.includes(open))showTab(open);else renderRail(); // the rail item carries a "new" badge until it is opened
       const k=sess.levels.length+1,note=el("div","sum","All visible tests pass. Level "+k+" unlocked: "+LV[k-2].title+". Open it in the left rail.");
       results.prepend(note);
     }
@@ -430,7 +449,7 @@
       chatBusy=true;chatBtn.disabled=true;chatIn.value="";
       sess.msgs.push({role:"user",content:text});
       bubble({role:"user",content:text},chatLog);
-      const out=el("div","m busy","Thinking…");chatLog.appendChild(out);chatLog.scrollTop=chatLog.scrollHeight;
+      const out=el("div","m busy","Thinking…");chatLog.appendChild(out);chatLog.scrollTop=chatLog.scrollHeight;chatRoot.scrollIntoView({block:"end",behavior:"smooth"}); // the rail drops below the editor on narrow screens: bring the new question and reply into view
       let answer="";
       ac=work.abort=new AbortController();
       try{
@@ -468,7 +487,7 @@
       WS.renderResults(results,res);
       const total=res.names.length,passed=res.cases.filter(c=>c&&c.pass).length;
       if(total){sess.last={passed,total};save()}
-      renderRail();
+      if(lvTabs.includes(open))showTab(open);else renderRail(); // a locked level's card shows the latest count
       // Every visible test passing (the candidate's own tests aside) brings the follow-up in early.
       const allVisible=res.names.length&&res.names.every((n,i)=>n.startsWith("[mine] ")||(res.cases[i]&&res.cases[i].pass));
       if(lld&&!full&&!sess.followup&&sess.coding&&allVisible)revealFollowup();

@@ -24,6 +24,7 @@ That's all the setup. Pick a tab and start.
 | 🏗️ **System Design Prep** | Fundamentals, timed mock interviews, and a whiteboard |
 | 🎤 **Behavioral** | STAR stories, plus an AI interviewer that asks follow-ups until it gets specifics |
 | 🧩 **LeetCode** | Company-tagged problems with walkthroughs and an in-browser editor |
+| 📚 **Learning** | The fundamentals behind the problems, starting with graphs: lessons, visualizers, drills and practice |
 | ⏱️ **Assessment** | Timed online-assessment (OA) style tests with hidden test cases |
 | 💼 **Jobs** | Live openings from the companies you're prepping for |
 
@@ -98,6 +99,18 @@ Algorithms still come up, so this tab covers them too. It has tons of problem-co
 ![Running tests on the practice editor](docs/media/practice-run.gif)
 
 ![Practice editor with all tests passing](docs/media/practice.jpg)
+
+## 📚 Learning
+
+LeetCode assumes you already know the basics. If writing an adjacency list from memory still takes a minute of thinking, start here.
+
+Each track is a path of short lessons. The first one, **Graphs**, goes from "what is a graph" through representations, DFS, BFS, grids, union-find, topological sort and Dijkstra, then teaches you to recognize which technique a problem wants, and finishes with graph databases in system design.
+
+- **Learn.** Readable lessons with templates worth memorizing, and step-through visualizers for DFS, BFS, components, topological sort and Dijkstra that show the stack, queue or heap at every step.
+- **Drill.** An adjacency-list drill draws a random graph and checks the list you write for it. Every code exercise has **Drill from memory**: it clears the editor, blurs the templates and times you.
+- **Practice.** Code exercises run against real tests in your browser. Quick checks explain the answer. Written answers (like "should this use Neo4j?") get feedback from the AI tutor, and the AI can review your code too.
+- **Track it.** Mark lessons complete, flag ones to revisit, and keep notes. Completed lessons come back for review after 3, 7 and 21 days. An **Ask the tutor** panel knows the lesson you're reading.
+- **Ready for LeetCode.** Each track ends with real problems from the LeetCode tab, in order, each linked to the lesson that prepares you for it.
 
 ## ⏱️ Assessment
 
@@ -243,6 +256,21 @@ For testing, `?dayspeed=20` in the URL runs the clock 20x faster.
 
 </details>
 
+<details>
+<summary><b>Adding to the Learning tab</b></summary>
+
+The curriculum is plain data in `web/learn_data.js`, and `web/learn.js` renders it. Add a track by appending to `LEARN_TRACKS`, or add a lesson to an existing one. The comment at the top of the file lists the block types (markdown, templates, callouts, visualizers, the adjacency drill) and the practice types (code exercises with tests, quick checks, AI-reviewed written answers). AI review and the tutor go through `/api/learn/*` (`app/routes/learn.py`). The page sends the lesson text, so no server change is needed for new content.
+
+After changing exercises, check them:
+
+```
+node scripts/verify_learn.js
+```
+
+It runs every code exercise through the real test harness. The reference solution must pass every test and the starter must not. It also checks ids, quiz answers, visualizer graphs and LeetCode slugs.
+
+</details>
+
 ## Dependencies
 
 The server uses only the Python standard library, and there's no `npm install`. These are the things the app does rely on:
@@ -254,7 +282,7 @@ The server uses only the Python standard library, and there's no `npm install`. 
 | [`anthropic`](https://pypi.org/project/anthropic/) Python SDK | optional | only with `WALKTHROUGH_BACKEND=api` |
 | [CodeMirror 5.65.16](https://codemirror.net/5/) | yes, loaded in the browser | code editor in LeetCode Practice, Assessment, AI Pairing and Engineer for a Day. Loaded on demand from `cdnjs.cloudflare.com`, so these editors need an internet connection |
 | [Prettier 2.8.8](https://prettier.io/) (standalone) | optional, loaded in the browser | the **Format** button and Shift-Alt-F in the code editors. Loaded from `cdnjs.cloudflare.com` the first time you format, with an SRI hash |
-| [Node.js](https://nodejs.org/) | optional | only for `scripts/verify_aipair.js` and `scripts/verify_day.js` when writing scenarios |
+| [Node.js](https://nodejs.org/) | optional | only for `scripts/verify_aipair.js`, `scripts/verify_day.js` and `scripts/verify_learn.js` when writing content |
 | Greenhouse, Lever, Ashby and Workday public job boards | optional | fetched only when you click **Refresh** in the Jobs tab |
 
 ## Credits

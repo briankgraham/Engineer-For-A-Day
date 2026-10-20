@@ -1,0 +1,44 @@
+{
+  "start-day-bucket": [
+    {
+      "file": "register.js",
+      "from": "    for (const s of w.shifts) total += Math.max(0, Math.min(s.end, to) - Math.max(s.start, from));",
+      "to": "    for (const s of w.shifts) if (s.start >= from && s.start < to) total += s.end - s.start;"
+    }
+  ],
+  "open-shift-counted": [
+    {
+      "file": "register.js",
+      "from": "    return total; // the open shift counts once it is clocked out",
+      "to": "    if (w.openSince !== null) total += Math.max(0, to - Math.max(w.openSince, from));\n    return total;"
+    }
+  ],
+  "daily-overtime": [
+    {
+      "file": "register.js",
+      "from": "    const minutes = this.minutesWorked(id, week * WEEK, (week + 1) * WEEK);\n    const regular = Math.min(minutes, OVERTIME_AFTER), overtime = minutes - regular;",
+      "to": "    let regular = 0, overtime = 0;\n    for (let d = week * 7; d < week * 7 + 7; d++) {\n      const m = this.minutesWorked(id, d * 1440, (d + 1) * 1440);\n      regular += Math.min(m, 480);\n      overtime += Math.max(0, m - 480);\n    }"
+    }
+  ],
+  "round-per-shift": [
+    {
+      "file": "register.js",
+      "from": "    const minutes = this.minutesWorked(id, week * WEEK, (week + 1) * WEEK);\n    const regular = Math.min(minutes, OVERTIME_AFTER), overtime = minutes - regular;\n    return Math.round((regular * w.rate + overtime * w.rate * 1.5) / 60); // rounded once, for the whole week",
+      "to": "    let minutes = 0, cents = 0;\n    for (const s of [...w.shifts].sort((a, b) => a.start - b.start)) {\n      const m = Math.max(0, Math.min(s.end, (week + 1) * WEEK) - Math.max(s.start, week * WEEK));\n      const regular = Math.min(m, Math.max(0, OVERTIME_AFTER - minutes));\n      cents += Math.round((regular * w.rate + (m - regular) * w.rate * 1.5) / 60);\n      minutes += m;\n    }\n    return cents;"
+    }
+  ],
+  "overlap-last-only": [
+    {
+      "file": "register.js",
+      "from": "if (w.shifts.some(s => start < s.end && s.start < end))",
+      "to": "if (w.shifts.slice(-1).some(s => start < s.end && s.start < end))"
+    }
+  ],
+  "overlap-touching": [
+    {
+      "file": "register.js",
+      "from": "if (w.shifts.some(s => start < s.end && s.start < end))",
+      "to": "if (w.shifts.some(s => start <= s.end && s.start <= end))"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "order": 26,
+  "title": "Implement a worker hours register",
+  "blurb": "Finish the hours register behind a warehouse time clock, like Amazon's Software Engineer AI pairing question: night shifts that cross midnight, forgotten shifts entered afterwards, and weekly overtime.",
+  "difficulty": "Medium",
+  "minutes": 40,
+  "brief": "A fulfillment center's time clock records when each associate clocks in and out. register.js already handles workers, clock-in and clock-out; time.js has the time helpers, and both work. Finish the rest of HoursRegister: managers need to enter shifts someone forgot to clock, see how many minutes a worker put in over any stretch of time, and run weekly pay with overtime. The visible test file (a read-only tab) shows what works today, which must keep working, and the new behavior, which fails. A few extra edge cases you cannot see run when you finish, so implement the requirements, not just the visible tests. Every time is a whole number of minutes since Monday 00:00 of week 0, and all money is integer cents.",
+  "requirements": [
+    "Already working, keep it: addWorker(id, hourlyRate) (rate in cents per hour), clockIn(id, t), clockOut(id, t) and onShift(). An unknown worker, a bad value, or a clock-in that overlaps a recorded shift throws RangeError; clocking in twice or out without being in throws Error.",
+    "A shift is the half-open interval [start, end): it covers start but not end, so one shift may end at the exact minute the next one starts.",
+    "addShift(id, start, end) records a finished shift someone forgot to clock. end must be after start, and the shift must not overlap any recorded shift of that worker, whenever it was recorded. If the worker is clocked in right now, the shift must end at or before that clock-in. Anything else throws RangeError and records nothing.",
+    "minutesWorked(id, from, to) returns the minutes of the worker's finished shifts that fall inside [from, to). A shift that crosses from or to (a night shift over midnight, or a Sunday night shift into Monday) counts only its part inside. to < from throws RangeError.",
+    "The shift a worker is clocked in on right now counts for nothing until they clock out.",
+    "weeklyPay(id, week) returns the cents owed for week w, the minutes in [w * WEEK, (w + 1) * WEEK). The first 40 hours of the week are paid at hourlyRate, and every minute after that at 1.5 × hourlyRate. Overtime is weekly only: a long day does not earn overtime by itself.",
+    "Pay is worked out on the week's minutes and rounded to the nearest cent once, for the whole week (Math.round), never per shift."
+  ],
+  "files": ["register.js", "time.js"]
+}

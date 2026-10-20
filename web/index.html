@@ -391,6 +391,7 @@ dialog.app-dlg{width:min(640px,94vw)}
 <nav class="tabs" role="tablist">
   <span class="ind" aria-hidden="true"></span>
   <button role="tab" data-tab="leetcode" class="on">LeetCode</button>
+  <button role="tab" data-tab="learn">Learning</button>
   <button role="tab" data-tab="sysdesign">System Design Prep</button>
   <button role="tab" data-tab="aipair">AI Pairing</button>
   <button role="tab" data-tab="day">Engineer for a Day</button>
@@ -428,6 +429,7 @@ dialog.app-dlg{width:min(640px,94vw)}
 </main>
 </div>
 <div id="tab-sysdesign" hidden><div class="sd"><nav class="sdnav" id="sdnav"></nav><div id="sdview"></div></div></div>
+<div id="tab-learn" hidden></div>
 <div id="tab-aipair" hidden></div>
 <div id="tab-day" hidden></div>
 <div id="tab-assess" hidden></div>
@@ -512,6 +514,16 @@ dialog.app-dlg{width:min(640px,94vw)}
     sc.onerror=()=>{bhLoading=false;document.getElementById("tab-behavioral").textContent="Behavioral needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     document.head.appendChild(sc);
   };
+  // And for the Learning tab (curriculum data first, then the tab's script).
+  let lrLoading=false;
+  const openLearnTab=()=>{
+    if(window.learnInit)return learnInit();
+    if(lrLoading)return;
+    lrLoading=true;
+    const fail=()=>{lrLoading=false;document.getElementById("tab-learn").textContent="Learning needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
+    const add=(src,next)=>{const sc=document.createElement("script");sc.src=src;sc.onload=next;sc.onerror=fail;document.head.appendChild(sc)};
+    add("learn_data.js",()=>add("learn.js",()=>learnInit()));
+  };
   const ind=document.querySelector("nav.tabs .ind");
   const moveInd=(instant)=>{
     const b=document.querySelector("nav.tabs button.on");if(!b)return;
@@ -533,6 +545,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     if(t==="day")openDay();
     if(t==="assess")openAssess();
     if(t==="behavioral")openBh();
+    if(t==="learn")openLearnTab();
   };
   tabs.forEach(b=>b.onclick=()=>show(b.dataset.tab));
   addEventListener("hashchange",()=>show(location.hash.slice(1).split("/")[0]));
@@ -1485,6 +1498,7 @@ $("export").onclick=()=>{
   const a=document.createElement("a");
   const out={...progress};if(window.sdExport)out.__sysdesign=sdExport();
   try{const bh=JSON.parse(localStorage.getItem("behavioral-progress-v1"));if(bh&&Object.keys(bh).length)out.__behavioral=bh}catch(e){}
+  try{const lr=JSON.parse(localStorage.getItem("learn-progress-v1"));if(lr&&lr.lessons&&Object.keys(lr.lessons).length)out.__learning=lr}catch(e){}
   a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:"application/json"}));
   a.download="leetcode-progress.json";a.click();
 };

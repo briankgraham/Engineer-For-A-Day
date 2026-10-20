@@ -99,29 +99,77 @@ class ClaudeCliBackend:
         self.cwd = tempfile.mkdtemp(prefix="walkthrough-")  # neutral dir: no project CLAUDE.md / memory gets loaded
         self.slots = threading.Semaphore(2)
 
-    def _run(self, system, prompt, effort, extra):
+    def _cmd(self, system, effort, extra):
         binary = shutil.which(CLAUDE_BIN)
         if not binary:
             raise ApiError(503, "The `claude` CLI was not found. Install Claude Code, or use WALKTHROUGH_BACKEND=api with an API key.")
-        cmd = [binary, "-p", "--no-session-persistence", "--tools", "", "--disable-slash-commands",
-               "--setting-sources", "", "--strict-mcp-config", "--model", current_model(), "--effort", effort, "--system-prompt", system, *extra]
+        return [binary, "-p", "--no-session-persistence", "--tools", "", "--disable-slash-commands",
+                "--setting-sources", "", "--strict-mcp-config", "--model", current_model(), "--effort", effort, "--system-prompt", system, *extra]
+
+    @staticmethod
+    def _env():
         # Never hand an API key to the subprocess: this backend must use your `claude` login.
-        env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+        return {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+
+    @staticmethod
+    def _failure(returncode, text):
+        print(f"claude CLI failed: exit {returncode}", file=sys.stderr)
+        low = text.lower()
+        if "login" in low or "log in" in low or "auth" in low:
+            return ApiError(503, "The `claude` CLI is not logged in. Run `claude` in a terminal and log in.")
+        if any(w in low for w in ("limit", "usage", "quota", "credit", "overloaded")):
+            return ApiError(429, "This model looks out of usage or overloaded. Pick a different model from the model menu and try again.")
+        return ApiError(502, "The `claude` CLI failed. Check that it works in a terminal.")
+
+    def _run(self, system, prompt, effort, extra):
+        cmd = self._cmd(system, effort, extra)
         with self.slots:
             try:
-                p = subprocess.run(cmd, input=prompt, capture_output=True, text=True, cwd=self.cwd, env=env, timeout=420)
+                p = subprocess.run(cmd, input=prompt, capture_output=True, text=True, cwd=self.cwd, env=self._env(), timeout=420)
             except subprocess.TimeoutExpired:
                 raise ApiError(504, "Claude took too long. Try again.")
         out = p.stdout or ""
         if p.returncode != 0 or not out.strip():
-            print(f"claude CLI failed: exit {p.returncode}", file=sys.stderr)
-            low = (out + (p.stderr or "")).lower()
-            if "login" in low or "log in" in low or "auth" in low:
-                raise ApiError(503, "The `claude` CLI is not logged in. Run `claude` in a terminal and log in.")
-            if any(w in low for w in ("limit", "usage", "quota", "credit", "overloaded")):
-                raise ApiError(429, "This model looks out of usage or overloaded. Pick a different model from the model menu and try again.")
-            raise ApiError(502, "The `claude` CLI failed. Check that it works in a terminal.")
+            raise self._failure(p.returncode, out + (p.stderr or ""))
         return out
+
+    def _stream(self, system, prompt, effort):
+        """Yield text deltas as the CLI emits them (stream-json); kill the process if the consumer goes away."""
+        cmd = self._cmd(system, effort, ["--output-format", "stream-json", "--include-partial-messages", "--verbose"])
+        with self.slots:
+            p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=self.cwd, env=self._env())
+            timer = threading.Timer(420, p.kill)
+            timer.start()
+            err, streamed, result = [], False, {}
+            threading.Thread(target=lambda: err.append(p.stderr.read()), daemon=True).start()
+            try:
+                p.stdin.write(prompt)
+                p.stdin.close()
+                for line in p.stdout:
+                    try:
+                        ev = json.loads(line)
+                    except ValueError:
+                        continue
+                    if ev.get("type") == "result":
+                        result = ev
+                    delta = ev.get("event", {}).get("delta", {}) if ev.get("type") == "stream_event" else {}
+                    if delta.get("type") == "text_delta" and delta.get("text"):
+                        streamed = True
+                        yield delta["text"]
+                p.wait()
+                if streamed:
+                    return
+                if p.returncode < 0:
+                    raise ApiError(504, "Claude took too long. Try again.")
+                if p.returncode == 0 and not result.get("is_error") and (result.get("result") or "").strip():
+                    yield result["result"]  # nothing arrived as deltas: fall back to the final text
+                    return
+                raise self._failure(p.returncode, (result.get("result") or "") + "".join(err))
+            finally:
+                timer.cancel()
+                if p.poll() is None:  # client went away or we errored: don't leave the CLI running
+                    p.kill()
+                    p.wait()
 
     def json(self, system, user, schema=SCHEMA):
         log_model("cli", "structured")
@@ -144,7 +192,7 @@ class ClaudeCliBackend:
     def chat(self, system, messages):
         log_model("cli", "chat")
         convo = "\n\n".join(("Learner: " if m["role"] == "user" else "Tutor: ") + m["content"] for m in messages)
-        yield self._run(system, f"Conversation so far:\n\n{convo}\n\nReply to the last message in your role.", "low", ["--output-format", "text"]).strip()
+        yield from self._stream(system, f"Conversation so far:\n\n{convo}\n\nReply to the last message in your role.", "low")
 
 
 BACKEND = ClaudeCliBackend() if BACKEND_NAME == "claude" else ApiBackend()

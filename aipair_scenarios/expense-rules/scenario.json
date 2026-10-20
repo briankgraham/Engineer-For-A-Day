@@ -1,0 +1,42 @@
+{
+  "order": 27,
+  "kind": "levels",
+  "title": "Build an expense policy rule engine",
+  "blurb": "Build the engine that checks expense reports against company policy, like Rippling's Software Engineer AI pairing question: rules written as data, then trip totals, then daily limits per employee. Each level unlocks when the last one passes.",
+  "difficulty": "Medium",
+  "minutes": 50,
+  "levelTitle": "Rules on single expenses",
+  "brief": "Finance writes the company's expense policy as a list of rules, plain data like { id: \"meal-cap\", type: \"max_amount\", where: { expenseType: \"meals\" }, limit: \"75.00\" }, and wants an engine that checks a batch of expenses against it. Build it in rules.js, in three levels: only level 1 is shown now. When every visible test passes, the next level unlocks with new rule types and new tests, and everything from earlier levels must keep working, so a design where a new rule type is a small addition saves you time later. money.js works. Every expense looks like { id: \"e1\", tripId: \"t1\", employeeId: \"ana\", expenseType: \"meals\", vendorType: \"restaurant\", vendorName: \"Joe's\", amountUsd: \"49.99\", spentAt: \"2026-03-02T19:30:00-05:00\" } (tripId may be missing). Expenses come from the expense system and are always well-formed, but rules are typed by hand, so check them. Hidden tests for each level you reach run when you finish.",
+  "requirements": [
+    "createEngine(rules) in rules.js checks the rules and returns an engine; engine.evaluate(expenses) returns the list of violations and changes neither its input nor the engine, so it can be called again with other expenses.",
+    "Every rule has an id (a non-empty string, unique in the list), a type, and an optional where. A rule applies to an expense when the expense matches every field in where: a string must equal that field of the expense exactly, and an array of strings matches any of them. No where, or {}, applies to every expense.",
+    "type \"deny\": every expense the rule applies to is a violation (for example where: { expenseType: [\"airfare\", \"entertainment\"] }).",
+    "type \"max_amount\" with a limit (a dollar string): an expense the rule applies to is a violation when its amount is over the limit. Exactly the limit is allowed. Compare amounts in cents (toCents in money.js), never as strings or floats.",
+    "A violation is { ruleId, expenseIds }, where expenseIds is the list of the expenses involved (one, for these rule types). evaluate returns them in rule order, and for one rule in the order of the expenses.",
+    "A policy that cannot be enforced as written must fail loudly: createEngine throws RangeError for a rules value that is not an array, a missing or duplicate id, an unknown type, a missing or malformed limit on a type that needs one, or a where that is not an object of strings and arrays of strings. It never skips a rule it does not understand."
+  ],
+  "levels": [
+    {
+      "title": "Trip totals",
+      "brief": "Finance also caps what a whole business trip may cost. Add a rule type that adds up the expenses of each trip.",
+      "requirements": [
+        "type \"trip_total\" with a limit: for each trip, add up the amounts of the trip's expenses that the rule applies to (its where narrows them, e.g. meals only). A trip whose total is over the limit is one violation { ruleId, tripId, expenseIds }, where expenseIds lists every expense of that trip the rule applies to, in input order. Exactly the limit is allowed.",
+        "Totals are exact: add up cents, so expenses that add up to exactly the limit are never a violation.",
+        "An expense with no tripId belongs to no trip, and trip rules ignore it.",
+        "A trip total counts every expense the rule applies to, including expenses that already break another rule (a denied flight still costs the company money until it is sorted out).",
+        "For one trip rule, violations come in the order of each trip's first expense in the input. Rule order across types is still the order of the rules list."
+      ]
+    },
+    {
+      "title": "Daily limits per employee",
+      "brief": "Some limits are per person per day, like a daily meal allowance while travelling. Add a rule type that adds up each employee's spending on each calendar day.",
+      "requirements": [
+        "type \"daily_total\" with a limit: for each employee and calendar day, add up the amounts of their expenses the rule applies to. A day whose total is over the limit is one violation { ruleId, employeeId, date, expenseIds }, with date as \"YYYY-MM-DD\" and expenseIds in input order. Exactly the limit is allowed.",
+        "The day is the local date where the expense happened: spentAt is an ISO 8601 time with that place's UTC offset, so the date is the one written in it. \"2026-03-02T21:30:00-05:00\" is March 2, even though it is March 3 in UTC.",
+        "Each employee has their own allowance: two employees on the same trip and day are checked separately. One employee's day counts all of their expenses that day, from any trip or none.",
+        "For one daily rule, violations come in the order of each (employee, day)'s first expense in the input."
+      ]
+    }
+  ],
+  "files": ["rules.js", "money.js"]
+}
