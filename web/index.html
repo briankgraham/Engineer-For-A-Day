@@ -464,6 +464,8 @@ dialog.app-dlg{width:min(640px,94vw)}
     sc.onerror=()=>{const c=wsCbs;wsCbs=null;sc.remove();c.forEach(x=>x[1]())};
     document.head.appendChild(sc);
   };
+  // learn_kit.js is a plain script tag at the end of the page; on a deep-linked load a lazy tab script can run before it, so wait for window load.
+  const whenKit=fn=>window.LK?fn():addEventListener("load",fn,{once:true});
   // Same lazy-load pattern for the AI Pairing tab.
   let apLoading=false;
   const openAp=()=>{
@@ -473,7 +475,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     const fail=()=>{apLoading=false;document.getElementById("tab-aipair").textContent="AI Pairing needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     loadWorkspace(()=>{
       const sc=document.createElement("script");sc.src="aipair.js";
-      sc.onload=()=>aipairInit();
+      sc.onload=()=>whenKit(aipairInit);
       sc.onerror=fail;
       document.head.appendChild(sc);
     },fail);
@@ -487,7 +489,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     const fail=()=>{dayLoading=false;document.getElementById("tab-day").textContent="Engineer for a Day needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     loadWorkspace(()=>{
       const sc=document.createElement("script");sc.src="day.js";
-      sc.onload=()=>dayInit();
+      sc.onload=()=>whenKit(dayInit);
       sc.onerror=fail;
       document.head.appendChild(sc);
     },fail);

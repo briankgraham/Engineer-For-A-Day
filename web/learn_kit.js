@@ -418,7 +418,24 @@
     return s;
   };
 
+  // List-page hero (title, blurb, outcome bullets, progress ring) and "pick up where you left off" banner, shared by the practice tabs.
+  const listHero=o=>{
+    const hero=el("div","lr-hero"),L=el("div");hero.appendChild(L);
+    L.append(el("h1",null,o.title),el("p","tag",o.tag));
+    if(o.outcomes){const ul=el("ul");o.outcomes.forEach(x=>ul.appendChild(el("li",null,x)));L.appendChild(ul)}
+    const R=el("div","lr-ring");R.appendChild(ring(o.done,o.total,0,o.label));
+    const st=el("div","stats");(o.stats||[]).forEach(x=>st.appendChild(el("span",null,x)));
+    R.appendChild(st);hero.appendChild(R);
+    return hero;
+  };
+  const contBanner=(small,title,label,onClick)=>{
+    const c=el("div","lr-cont"),t=el("div","t");
+    t.append(el("small",null,small),el("b",null,title));
+    c.append(t,btn(label,onClick,"cta"));
+    return c;
+  };
+
   let cssOn=false;
   const injectCss=()=>{if(cssOn)return;cssOn=true;const st=document.createElement("style");st.textContent=css;document.head.appendChild(st)};
-  window.LK={btn,sv,ring,css,injectCss,toast,inline,md,mdEl,codeEl,partShell,markOk,quizPart,explainPart};
+  window.LK={btn,sv,ring,listHero,contBanner,css,injectCss,toast,inline,md,mdEl,codeEl,partShell,markOk,quizPart,explainPart};
 })();

@@ -7,7 +7,9 @@
   const readSessions=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}};
   const writeSession=(id,s)=>{try{const all=readSessions();all[id]=s;localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
   const dropSession=id=>{try{const all=readSessions();delete all[id];localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
-  const DKEY="aipair-done-v1",SKEY="aipair-sort-v1";
+  const DKEY="aipair-done-v1",SKEY="aipair-sort-v1",LKEY="aipair-last-v1";
+  const KIND_IC={debug:"🐞",lld:"🧩",review:"🔍",levels:"🪜"};
+  const DIFF_PILL={Easy:"ok",Medium:"due",Hard:"flag"};
   const readDone=()=>{try{return JSON.parse(localStorage.getItem(DKEY))||{}}catch(e){return {}}};
   const setDone=(id,v)=>{try{const all=readDone();if(v)all[id]=true;else delete all[id];localStorage.setItem(DKEY,JSON.stringify(all))}catch(e){}};
   const SORTS={"":"Default order",todo:"Not completed first",done:"Completed first",easy:"Easiest first",hard:"Hardest first"};
@@ -18,13 +20,14 @@
   const css=`
 .ap{max-width:1500px;margin:0 auto;padding:16px}
 .ap h2{margin:0 0 4px;font-size:20px}.ap .sub{color:var(--muted);margin:0 0 14px}
-.ap-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.ap-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
-.ap-card.done{border-left:3px solid var(--easy)}
+.lr.ap{max-width:1180px;padding:28px 20px 80px}
 .ap-card .dn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;width:max-content}
-.ap-sort{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--muted);font-size:13px}
-.ap-card h3{margin:0;font-size:16px}.ap-card p{margin:0;color:var(--muted)}.ap-card .meta{font-size:12px;color:var(--muted)}
-.ap-card .act{margin-top:auto;padding-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.ap-sort{display:flex;align-items:center;gap:8px;margin:0 0 14px;color:var(--muted);font-size:13px}
+.lr-card.done{border-color:var(--easy)}
+.lr-card .pills{display:flex;gap:6px;flex-wrap:wrap}
+.lr-card .act{margin-top:auto;padding-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lr-card .act .cta{padding:7px 16px;font-size:14px}
+.lr-card .act button:not(.cta){background:none;border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:6px 14px;font-weight:600}
 .ap-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 -16px 12px;padding:8px 16px;position:sticky;top:var(--nav-h);z-index:2;background:var(--bg);border-bottom:1px solid var(--line)}
 .ap-top h2{margin:0;flex:1;min-width:160px}.ap-timer{font-variant-numeric:tabular-nums;color:var(--muted)}
 .ap-grid{display:grid;grid-template-columns:200px minmax(0,1fr) 340px;gap:14px;align-items:start}
@@ -105,42 +108,67 @@
 
   async function showList(){
     leaveWork();openGen++;
+    LK.injectCss();
     const r=root();r.textContent="";
-    const wrap=el("div","ap");r.appendChild(wrap);
-    wrap.appendChild(el("h2","","AI Pairing"));
-    wrap.appendChild(el("p","sub","Build a small project with an AI coding assistant. It is sometimes subtly wrong, so verify what it gives you. Some tests are visible and some are hidden, and you can write your own."));
+    const wrap=el("div","lr lr-home ap");r.appendChild(wrap);
+    const intro="Build a small project with an AI coding assistant. It is sometimes subtly wrong, so verify what it gives you. Some tests are visible and some are hidden, and you can write your own.";
     if(!scenarios){
       try{
         // Plain fetch: apiFetch would light the global "AI busy" spinner for a non-AI call.
         const res=await fetch("/api/ap/scenarios",{headers:{"X-Requested-With":"walkthrough"}});
         if(!res.ok)throw new Error(res.status);
         scenarios=(await res.json()).scenarios;
-      }catch(e){wrap.appendChild(el("p","","Could not load scenarios. Run: python3 server.py — then open http://localhost:8000"));return}
+      }catch(e){
+        wrap.append(el("h1",null,"AI Pairing"),el("p","lede",intro));
+        const cards=el("div","lr-cards"),c=el("div","lr-card soon");
+        c.append(el("div","ic","🔌"),el("h3",null,"Could not load scenarios"),el("p",null,"AI Pairing needs the local server. In a terminal run: python3 server.py, then open the address it prints."),LK.btn("Try again",showList,"ghost"));
+        cards.appendChild(c);wrap.appendChild(cards);return;
+      }
     }
     const sessions=readSessions();
     let sort=readSort();
+    const top=el("div");wrap.appendChild(top);
     const bar=el("label","ap-sort","Sort by ");const sel=el("select");
     Object.entries(SORTS).forEach(([v,t])=>{const o=el("option","",t);o.value=v;sel.appendChild(o)});
     sel.value=sort;bar.appendChild(sel);wrap.appendChild(bar);
-    const grid=el("div","ap-cards");wrap.appendChild(grid);
+    const grid=el("div","lr-cards");wrap.appendChild(grid);
     const render=()=>{
-      grid.textContent="";
       const done=readDone();
+      const nDone=scenarios.filter(sc=>done[sc.id]).length,nProg=scenarios.filter(sc=>sessions[sc.id]&&!done[sc.id]).length;
+      top.textContent="";
+      top.appendChild(LK.listHero({title:"AI Pairing",tag:intro,
+        outcomes:["Spot the subtle mistakes in AI-written code","Write your own tests, not just the visible ones","Debug, review and design with an assistant beside you"],
+        done:nDone,total:scenarios.length,label:"completed",
+        stats:[nProg+" in progress",scenarios.length-nDone+" to go"]}));
+      let lastId="";try{lastId=localStorage.getItem(LKEY)||""}catch(e){}
+      const rs=scenarios.find(sc=>sc.id===lastId&&sessions[sc.id]&&!sessions[sc.id].result);
+      if(rs)top.appendChild(LK.contBanner("Pick up where you left off",rs.title,"Continue →",()=>openWork(rs)));
+      grid.textContent="";
       // Array.sort is stable, so ties keep the default (server) order.
       const rank=sc=>sort==="todo"?+!!done[sc.id]:sort==="done"?+!done[sc.id]:sort==="easy"?(DIFF[sc.difficulty]??1):sort==="hard"?-(DIFF[sc.difficulty]??1):0;
       [...scenarios].sort((a,b)=>rank(a)-rank(b)).forEach(sc=>{
       const s=sessions[sc.id];
-      const card=el("div","ap-card"+(done[sc.id]?" done":""));
-      card.appendChild(el("h3","",sc.title));
-      card.appendChild(el("p","",sc.blurb));
-      const bits=[...(sc.kind==="review"?["Code review"]:sc.kind==="debug"?["Debugging"]:sc.kind==="lld"?["Object design"]:sc.kind==="levels"?[sc.levels.length+1+" levels"]:[]),sc.difficulty,"~"+sc.minutes+" min"];
-      if(s){bits.push("in progress · "+fmt(s.elapsed||0));if(s.last)bits.push(s.last.passed+"/"+s.last.total+" tests passing");if(s.followup)bits.push("follow-up revealed");if(sc.kind==="levels")bits.push("on level "+(1+(s.levels||[]).length))}
-      card.appendChild(el("div","meta",bits.join(" · ")));
+      const card=el("div","lr-card ap-card"+(done[sc.id]?" done":""));
+      card.append(el("div","ic",KIND_IC[sc.kind]||"🛠"),el("h3","",sc.title),el("p","",sc.blurb));
+      const pills=el("div","pills");card.appendChild(pills);
+      const kind=sc.kind==="review"?"Code review":sc.kind==="debug"?"Debugging":sc.kind==="lld"?"Object design":sc.kind==="levels"?sc.levels.length+1+" levels":"";
+      if(kind)pills.appendChild(el("span","pill",kind));
+      pills.append(el("span","pill "+(DIFF_PILL[sc.difficulty]||""),sc.difficulty),el("span","pill","~"+sc.minutes+" min"));
+      if(done[sc.id])pills.appendChild(el("span","pill ok","✓ Completed"));
+      if(s){
+        pills.appendChild(el("span","pill acc","In progress · "+fmt(s.elapsed||0)));
+        if(s.followup)pills.appendChild(el("span","pill","follow-up revealed"));
+        if(sc.kind==="levels")pills.appendChild(el("span","pill","on level "+(1+(s.levels||[]).length)));
+      }
+      // Bar: the last test run's pass rate, full once marked completed.
+      const frac=done[sc.id]?1:s&&s.last&&s.last.total?s.last.passed/s.last.total:0;
+      const bot=el("div","bot"),bb=el("div","lr-bar"),fill=el("i");fill.style.width=100*frac+"%";bb.appendChild(fill);bot.appendChild(bb);
+      if(s&&s.last)bot.appendChild(el("span","pill",s.last.passed+"/"+s.last.total+" tests"));
+      card.appendChild(bot);
       const dn=el("label","dn");const cb=el("input");cb.type="checkbox";cb.checked=!!done[sc.id];
       cb.onchange=()=>{setDone(sc.id,cb.checked);render()};
       dn.append(cb,"Completed");card.appendChild(dn);
-      const b=el("button","",s?"Resume":"Start");
-      b.onclick=()=>openWork(sc);
+      const b=LK.btn(s?"Resume":"Start",()=>openWork(sc),"cta");
       const act=el("div","act");card.appendChild(act);act.appendChild(b);
       if(s){
         const d=el("button","",s.result?"Discard attempt":"Abandon");let armed=0;
@@ -161,6 +189,7 @@
   async function openWork(sc){
     leaveWork();
     const gen=++openGen;
+    try{localStorage.setItem(LKEY,sc.id)}catch(e){}
     const r=root();r.textContent="";
     const wrap=el("div","ap");r.appendChild(wrap);
     const sess=readSessions()[sc.id]||{files:{},elapsed:0};

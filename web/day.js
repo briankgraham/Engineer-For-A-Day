@@ -11,7 +11,8 @@
   const writeSession=(id,s)=>{try{const all=readSessions();all[id]=s;localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
   const dropSession=id=>{try{const all=readSessions();delete all[id];localStorage.setItem(KEY,JSON.stringify(all))}catch(e){}};
   // Finished days, newest first, kept after the session itself is discarded so past reviews stay readable.
-  const HKEY="day-history-v1",HMAX=50;
+  const HKEY="day-history-v1",HMAX=50,LKEY="day-last-v1";
+  const DIFF_PILL={Easy:"ok",Medium:"due",Hard:"flag"};
   const readHistory=()=>{try{const h=JSON.parse(localStorage.getItem(HKEY));return Array.isArray(h)?h:[]}catch(e){return []}};
   const writeHistory=h=>{try{localStorage.setItem(HKEY,JSON.stringify(h.slice(0,HMAX)))}catch(e){}};
   const addHistory=entry=>{const h=readHistory().filter(x=>x.sid!==entry.sid);h.unshift(entry);writeHistory(h)};
@@ -24,10 +25,12 @@
   const css=`
 .dy{max-width:1500px;margin:0 auto;padding:16px}
 .dy h2{margin:0 0 4px;font-size:20px}.dy .sub{color:var(--muted);margin:0 0 14px;max-width:820px;line-height:1.5}
-.dy-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.dy-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
-.dy-card h3{margin:0;font-size:16px}.dy-card p{margin:0;color:var(--muted);line-height:1.5}.dy-card .meta{font-size:12px;color:var(--muted)}
-.dy-card .act{margin-top:auto;padding-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.lr.dy{max-width:1180px;padding:28px 20px 80px}
+.lr-card .pills{display:flex;gap:6px;flex-wrap:wrap}
+.lr-card.done{border-color:var(--easy)}
+.lr-card .act{margin-top:auto;padding-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lr-card .act .cta{padding:7px 16px;font-size:14px}
+.lr-card .act button:not(.cta){background:none;border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:6px 14px;font-weight:600}
 .dy-people{display:flex;gap:6px;flex-wrap:wrap}
 .dy-av{flex:none;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
 .dy-av.you{background:var(--head);color:var(--fg);border:1px solid var(--line)}
@@ -159,38 +162,54 @@
 
   async function showList(){
     leave();openGen++;
+    LK.injectCss();
     const r=root();r.textContent="";
-    const wrap=el("div","dy");r.appendChild(wrap);
-    wrap.appendChild(el("h2","","Engineer for a Day"));
-    wrap.appendChild(el("p","sub","Spend a compressed workday on a fake team: a repo, Slack channels, a ticket, a PR to review, docs and production logs. Coworkers are played by AI and react to what you do (and are not always right). Things will happen while you work. At the end of the day your manager reviews how it went."));
+    const wrap=el("div","lr lr-home dy");r.appendChild(wrap);
+    const intro="Spend a compressed workday on a fake team: a repo, Slack channels, a ticket, a PR to review, docs and production logs. Coworkers are played by AI and react to what you do (and are not always right). Things will happen while you work. At the end of the day your manager reviews how it went.";
     if(!days){
       try{
         const res=await fetch("/api/day/scenarios",{headers:{"X-Requested-With":"walkthrough"}});
         if(!res.ok)throw new Error(res.status);
         days=(await res.json()).days;
-      }catch(e){wrap.appendChild(el("p","","Could not load the days. Run: python3 server.py — then open http://localhost:8000"));return}
+      }catch(e){
+        wrap.append(el("h1",null,"Engineer for a Day"),el("p","lede",intro));
+        const cards=el("div","lr-cards"),c=el("div","lr-card soon");
+        c.append(el("div","ic","🔌"),el("h3",null,"Could not load the days"),el("p",null,"Engineer for a Day needs the local server. In a terminal run: python3 server.py, then open the address it prints."),LK.btn("Try again",showList,"ghost"));
+        cards.appendChild(c);wrap.appendChild(cards);return;
+      }
     }
     const sessions=readSessions();
     // Reviews finished before history existed: archive them once (the flag stops a deleted entry coming back).
     days.forEach(day=>{const s=sessions[day.id];if(s&&s.result&&!s.archived){addHistory(historyEntry(day,s));s.archived=true;writeSession(day.id,s)}});
-    const grid=el("div","dy-cards");wrap.appendChild(grid);
+    const nDone=days.filter(d=>sessions[d.id]&&sessions[d.id].result).length,nProg=days.filter(d=>sessions[d.id]&&!sessions[d.id].result).length;
+    wrap.appendChild(LK.listHero({title:"Engineer for a Day",tag:intro,
+      outcomes:["Work a real-feeling repo, ticket, PR, docs and logs","AI coworkers react to what you do (and can be wrong)","Get a manager review against the senior bar"],
+      done:nDone,total:days.length,label:"days reviewed",
+      stats:[nProg+" in progress",days.length-nDone+" to go"]}));
+    let lastId="";try{lastId=localStorage.getItem(LKEY)||""}catch(e){}
+    const rd=days.find(d=>d.id===lastId&&sessions[d.id]&&!sessions[d.id].result);
+    if(rd)wrap.appendChild(LK.contBanner("Pick up where you left off",`${rd.title} · ${ampm(simAt(rd,sessions[rd.id].t||0))}`,"Continue →",()=>openDay(rd)));
+    const grid=el("div","lr-cards");wrap.appendChild(grid);
     days.forEach(day=>{
       const s=sessions[day.id];
-      const card=el("div","dy-card");
+      const card=el("div","lr-card dy-card"+(s&&s.result?" done":""));
       card.append(el("h3","",day.title),el("p","",day.blurb));
       const ppl=el("div","dy-people");
       day.personas.forEach(p=>{const a=avatar(p);a.title=p.name+" · "+p.role;ppl.appendChild(a)});
       card.appendChild(ppl);
-      const bits=[day.difficulty,"~"+day.minutes+" min",ampmS(day.clock.start)+" to "+ampmS(day.clock.end)];
-      if(s&&s.result)bits.push("reviewed: "+s.result.level.verdict+" the senior bar");
-      else if(s)bits.push("in progress · "+ampm(simAt(day,s.t||0)));
-      if(s&&s.ai)bits.push("with AI");
-      card.appendChild(el("div","meta",bits.join(" · ")));
+      const pills=el("div","pills");card.appendChild(pills);
+      pills.append(el("span","pill "+(DIFF_PILL[day.difficulty]||""),day.difficulty),el("span","pill","~"+day.minutes+" min"),el("span","pill",ampmS(day.clock.start)+" to "+ampmS(day.clock.end)));
+      if(s&&s.ai)pills.appendChild(el("span","pill acc","✦ with AI"));
+      if(s&&s.result)pills.appendChild(el("span","pill "+(s.result.level.verdict==="below"?"flag":"ok"),"Reviewed: "+s.result.level.verdict+" the senior bar"));
+      else if(s)pills.appendChild(el("span","pill acc","In progress · "+ampm(simAt(day,s.t||0))));
+      // Bar: how much of the simulated workday has passed, full once reviewed.
+      const frac=s&&s.result?1:s?Math.min(1,Math.max(0,(s.t||0)/(day.minutes*60))):0;
+      const bot=el("div","bot"),bb=el("div","lr-bar"),fill=el("i");fill.style.width=100*frac+"%";bb.appendChild(fill);bot.appendChild(bb);card.appendChild(bot);
       const act=el("div","act");card.appendChild(act);
-      if(s){const b=el("button","",s.result?"Open":"Resume");b.onclick=()=>openDay(day);act.appendChild(b)}
+      if(s){act.appendChild(LK.btn(s.result?"Open":"Resume",()=>openDay(day),"cta"))}
       else{
         // The mode is chosen once, here, and kept for the whole attempt.
-        const b=el("button","","Start");b.title="Work the day on your own";b.onclick=()=>openDay(day,{ai:false});
+        const b=LK.btn("Start",()=>openDay(day,{ai:false}),"cta");b.title="Work the day on your own";
         const a=el("button","","✦ Start with AI");a.title="Work the day with an AI coding assistant that sees the repo, tests, tickets and PR, and can suggest code to apply";a.onclick=()=>openDay(day,{ai:true});
         act.append(b,a);
       }
@@ -285,7 +304,7 @@
   function historySection(){
     const hist=readHistory(),sec=el("section","dy-hist"),hd=el("div","hd");
     hd.appendChild(el("h3","","Past days"));sec.appendChild(hd);
-    if(!hist.length){sec.appendChild(el("p","sub","No past days yet. End a day to get a manager review; it is kept here."));return sec}
+    if(!hist.length){const c=el("div","lr-card soon");c.append(el("div","ic","🗂"),el("p",null,"No past days yet. End a day to get a manager review; it is kept here."));sec.appendChild(c);return sec}
     hd.appendChild(confirmBtn("Clear history","Click again to clear all",()=>{writeHistory([]);showList()}));
     hist.forEach(e=>{
       const date=new Date(e.ts).toLocaleDateString();
@@ -316,6 +335,7 @@
   async function openDay(day,mode){
     leave();
     const gen=++openGen;
+    try{localStorage.setItem(LKEY,day.id)}catch(e){}
     const r=root();r.textContent="";
     const wrap=el("div","dy");r.appendChild(wrap);
     wrap.appendChild(el("div","dy-busy","Loading the workspace…"));
