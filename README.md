@@ -1,5 +1,13 @@
 # Engineer for a Day
 
+> **Hey. We don't want your money. We don't want your data. We want you to learn.**
+>
+> There's no $49/month "Pro" tier. No "unlock this hint for 3 credits." No 11-part thread about how you're one cohort away from a FAANG offer. No guy in a rented Lamborghini explaining that the secret is to *wake up at 4am*.
+>
+> It's one Python file on your laptop. The only thing we'll ask you to pay for is your Claude account, and honestly, that's between you and Anthropic.
+>
+> Go get the job. Then tell nobody how, and ruin the influencers' lives.
+
 **Your whole interview loop in one local app, so the real one feels like a rerun.**
 
 Interviews ask for more than reversing a linked list now. You'll be asked to design a system on a whiteboard, tell a story about the time you disagreed with your manager, pair with an AI that's confidently wrong, review someone's PR, and stay calm while production is on fire. This app lets you practice all of it before it counts.
