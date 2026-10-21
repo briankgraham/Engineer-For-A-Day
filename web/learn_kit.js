@@ -165,6 +165,23 @@
 .vz-n.sel circle{fill:var(--accent);stroke:var(--accent)}.vz-n.sel text.v{fill:#fff}
 .vz-n.nb circle{fill:var(--accent-soft);stroke:var(--accent)}
 .vz-arrow{fill:var(--muted)}
+.vg-n rect{fill:var(--surface);stroke:var(--line);stroke-width:.5;transition:fill .25s,stroke .25s}
+.vg-n text{font:700 4px ui-monospace,Menlo,monospace;fill:var(--fg);text-anchor:middle;dominant-baseline:central}
+.vg-n.wall rect{fill:var(--head);stroke:none}
+.vg-n.fresh rect{fill:var(--med-bg);stroke:var(--med)}
+.vg-n.o0 rect{fill:color-mix(in srgb,var(--accent) 24%,var(--surface));stroke:var(--accent)}
+.vg-n.o1 rect{fill:color-mix(in srgb,var(--easy) 24%,var(--surface));stroke:var(--easy)}
+.vg-n.o2 rect{fill:color-mix(in srgb,var(--med) 24%,var(--surface));stroke:var(--med)}
+.vg-n.o3 rect{fill:color-mix(in srgb,var(--hard) 24%,var(--surface));stroke:var(--hard)}
+.vg-n.q rect{stroke-width:.9;stroke-dasharray:1.6 1}
+.vg-n.cur rect{stroke:var(--fg);stroke-width:1.3;stroke-dasharray:none}
+.vg-n.cur.o0 rect{fill:var(--accent)}.vg-n.cur.o1 rect{fill:var(--easy)}.vg-n.cur.o2 rect{fill:var(--med)}.vg-n.cur.o3 rect{fill:var(--hard)}
+.vg-n.cur text{fill:#fff}
+.vg-n.nb rect{stroke:var(--fg);stroke-width:1.1;stroke-dasharray:none}
+.lr-viz .vcode{border-top:1px solid var(--line);padding:8px 0;font:12.5px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto}
+.lr-viz .vcode .ln{white-space:pre;padding:0 14px;border-left:3px solid transparent;transition:background .2s}
+.lr-viz .vcode .ln.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.lr.drilling .vcode{filter:blur(6px);user-select:none;pointer-events:none}
 /* drill */
 .lr-drill{border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:6px 0 22px;overflow:hidden}
 .lr-drill .dh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}

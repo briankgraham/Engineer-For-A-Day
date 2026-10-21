@@ -61,6 +61,22 @@
       setNode:(i,cls,label)=>{nodes[i].g.setAttribute("class","vz-n"+(cls?" "+cls:""));nodes[i].lb.textContent=label==null?"":label},
       setEdge:(i,cls)=>edges[i].line.setAttribute("class","vz-e"+(cls?" "+cls:""))};
   }
+  // gridGraph / drawGrid: a 2D array drawn as square cells instead of circles; the same {nodes, edges, setNode, setText} shape
+  // as drawGraph, so the step-through controls work unchanged. Cell ids are r * cols + c.
+  const gridGraph=grid=>({n:grid.length*grid[0].length,rows:grid.length,cols:grid[0].length,grid,edges:[],pos:[]});
+  function drawGrid(g){
+    const svg=sv("svg",{viewBox:`-1 -1 ${g.cols*10+2} ${g.rows*10+2}`,role:"img"}),nodes=[];
+    for(let i=0;i<g.n;i++){
+      const gr=sv("g",{class:"vg-n"},svg),x=(i%g.cols)*10,y=Math.floor(i/g.cols)*10;
+      sv("rect",{x:x+.5,y:y+.5,width:9,height:9,rx:1.2},gr);
+      const t=sv("text",{x:x+5,y:y+5.2,class:"v"},gr);
+      nodes.push({g:gr,t});
+    }
+    return {svg,nodes,edges:[],
+      setText:(i,t)=>{nodes[i].t.textContent=t},
+      setNode:(i,cls)=>{nodes[i].g.setAttribute("class","vg-n"+(cls?" "+cls:""))},
+      setEdge:()=>{}};
+  }
   const edgeIndex=(g,u,v)=>g.edges.findIndex(e=>(e[0]===u&&e[1]===v)||(!g.directed&&e[0]===v&&e[1]===u));
   const adjOf=g=>{
     const adj=Array.from({length:g.n},()=>[]);
@@ -103,7 +119,7 @@
     }
     return {n,edges,pos,labels:arr.map(String).concat(new Array(extra||0).fill("")),arr};
   }
-  const graphFor=b=>b.tree?treeGraph(b.tree):b.heap?heapGraph(b.heap,b.viz==="heapPush"?1:0):b.graph;
+  const graphFor=b=>b.grid?gridGraph(b.grid):b.tree?treeGraph(b.tree):b.heap?heapGraph(b.heap,b.viz==="heapPush"?1:0):b.graph;
 
   // Step generators: each returns a list of frames {cls[], lab[], tree:Set, gone:Set, act, ds:{t, items, hot}, out:{t, items}, say}.
   function stepper(g){
@@ -288,7 +304,92 @@
     heapPush:(g,v)=>heapGen(g,"push",v),
     heapPop:g=>heapGen(g,"pop"),
     heapify:g=>heapGen(g,"heapify"),
+    multiBfs:g=>gridGen(g,"nearest"),
+    rotting:g=>gridGen(g,"rotting"),
   };
+
+  // Code shown beside the grid step-throughs; frames carry `lines` (indexes into these) so the matching lines light up.
+  const GRID_CODE={
+    multiBfs:`const dist = grid.map(row => row.map(() => -1));
+const q = [];
+for (let r = 0; r < rows; r++)
+  for (let c = 0; c < cols; c++)
+    if (grid[r][c] === 0) { dist[r][c] = 0; q.push([r, c]); }
+
+for (let head = 0; head < q.length; head++) {
+  const [r, c] = q[head];
+  for (const [dr, dc] of DIRS) {
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || dist[nr][nc] !== -1) continue;
+    dist[nr][nc] = dist[r][c] + 1;
+    q.push([nr, nc]);
+  }
+}`.split("\n"),
+    rotting:`const dist = grid.map(row => row.map(() => -1));
+const q = [];
+for (let r = 0; r < rows; r++)
+  for (let c = 0; c < cols; c++)
+    if (grid[r][c] === 2) { dist[r][c] = 0; q.push([r, c]); }
+
+for (let head = 0; head < q.length; head++) {
+  const [r, c] = q[head];
+  for (const [dr, dc] of DIRS) {
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || grid[nr][nc] === 0 || dist[nr][nc] !== -1) continue;
+    dist[nr][nc] = dist[r][c] + 1;
+    q.push([nr, nc]);
+  }
+}`.split("\n"),
+  };
+
+  // Multi-source BFS on a grid, one frame per line of work. mode "nearest": 0s are sources, every other cell wants its distance
+  // to the nearest 0. mode "rotting": 2s are rotten oranges, 1s are fresh, 0s are empty; a level is a minute.
+  // Colors show which source got there first. Each frame's `lines` index GRID_CODE; `lvl` is the BFS level for Next level.
+  function gridGen(g,mode){
+    const S=stepper(g),{rows,cols,grid}=g,rot=mode==="rotting",unit=rot?"minute":"distance";
+    const dist=new Array(g.n).fill(-1),owner=new Array(g.n).fill(-1),inq=new Array(g.n).fill(false),q=[],doneAt=[];let head=0,nsrc=0;
+    const flat=grid.flat(),wall=i=>rot&&flat[i]===0,nm=i=>`(${Math.floor(i/cols)},${i%cols})`;
+    S.val=new Array(g.n).fill("");
+    const paint=(cur,nb)=>{
+      for(let i=0;i<g.n;i++){
+        S.val[i]=wall(i)?"":dist[i]>=0?String(dist[i]):rot?"":"?";
+        S.cls[i]=wall(i)?"wall":dist[i]<0?(rot?"fresh":""):`o${rot?3:owner[i]%4}`+(inq[i]?" q":"")+(i===cur?" cur":"");
+        if(i===nb)S.cls[i]+=" nb";
+      }
+    };
+    const ds=()=>({t:`Queue (front on the left): cell · ${unit}`,items:q.slice(head).map(i=>`${nm(i)}·${dist[i]}`),hot:0});
+    const out=()=>({t:rot?"Oranges rotted at each minute":"Cells finished at each distance",items:doneAt.map((n,d)=>`${d}: ${n}`)});
+    const snap=(say,lines,lvl)=>{S.snap(say,null,ds(),out());const f=S.frames[S.frames.length-1];f.lines=lines;f.lvl=lvl};
+    paint(-1);
+    snap(`Make a distance grid filled with -1, meaning "not reached yet", and an empty queue.`,[0,1],-1);
+    flat.forEach((v,i)=>{if(rot?v===2:v===0){dist[i]=0;owner[i]=nsrc++;inq[i]=true;q.push(i)}});
+    paint(-1);
+    snap(rot?`Seed the queue with every rotten orange (${nsrc} of them) at minute 0, before the main loop starts. Dashed outlines are cells waiting in the queue; fresh oranges are orange.`:`Seed the queue with every 0 (${nsrc} of them) at distance 0, before the main loop starts. Each source gets its own color, and dashed outlines are cells waiting in the queue.`,[2,3,4],-1);
+    while(head<q.length){
+      const u=q[head++],d=dist[u],r=Math.floor(u/cols),c=u%cols;
+      inq[u]=false;doneAt[d]=(doneAt[d]||0)+1;
+      paint(u);
+      snap(`Dequeue ${nm(u)}, ${unit} ${d}. Now look at its four neighbors, one at a time.`,[6,7,8],d);
+      for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        const nr=r+dr,nc=c+dc,v=nr*cols+nc,where=`${nm(u)} → ${nr<0||nr>=rows||nc<0||nc>=cols?`(${nr},${nc})`:nm(v)}`;
+        if(nr<0||nr>=rows||nc<0||nc>=cols){paint(u);snap(`${where} is off the grid, so the bounds check skips it.`,[9,10],d);continue}
+        if(wall(v)){paint(u,v);snap(`${where} is an empty cell. There is nothing to rot, so skip it.`,[9,10],d);continue}
+        if(dist[v]!==-1){
+          const tie=!rot&&owner[v]!==owner[u];
+          paint(u,v);
+          snap(`${where} was already reached (${unit} ${dist[v]}). The queue hands out cells in order, so that earlier arrival is at least as close: skip it.${tie?" Two ripples from different sources meet here, and whoever got there first keeps the cell.":""}`,[9,10],d);
+          continue;
+        }
+        dist[v]=d+1;owner[v]=owner[u];inq[v]=true;q.push(v);
+        paint(u,v);
+        snap(`${where} is new. Set its ${unit} to ${d} + 1 = ${d+1} and push it on the queue. Writing the distance now, at enqueue time, is what stops it being queued twice.`,[9,10,11,12],d);
+      }
+    }
+    paint(-1);
+    const left=rot?flat.filter((v,i)=>v===1&&dist[i]<0).length:0,last=doneAt.length-1;
+    snap(rot?(left?`The queue is empty (the loop condition fails) but ${left} fresh orange${left>1?"s":""} never got reached, so the answer is -1.`:`The queue is empty, so the loop ends. Every orange is rotten and the last level is minute ${last}: that's the answer. All ${nsrc} rotten oranges spread at the same time in one BFS.`):`The queue is empty, so the loop ends. Every cell holds its distance to the nearest 0 and its color shows which 0 reached it first. Each cell entered the queue exactly once, so the cost is O(rows × cols) however many sources there are.`,[6],last+1);
+    return S.frames;
+  }
 
   // Pre/in/post-order DFS over a treeGraph: the call stack, the output so far and a visit number on each node.
   function travGen(g,kind){
@@ -370,7 +471,7 @@
   function vizBlock(b){
     const g=graphFor(b),box=el("div","lr-viz"),head=el("div","vt",b.title||"");box.appendChild(head);
     const body=el("div","vb");box.appendChild(body);
-    const G=drawGraph(g);body.appendChild(G.svg);
+    const G=b.grid?drawGrid(g):drawGraph(g);body.appendChild(G.svg);
     if(b.viz==="graph"||b.viz==="tree"||b.viz==="heap"){body.style.gridTemplateColumns="1fr";return box}
     const side=el("div","side");body.appendChild(side);
     if(b.viz==="adj"){
@@ -399,6 +500,11 @@
     }
     const frames=GEN[b.viz](g,b.value!==undefined?b.value:b.start||0),dsBox=el("div"),outBox=el("div");
     side.append(dsBox,outBox);
+    let codeLines=null;
+    if(frames[0].lines){
+      const code=el("div","vcode");codeLines=GRID_CODE[b.viz].map(t=>{const d=el("div","ln");d.append(...LK.codeEl(t||" ").childNodes);code.appendChild(d);return d});
+      box.appendChild(code);
+    }
     const cap=el("div","cap");box.appendChild(cap);
     const ctl=el("div","ctl");box.appendChild(ctl);
     let k=0,timer=0;
@@ -414,6 +520,7 @@
       if(f.val)f.val.forEach((x,i)=>G.setText(i,x==null?"":x));
       G.edges.forEach((e,i)=>G.setEdge(i,f.cls[e.u]==="off"||f.cls[e.v]==="off"?"off":i===f.act?"act":f.gone.has(i)?"gone":f.tree.has(i)?"tree":""));
       chips(dsBox,f.ds);chips(outBox,f.out);
+      if(codeLines)codeLines.forEach((d,i)=>d.classList.toggle("on",f.lines.includes(i)));
       cap.textContent=f.say;head.lastChild.textContent=`Step ${k+1} / ${frames.length}`;
       range.value=k;play.textContent=timer?"❚❚ Pause":k===frames.length-1?"↺ Replay":"▶ Play";
     };
@@ -429,6 +536,10 @@
     const range=el("input");range.type="range";range.min=0;range.max=frames.length-1;range.oninput=()=>{stop();k=+range.value;draw()};
     const reset=btn("⟲",()=>{stop();k=0;draw()});reset.title="Back to the start";
     ctl.append(play,prev,next,range,reset);
+    if(frames[0].lvl!==undefined){
+      const lvl=btn("⏭ Next level",()=>{stop();const j=frames.findIndex((f,x)=>x>k&&f.lvl>frames[k].lvl);k=j<0?frames.length-1:j;draw()});
+      lvl.title="Jump to the first step of the next BFS level";ctl.insertBefore(lvl,range);
+    }
     box.tabIndex=0;box.onkeydown=e=>{if(e.target!==box)return;if(e.key==="ArrowRight"){next.click();e.preventDefault()}else if(e.key==="ArrowLeft"){prev.click();e.preventDefault()}};
     draw();
     return box;

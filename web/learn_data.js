@@ -6,6 +6,7 @@
 //          {tip} / {warn}             a callout
 //          {viz, graph, start, title} a graph picture; viz: "graph" (static), "adj" (click a node to see its list/matrix row),
 //                                     or a step-through: "dfs", "bfs", "components", "topo", "dijkstra"
+//          {viz, grid, title}         a grid picture, step-through: "multiBfs" (0s are sources) or "rotting" (2 rotten, 1 fresh, 0 empty)
 //                                     graph: {n, edges, directed, weighted, pos: [[x, y], ...] in a 100 x 60 box}
 //          {drill: "adj"}             the adjacency-list drill (a random graph you write the adjacency list for)
 // Parts:   {type: "code", id, title, prompt, fn, kind: "function" | "class", compare: "exact" | "unordered",
@@ -421,7 +422,21 @@ function sink(r, c) {
     {tip:"Changing the grid in place (land → water) saves a visited array. Ask the interviewer first: “Is it OK to modify the input?” If not, use a visited matrix or a Set of r * cols + c keys."},
     {md:`## Multi-source BFS
 
-"Distance from every cell to the **nearest** 0" or "minutes until every orange rots" sounds like one BFS per cell, which is O((RC)²). Instead, put **all** the sources in the queue at distance 0 and run a **single** BFS. The ripples spread from every source at once, and each cell is reached first by its nearest source.`},
+"Distance from every cell to the **nearest** 0" or "minutes until every orange rots" sounds like one BFS per cell, which is O((RC)²). Instead, put **all** the sources in the queue at distance 0 and run a **single** BFS. The ripples spread from every source at once, and each cell is reached first by its nearest source.
+
+### Why one BFS is enough
+
+Picture an invisible **super-source** vertex wired to every real source. BFS from that one vertex is ordinary single-source BFS: level 1 is all the real sources, level 2 is everything one step from any of them, and so on. We skip the invisible vertex and just start with the whole of level 0 already in the queue.
+
+The queue is also what makes "first to arrive = nearest" true. BFS hands out cells in order of distance, so the queue only ever holds cells at distance \`d\` followed by cells at distance \`d + 1\`. If a cell has already been claimed when you reach it again, whoever claimed it was at least as close.
+
+Step through it below. Each source gets a color, and a cell takes the color of the source that reaches it first. Watch the rings grow outward at the same speed and stop where they meet. The highlighted lines of code are the ones running at each step. Use **Next level** to jump one whole ring at a time.`},
+    {viz:"multiBfs",title:"Distance to the nearest 0: all three 0s spread at once",grid:[[1,1,1,1,1,1],[1,0,1,1,1,1],[1,1,1,1,0,1],[0,1,1,1,1,1]]},
+    {md:`Things to notice in the animation:
+
+- **Seeding comes first.** All the 0s are in the queue before the first dequeue. If you ran a full BFS from one 0, then another, you'd be back to one BFS per source.
+- **A cell is written once.** Marking \`dist\` when you **enqueue** (not when you dequeue) keeps a cell from entering the queue twice, so total work is O(rows × cols) however many sources there are.
+- **Ties don't matter.** When two rings reach a cell on the same step, either answer for the distance is the same number. Only the color (which source) depends on dequeue order.`},
     {tpl:`const dist = grid.map(row => row.map(() => -1));
 const q = [];
 for (let r = 0; r < rows; r++)
@@ -437,6 +452,11 @@ for (let head = 0; head < q.length; head++) {
     q.push([nr, nc]);
   }
 }`,title:"Multi-source BFS"},
+    {md:`### The same idea as a story: Rotting Oranges
+
+Here the sources are the rotten oranges (\`2\`), \`1\` is a fresh orange, and \`0\` is an empty cell (the gray squares, which BFS never enters). Every BFS level is one **minute**. The answer is the last level reached, or **-1** if a fresh orange is never reached.`},
+    {viz:"rotting",title:"Rotting oranges: two rotten oranges spread together, one level per minute",grid:[[2,1,1,1,0],[1,1,0,1,1],[0,1,1,1,2],[1,1,0,1,1]]},
+    {warn:"Do not loop over the sources and run a BFS from each one, keeping the minimum. That is O(sources × cells). The fix is always the same: seed the queue with every source, then run one BFS."},
   ],
   parts:[
     {type:"code",id:"grid-nbrs",title:"Neighbors with bounds checks",fn:"gridNeighbors",compare:"unordered",

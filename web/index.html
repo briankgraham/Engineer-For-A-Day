@@ -1370,7 +1370,17 @@ async function runEditor(){
   if(slug!==pSlug)return;
   setBusy(false);
   if(pDoc&&pDoc.exercise===ex){pLast=summarize(allTests(ex,custom),r);pLastKey=runKey(code,custom)}
-  if(renderResults(allTests(ex,custom),r))confetti();
+  if(renderResults(allTests(ex,custom),r)){confetti();creditSolve(slug)}
+}
+
+// A fully passing run marks the problem done and counts one solve, once per time the editor is opened.
+let pCredited="";
+function creditSolve(slug){
+  if(pCredited===slug)return;
+  pCredited=slug;
+  const p=progress[slug]||{done:false,times:0};
+  p.done=true;p.times++;p.last=today();
+  progress[slug]=p;save();refresh(false);
 }
 
 // The model's expected outputs can be wrong, so run its own reference solution against them once per open.
@@ -1495,7 +1505,7 @@ $("paskclr").onclick=()=>{if(askMsgs.length&&!confirm("Clear this conversation?"
 async function openPractice(slug){
   const r=DATA.find(x=>x[6]===slug);
   if(pRunning&&pKill)pKill();
-  pSlug=slug;pDoc=null;pCustom=[];pLast="";pLastKey="";pRevGen++;askMic();resetAsk();askMsgs=loadAsk(slug);renderAsk();$("paskb").disabled=true;$("paskin").disabled=true;$("preview").disabled=true;$("prev-out").hidden=true;$("pclist").replaceChildren();$("pccount").textContent="";
+  pSlug=slug;pCredited="";pDoc=null;pCustom=[];pLast="";pLastKey="";pRevGen++;askMic();resetAsk();askMsgs=loadAsk(slug);renderAsk();$("paskb").disabled=true;$("paskin").disabled=true;$("preview").disabled=true;$("prev-out").hidden=true;$("pclist").replaceChildren();$("pccount").textContent="";
   $("pt").textContent=`${r[2]} · ${DN[r[1]]}`;
   $("pcon").replaceChildren();$("pres").replaceChildren();$("pstat").textContent="";$("pstmt").replaceChildren();
   $("pdlg").showModal();

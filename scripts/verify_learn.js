@@ -94,6 +94,14 @@ for (const track of LEARN_TRACKS) {
     for (const b of lesson.blocks) {
       if (!b.viz) continue;
       if (b.tree || b.heap) { checkArrayViz(b); continue; }
+      if (b.grid) {
+        const flat = b.grid.flat(), src = b.viz === "rotting" ? 2 : 0;
+        if (b.grid.some(r => r.length !== b.grid[0].length)) bad(`viz "${b.title}": ragged grid`);
+        if (!flat.includes(src)) bad(`viz "${b.title}": no source cells (${src}) to start from`);
+        if (flat.filter(v => v === src).length > 4) bad(`viz "${b.title}": more than 4 sources, so colors repeat`);
+        if (flat.length > 36) bad(`viz "${b.title}": ${flat.length} cells is too many to step through`);
+        continue;
+      }
       const g = b.graph;
       if (g.pos.length !== g.n) bad(`viz "${b.title}": ${g.pos.length} positions for ${g.n} vertices`);
       if (g.edges.some(e => e[0] >= g.n || e[1] >= g.n || e[0] < 0 || e[1] < 0)) bad(`viz "${b.title}": edge out of range`);
