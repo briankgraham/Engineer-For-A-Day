@@ -60,6 +60,8 @@ More and more interviews hand you an AI assistant and watch how you use it. Here
 
 27 scenarios from Easy to Hard: URL slugs for a blog, an LRU cache with TTL, a token-bucket rate limiter, a key-value store with nested transactions, offline sync, an Express-style middleware router, a **PR review** round, a **debug-from-an-incident-ticket** round, an **elevator object-design** round where the requirements change partway through, and more.
 
+![AI Pairing: the editor next to an AI assistant that has just answered a question](docs/media/ai-pairing.jpg)
+
 ## 🏗️ System Design Prep
 
 A guided path from the fundamentals to full designs, with topics, practice problems and mock interviews.
@@ -112,9 +114,14 @@ Algorithms still come up, so this tab covers them too. It has tons of problem-co
 
 LeetCode assumes you already know the basics. If writing an adjacency list from memory still takes a minute of thinking, start here.
 
+![Learning tab: ten tracks, from graphs to concurrency](docs/media/learning.jpg)
+
 Each track is a path of short lessons. The first one, **Graphs**, goes from "what is a graph" through representations, DFS, BFS, grids, union-find, topological sort and Dijkstra, then teaches you to recognize which technique a problem wants, and finishes with graph databases in system design.
 
 - **Learn.** Readable lessons with templates worth memorizing, and step-through visualizers for DFS, BFS, components, topological sort and Dijkstra that show the stack, queue or heap at every step.
+
+![BFS lesson: the step-through graph visualizer above the template it animates](docs/media/learn-bfs.jpg)
+
 - **Drill.** An adjacency-list drill draws a random graph and checks the list you write for it. Every code exercise has **Drill from memory**: it clears the editor, blurs the templates and times you.
 - **Practice.** Code exercises run against real tests in your browser. Quick checks explain the answer. Written answers (like "should this use Neo4j?") get feedback from the AI tutor, and the AI can review your code too.
 - **Track it.** Mark lessons complete, flag ones to revisit, and keep notes. Completed lessons come back for review after 3, 7 and 21 days. An **Ask the tutor** panel knows the lesson you're reading.
