@@ -11,7 +11,7 @@ const WEB = path.join(__dirname, "..", "web");
 const html = fs.readFileSync(path.join(WEB, "index.html"), "utf8");
 const harness = html.slice(html.indexOf("function harness(spec){"), html.indexOf("// Runs `code` against the exercise's tests"));
 // Track files after learn_data.js push onto LEARN_TRACKS (same load order as the page).
-const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_fundamentals.js"];
+const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_fundamentals.js", "learn_concurrency.js"];
 const LEARN_TRACKS = vm.runInNewContext(LEARN_FILES.map(f => fs.readFileSync(path.join(WEB, f), "utf8")).join("\n") + ";LEARN_TRACKS");
 const slugs = new Set([...html.matchAll(/,"([a-z0-9-]+)","[^"]*"\]/g)].map(m => m[1]));
 

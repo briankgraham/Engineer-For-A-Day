@@ -524,7 +524,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     lrLoading=true;
     const fail=()=>{lrLoading=false;document.getElementById("tab-learn").textContent="Learning needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     const add=(src,next)=>{const sc=document.createElement("script");sc.src=src;sc.onload=next;sc.onerror=fail;document.head.appendChild(sc)};
-    add("learn_data.js",()=>add("learn_trees.js",()=>add("learn_heaps.js",()=>add("learn_fundamentals.js",()=>add("learn.js",()=>learnInit())))));
+    add("learn_data.js",()=>add("learn_trees.js",()=>add("learn_heaps.js",()=>add("learn_fundamentals.js",()=>add("learn_concurrency.js",()=>add("learn.js",()=>learnInit()))))));
   };
   const ind=document.querySelector("nav.tabs .ind");
   const moveInd=(instant)=>{
@@ -1207,9 +1207,9 @@ function harness(spec){
   });
 }
 
-// Runs `code` against the exercise's tests in a fresh worker. Resolves {cases, fatal, err, timedOut}; onOut gets console output.
+// Runs `code` against the exercise's tests in a fresh worker (opt.timeout ms, default RUN_TIMEOUT: a runaway loop can allocate a lot before it fires). Resolves {cases, fatal, err, timedOut}; onOut gets console output.
 function runTests(code,ex,opt={}){
-  const {onOut,onStart,custom=[]}=opt;
+  const {onOut,onStart,custom=[],timeout=RUN_TIMEOUT}=opt;
   return new Promise(resolve=>{
     const w=new Worker("/worker.js"),res={cases:[],fatal:"",err:"",timedOut:false};
     let timer=0,finished=false;
@@ -1218,7 +1218,7 @@ function runTests(code,ex,opt={}){
     pKill=stop;
     w.onmessage=e=>{
       const m=e.data;
-      if(m.t==="start"){if(onStart)onStart();timer=setTimeout(()=>{res.timedOut=true;end()},RUN_TIMEOUT)}
+      if(m.t==="start"){if(onStart)onStart();timer=setTimeout(()=>{res.timedOut=true;end()},timeout)}
       else if(m.t==="out"){if(onOut)onOut(m.s)}
       else if(m.t==="case")res.cases[m.i]=m;
       else if(m.t==="fatal")res.fatal=m.s;

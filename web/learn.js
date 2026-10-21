@@ -17,6 +17,10 @@
   const peekLp=(t,l)=>prog.lessons[lkey(t,l)]||{done:false,times:0,parts:{}};
   const pp=(t,l,p)=>{const x=lp(t,l);if(!x.parts)x.parts={};return x.parts[p.id]||(x.parts[p.id]={})};
   const partsDone=(t,l)=>{const x=peekLp(t,l).parts||{};return l.parts.filter(p=>x[p.id]&&x[p.id].ok).length};
+  // A lesson counts as done once marked complete or when every practice step is solved.
+  const lessonDone=(t,l)=>!!peekLp(t,l).done||(l.parts.length>0&&partsDone(t,l)===l.parts.length);
+  // Lesson tests are tiny, so give runaway code less time to eat memory than the 10s LeetCode limit.
+  const LEARN_TIMEOUT=3000;
   const fmt=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
   const btn=(text,fn,cls)=>{const b=el("button",cls||null,text);b.type="button";if(fn)b.onclick=fn;return b};
   const root=()=>$("tab-learn");
@@ -495,13 +499,13 @@
   };
   const trackStats=t=>{
     const ls=t.lessons.map(l=>peekLp(t,l));
-    return {done:ls.filter(x=>x.done).length,due:t.lessons.filter(l=>isDue(peekLp(t,l))),flag:t.lessons.filter(l=>peekLp(t,l).revisit),
+    return {done:t.lessons.filter(l=>lessonDone(t,l)).length,due:t.lessons.filter(l=>isDue(peekLp(t,l))),flag:t.lessons.filter(l=>peekLp(t,l).revisit),
       parts:t.lessons.reduce((a,l)=>a+l.parts.length,0),partsDone:t.lessons.reduce((a,l)=>a+partsDone(t,l),0)};
   };
   const nextLesson=t=>{
     const last=t.lessons.find(l=>prog.last===lkey(t,l));
-    if(last&&!peekLp(t,last).done)return last;
-    return t.lessons.find(l=>!peekLp(t,l).done)||null;
+    if(last&&!lessonDone(t,last))return last;
+    return t.lessons.find(l=>!lessonDone(t,l))||null;
   };
 
   function viewHome(){
@@ -565,10 +569,10 @@
         c.append(el("div","eb","Checkpoint"),el("h3",null,"Ready for LeetCode"),el("p",null,`${t.ready.length} real interview problems, ordered from easy to hard. You've solved ${solved} so far.`));
         step(n,c,"check"+(solved===t.ready.length?" done":""));
       }
-      const n=el("div","lr-node",x.done?"✓":String(i+1));
+      const ld=lessonDone(t,l),n=el("div","lr-node",ld?"✓":String(i+1));
       const c=el("button","lr-lc");c.type="button";c.onclick=()=>go(`#learn/${t.id}/${l.id}`);
       const eb=el("div","eb",`Lesson ${i+1}${l.system?" · System design":""}`);
-      if(x.done)eb.appendChild(el("span","pill ok","Complete"));
+      if(ld)eb.appendChild(el("span","pill ok","Complete"));
       if(due)eb.appendChild(el("span","pill due","↻ Review due"));
       if(x.revisit)eb.appendChild(el("span","pill flag","⚑ Revisit"));
       if(x.note)eb.appendChild(el("span","pill","📝 Notes"));
@@ -576,7 +580,7 @@
       const meta=el("div","meta"),bar=el("div","lr-bar"),fill=el("i");fill.style.width=(100*pd/l.parts.length)+"%";bar.appendChild(fill);
       meta.append(el("span",null,`⏱ ${l.mins} min`),bar,el("span",null,`${pd}/${l.parts.length} practice`));
       c.appendChild(meta);
-      step(n,c,x.done?"done":l===nl?"cur":"");
+      step(n,c,ld?"done":l===nl?"cur":"");
     });
 
     const readyBox=el("div");if(t.ready.length)w.appendChild(readyBox);
@@ -780,7 +784,7 @@
       const code=e.getValue();writeDraft(code);
       running=true;runB.disabled=true;runB.textContent="Running…";
       const con=[];
-      const r=await runTests(code,ex,{onOut:s=>con.push(s)});
+      const r=await runTests(code,ex,{onOut:s=>con.push(s),timeout:LEARN_TIMEOUT});
       running=false;runB.disabled=false;runB.textContent="▶ Run tests";
       if(!card.isConnected)return;
       lastSum=summarize(ex.tests,r);lastKey=code;
@@ -790,7 +794,7 @@
       const sum=el("div","sum "+(all?"ok":"no"),all?`✓ All ${passed} tests pass`:`${passed} / ${ex.tests.length} tests pass`);
       const dots=el("span","dots");ex.tests.forEach((_,i)=>dots.appendChild(el("i",r.cases[i]&&r.cases[i].pass?"ok":null)));sum.appendChild(dots);res.appendChild(sum);
       if(r.err)res.appendChild(el("pre",null,r.err.trim()));
-      if(r.timedOut)res.appendChild(el("pre",null,"Stopped: took longer than 10s. Infinite loop, or an O(n²) step on a big input?"));
+      if(r.timedOut)res.appendChild(el("pre",null,"Stopped: took longer than "+LEARN_TIMEOUT/1000+"s. Infinite loop, or an O(n²) step on a big input?"));
       ex.tests.forEach((tc,i)=>{
         const c=r.cases[i];if(c&&c.pass)return;
         const d=el("details");if(!res.querySelector("details"))d.open=true;

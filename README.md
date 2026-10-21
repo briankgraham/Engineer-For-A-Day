@@ -24,7 +24,7 @@ That's all the setup. Pick a tab and start.
 | 🏗️ **System Design Prep** | Fundamentals, timed mock interviews, and a whiteboard |
 | 🎤 **Behavioral** | STAR stories, plus an AI interviewer that asks follow-ups until it gets specifics |
 | 🧩 **LeetCode** | Company-tagged problems with walkthroughs and an in-browser editor |
-| 📚 **Learning** | The fundamentals behind the problems and behind full-stack screens: algorithm tracks (graphs, trees, heaps) plus JavaScript/TypeScript, HTTP, auth and security, browser and frontend, and SQL |
+| 📚 **Learning** | The fundamentals behind the problems and behind full-stack screens: algorithm tracks (graphs, trees, heaps) plus JavaScript/TypeScript, HTTP, auth and security, browser and frontend, SQL, and concurrency and async |
 | ⏱️ **Assessment** | Timed online-assessment (OA) style tests with hidden test cases |
 | 💼 **Jobs** | Live openings from the companies you're prepping for |
 
@@ -112,7 +112,7 @@ Each track is a path of short lessons. The first one, **Graphs**, goes from "wha
 - **Track it.** Mark lessons complete, flag ones to revisit, and keep notes. Completed lessons come back for review after 3, 7 and 21 days. An **Ask the tutor** panel knows the lesson you're reading.
 - **Ready for LeetCode.** Each track ends with real problems from the LeetCode tab, in order, each linked to the lesson that prepares you for it.
 
-**Full-stack fundamentals.** Five more tracks cover what screens and phone interviews open with: **JavaScript and TypeScript** (closures, `this`, the event loop, coercion, the type system), **HTTP and the web platform** (methods, caching, CORS, API styles, URL-to-page), **Auth and web security** (sessions vs JWTs, OAuth and PKCE, XSS, CSRF, injection, passwords), **Browser and frontend** (rendering, events, React, performance, accessibility) and **SQL and data** (joins and NULLs, window functions, indexes, transactions, schema design). Each lesson is a short read, quick checks that explain every answer, and an "explain it" question the AI tutor reviews. They have no LeetCode checkpoint, but they use the same notes, review dates and tutor.
+**Full-stack fundamentals.** Six more tracks cover what screens and phone interviews open with: **JavaScript and TypeScript** (closures, `this`, the event loop, coercion, the type system), **HTTP and the web platform** (methods, caching, CORS, API styles, URL-to-page), **Auth and web security** (sessions vs JWTs, OAuth and PKCE, XSS, CSRF, injection, passwords), **Browser and frontend** (rendering, events, React, performance, accessibility) **SQL and data** (joins and NULLs, window functions, indexes, transactions, schema design) and **Concurrency and async** (promise patterns and pools, threads vs processes, race conditions, locks and deadlocks, queues and backpressure, retries and idempotency). Each lesson is a short read, quick checks that explain every answer, and an "explain it" question the AI tutor reviews. They have no LeetCode checkpoint, but they use the same notes, review dates and tutor.
 
 ## ⏱️ Assessment
 
@@ -261,7 +261,7 @@ For testing, `?dayspeed=20` in the URL runs the clock 20x faster.
 <details>
 <summary><b>Adding to the Learning tab</b></summary>
 
-The curriculum is plain data in `web/learn_data.js`, and `web/learn.js` renders it. Add a track by appending to `LEARN_TRACKS`, or add a lesson to an existing one. The comment at the top of the file lists the block types (markdown, templates, callouts, visualizers, the adjacency drill) and the practice types (code exercises with tests, quick checks, AI-reviewed written answers). AI review and the tutor go through `/api/learn/*` (`app/routes/learn.py`). The page sends the lesson text, so no server change is needed for new content.
+The curriculum is plain data in `web/learn_data.js`, and `web/learn.js` renders it. Add a track by appending to `LEARN_TRACKS`, or add a lesson to an existing one. The comment at the top of the file lists the block types (markdown, templates, callouts, visualizers, the adjacency drill) and the practice types (code exercises with tests, quick checks, AI-reviewed written answers). AI review and the tutor go through `/api/learn/*` (`app/routes/learn.py`). The page sends the lesson text, so no server change is needed for new lessons. A new track file (like `web/learn_fundamentals.js` or `web/learn_concurrency.js`) also needs its name added to the script chain in `openLearnTab` in `web/index.html`, to the static file list in `app/routes/static.py`, and to `LEARN_FILES` in `scripts/verify_learn.js`.
 
 After changing exercises, check them:
 
