@@ -6,7 +6,7 @@
 >
 > It's one Python file on your laptop. The only thing we'll ask you to pay for is your Claude account, and honestly, that's between you and Anthropic.
 >
-> Go get the job. Then tell nobody how, and ruin the influencers' lives.
+> Go get the job. Then tell a friend how, and quietly prove wrong the guy who asks "if you're not at Meta, are you really engineering?"
 
 **Your whole interview loop in one local app, so the real one feels like a rerun.**
 
