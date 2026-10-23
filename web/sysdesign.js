@@ -5,6 +5,8 @@
 const KEY="sysdesign-progress-v1",MKEY="sysdesign-mocks-v1",AKEY="sysdesign-active-mock-v1";
 const rd=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const CKEY="sysdesign-cards-v1";
+let cards=rd(CKEY,{});
 let prog=rd(KEY,{}),mocks=rd(MKEY,[]),active=rd(AKEY,null);
 const T=Object.fromEntries(SD.topics.map(t=>[t.id,t])),P=Object.fromEntries(SD.problems.map(p=>[p.id,p]));
 const gp=k=>prog[k]||{done:false,times:0};
@@ -195,7 +197,7 @@ $("sdregen").onclick=()=>{if(walkId){walkMsgs=[];loadWalk("/api/sd/walkthrough/r
 
 // ---- views ----
 const view=()=>$("sdview");
-const TABS=[["start","Course"],["topics","Topics"],["problems","Problems"],["mock","Mock interview"]];
+const TABS=[["start","Course"],["topics","Topics"],["quiz","Quiz"],["problems","Problems"],["mock","Mock interview"]];
 let curTab="start";
 function paintNav(){
   const n=$("sdnav");n.textContent="";
@@ -495,12 +497,75 @@ function viewProblem(v,id){
   const pb=h("div","pb"),w=h("button",null,"Open AI walkthrough"),mk=h("button",null,"Start a mock interview");
   const wbb=h("button",null,wb.has(id)?"Open whiteboard (saved)":"Open whiteboard");
   w.onclick=()=>openWalk(id);mk.onclick=()=>go("mock/"+id);wbb.onclick=()=>wb.open(id,p.name+" — whiteboard",{onClose:()=>sdRoute()});
-  add(pb,wbb,w,mk);v.appendChild(pb);
+  const ch=h("button",null,"Cheat sheet");ch.onclick=()=>go("cheat/"+id);
+  add(pb,ch,wbb,w,mk);v.appendChild(pb);
   if(wb.has(id)){const pv=h("div");pv.innerHTML=wb.preview(id);pv.style.cursor="pointer";pv.title="Open whiteboard";pv.onclick=()=>wbb.click();v.appendChild(pv)}
   v.appendChild(controls(kp(id)));
   sect(v,"What to nail",p.reqs);
   v.appendChild(h("h3",null,"Building blocks involved"));
   p.topics.forEach(t=>v.appendChild(chip(T[t].name,"topic/"+t,isDone(kt(t)))));
+}
+
+// ---- cheat sheet: static, hand-written walkthrough per problem (data in sysdesign_cheats*.js) ----
+const CHEATS=window.SD_CHEATS||{};
+function viewCheat(v,id){
+  const p=P[id],c=CHEATS[id];if(!p){go("problems");return}
+  add(v,backBtn(p.name,"problem/"+id));
+  const hero=h("div","hero");
+  add(hero,h("div","eyebrow","Cheat sheet · "+DIFF[p.diff]),h("h2",null,p.name),h("p","sub","A full walkthrough to follow when you are stuck. Work through it top to bottom, or jump to the part you need. The numbers are examples: say your own assumptions out loud and adjust."));
+  v.appendChild(hero);
+  if(!c){v.appendChild(h("p","warn","No cheat sheet for this problem yet."));return}
+  const lost=h("div","card raised");
+  add(lost,h("h3",null,"If you are completely lost, say this"),h("p",null,c.say),
+    h("p","meta","Then: ask 3-4 clarifying questions, state assumptions, estimate, sketch one write and one read, and go deep on the one or two hard parts. Any order works; the sections below follow it."));
+  v.appendChild(lost);
+  const secs=[];
+  const sec=(key,title,build)=>{
+    const d=h("details");d.open=true;d.id="cs-"+key;
+    const sm=h("summary",null,title);sm.style.cssText="cursor:pointer;font-weight:600;font-size:16px;margin:18px 0 6px";
+    d.appendChild(sm);build(d);secs.push([key,title,d]);
+  };
+  const list=(d,items)=>{if(items&&items.length)d.appendChild(ul(items))};
+  const sub=(d,t)=>d.appendChild(h("h4",null,t));
+  sec("clarify","1. Clarify requirements",d=>{
+    sub(d,"Questions to ask");list(d,c.clarify);
+    sub(d,"Functional requirements to propose");list(d,c.fr);
+    sub(d,"Non-functional requirements (with numbers)");list(d,c.nfr);
+  });
+  sec("estimate","2. Back-of-envelope estimates",d=>{list(d,c.est);d.appendChild(h("p","meta","Rules of thumb: 1 day is about 100k seconds, peak is 2-3x average, round aggressively. Finish each estimate by saying what it implies for the design."))});
+  sec("api","3. API",d=>list(d,c.api));
+  sec("data","4. Data model and storage",d=>list(d,c.data));
+  sec("hld","5. High-level design",d=>{
+    if(c.flow)d.appendChild(h("pre",null,c.flow));
+    sub(d,"Walk one write through it");const ow=h("ol");c.write.forEach(x=>ow.appendChild(h("li",null,x)));d.appendChild(ow);
+    sub(d,"Walk one read through it");const or=h("ol");c.read.forEach(x=>or.appendChild(h("li",null,x)));d.appendChild(or);
+  });
+  sec("deep","6. Deep dives",d=>{
+    d.appendChild(h("p","meta","Pick the two or three that matter most for this problem. For each: name the problem, compare options, commit to one, say why."));
+    c.deep.forEach(x=>{
+      const k=h("div","card");
+      add(k,h("h4",null,x.t),h("p",null,x.p),h("div","meta","Options"),ul(x.opts));
+      const pk=h("p",null);pk.appendChild(h("b",null,"Pick: "));pk.appendChild(document.createTextNode(x.pick));k.appendChild(pk);
+      d.appendChild(k);
+    });
+  });
+  sec("trade","7. Trade-offs to say out loud",d=>list(d,c.trade));
+  sec("fail","8. Failure modes and bottlenecks",d=>list(d,c.fail));
+  sec("follow","9. Likely follow-up questions",d=>{
+    c.follow.forEach(x=>{
+      const i=x.indexOf(" -> "),k=h("details","card"),sm=h("summary",null,i<0?x:x.slice(0,i));
+      add(k,sm,h("p",null,i<0?"":x.slice(i+4)));d.appendChild(k);
+    });
+  });
+  sec("traps","10. Common mistakes",d=>list(d,c.traps));
+  const nav=h("div","pb");nav.style.flexWrap="wrap";
+  secs.forEach(([k,t,d])=>{const b=h("button","chip",t.replace(/^\d+\.\s*/,""));b.onclick=()=>{d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})};nav.appendChild(b)});
+  v.appendChild(nav);
+  secs.forEach(([,,d])=>v.appendChild(d));
+  v.appendChild(h("h3",null,"Building blocks involved"));
+  p.topics.forEach(t=>v.appendChild(chip(T[t].name,"topic/"+t,isDone(kt(t)))));
+  const row=h("div","pb"),mk=h("button",null,"Start a mock interview"),wk=h("button",null,"Open AI walkthrough");
+  mk.onclick=()=>go("mock/"+id);wk.onclick=()=>openWalk(id);add(row,mk,wk);v.appendChild(row);
 }
 
 // ---- mock interview ----
@@ -516,7 +581,7 @@ function viewMock(v,pre){
   if(active&&active.end)return viewScore(v);
   if(active)return viewRunning(v);
   const hero=h("div","hero");
-  add(hero,h("div","eyebrow","System design"),h("h2",null,"Mock interview"),h("p","sub","Pick a problem, start the clock, and think out loud in the scratchpad. An AI interviewer answers clarifying questions and probes your choices. Score yourself against the framework at the end."));
+  add(hero,h("div","eyebrow","System design"),h("h2",null,"Mock interview"),h("p","sub","Pick a problem, start the clock, and think out loud in the scratchpad. An AI interviewer answers clarifying questions and probes your choices. The framework stages are a guide, not a checklist: skip or reorder them as you like. Score yourself against the framework at the end."));
   v.appendChild(hero);
   const c=h("div","card raised"),sel=h("select");
   SD.problems.forEach(p=>sel.appendChild(new Option(`${p.name} (${DIFF[p.diff]})`,p.id)));
@@ -632,7 +697,7 @@ function viewRunning(v){
   const ta=h("textarea");ta.rows=16;ta.placeholder="Requirements, estimates, API, data model, diagram, trade-offs…";ta.value=active.scratch||"";
   ta.oninput=()=>{active.scratch=ta.value;saveActive()};pad.appendChild(ta);
   right.appendChild(h("h3",null,"Interviewer"));
-  if(!active.msgs.length)right.appendChild(h("div","meta","Ask clarifying questions about requirements and scale. Say \"I'm done\" for feedback."));
+  if(!active.msgs.length)right.appendChild(h("div","meta","Ask clarifying questions, or just start designing. The stages are a guide, so skip or reorder anything. Say \"I'm done\" for feedback."));
   right.appendChild(chatBox(active.id,"interviewer",active.msgs,"Talk to the interviewer…",saveActive));
   add(cols,left,right);v.appendChild(cols);
   const tick=()=>{
@@ -703,22 +768,124 @@ function viewScore(v){
   add(row,lab,save,wk,dis);v.appendChild(row);
 }
 
+
+// ---- quiz: typed-recall flashcards (cards in sysdesign_cards.js, Leitner boxes in sysdesign-cards-v1) ----
+const CARDS=typeof SD_CARDS==="undefined"?[]:SD_CARDS;
+const BOX_DAYS=[0,1,3,7,21,60];  // days until a card is due again, by box (box 0 = new or just missed)
+const addDays=n=>new Date(Date.now()+n*864e5).toISOString().slice(0,10);
+const cardDue=c=>{const s=cards[c.id];return !s||s.due<=today()};
+const normAns=s=>String(s).toLowerCase().replace(/[^a-z0-9+% ]+/g," ").split(/\s+/).filter(w=>w&&!["a","an","the"].includes(w)).join(" ");
+function editDist(a,b){
+  const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[a.length][b.length];
+}
+// "ok" exact match, "typo" within a character or two on a longer answer, "" no match
+function matchAns(c,text){
+  const t=normAns(text);if(!t)return "";
+  let typo=false;
+  for(const a of c.a.map(normAns)){
+    if(t===a)return "ok";
+    const lim=a.length>=10?2:a.length>=5?1:0;
+    if(lim&&editDist(t,a)<=lim)typo=true;
+  }
+  return typo?"typo":"";
+}
+function grade(c,right){
+  const s=cards[c.id]||{box:0,seen:0,right:0};
+  s.seen++;if(right){s.right++;s.box=Math.min(s.box+1,BOX_DAYS.length-1)}else s.box=0;
+  s.due=addDays(BOX_DAYS[s.box]);cards[c.id]=s;wr(CKEY,cards);
+}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function viewQuiz(v){
+  const hero=h("div","hero");
+  add(hero,h("div","eyebrow","System design"),h("h2",null,"Quiz"),h("p","sub","Flashcards you answer by typing. See a definition or scenario, recall the term, check it. Cards you miss come back sooner; cards you know space out over weeks."));
+  v.appendChild(hero);
+  if(!CARDS.length){v.appendChild(h("p","warn","No cards loaded."));return}
+  const stats=h("div","meta"),bar=h("div","pb"),body=h("div");
+  const topicSel=h("select");topicSel.appendChild(new Option("All topics","all"));
+  [...new Set(CARDS.map(c=>c.topic))].forEach(id=>{if(T[id])topicSel.appendChild(new Option(T[id].name.split(":")[0],id))});
+  const start=h("button",null,"Start");start.style.background="var(--accent)";start.style.color="#fff";
+  add(bar,topicSel,start);add(v,bar,stats,body);
+  const pool=()=>CARDS.filter(c=>topicSel.value==="all"||c.topic===topicSel.value);
+  const paintStats=()=>{
+    const p=pool(),due=p.filter(cardDue).length,fresh=p.filter(c=>!cards[c.id]).length,known=p.filter(c=>(cards[c.id]||{}).box>=3).length;
+    stats.textContent=`${p.length} cards · ${due} due now (${fresh} new) · ${known} well known`;
+    start.textContent=due?`Start (${due})`:"Nothing due";start.disabled=!due;
+  };
+  const home=()=>{body.textContent="";paintStats()};
+  topicSel.onchange=home;
+  start.onclick=()=>run(shuffle(pool().filter(cardDue)));
+
+  function run(queue){
+    const total=queue.length;let done=0,right=0;const retried=new Set(),missed=[];
+    const next=()=>{
+      body.textContent="";
+      if(!queue.length){
+        const c=h("div","card");
+        add(c,h("h3",null,"Session complete"),h("p",null,`${right} of ${total} right first time.`));
+        if(missed.length){c.appendChild(h("p","meta","To review:"));c.appendChild(ul(missed.map(m=>m.a[0]+" — "+m.q)))}
+        const again=h("button",null,"Back to quiz");again.onclick=home;c.appendChild(again);
+        body.appendChild(c);paintStats();return;
+      }
+      const c=queue.shift(),card=h("div","card");
+      const t=T[c.topic];
+      add(card,h("div","meta",`Card ${Math.min(done+1,total)} of ${total}${t?" · "+t.name.split(":")[0]:""}`),h("h3",null,c.q));
+      const inp=h("input");inp.type="text";inp.placeholder="Type your answer…";inp.autocomplete="off";inp.spellcheck=false;
+      const form=h("form","pb"),go1=h("button",null,"Check"),idk=h("button",null,"I don't know");
+      go1.type="submit";idk.type="button";go1.style.background="var(--accent)";go1.style.color="#fff";
+      add(form,inp,go1,idk);card.appendChild(form);
+      const fb=h("div");card.appendChild(fb);body.appendChild(card);inp.focus();
+      let graded=false;
+      const reveal=(m,typed)=>{
+        if(graded)return;graded=true;
+        inp.disabled=go1.disabled=idk.disabled=true;
+        const ok=m==="ok"||m==="typo";
+        const first=!retried.has(c.id);
+        if(first){grade(c,ok);if(ok)right++;else missed.push(c)}
+        else if(ok){/* a re-ask after a miss doesn't change the box again */}
+        done++;
+        add(fb,h("p",ok?"pill ok":"warn",ok?(m==="typo"?"✓ Correct (small typo ignored)":"✓ Correct"):(typed?"✗ Not quite":"Answer")),
+          h("p",null,"Answer: "+c.a[0]),h("p","meta",c.why||""));
+        if(c.a.length>1&&!ok)fb.appendChild(h("p","meta","Also accepted: "+c.a.slice(1,4).join(", ")));
+        const row=h("div","pb");
+        if(!ok&&typed&&first){
+          const mine=h("button",null,"I was right");
+          mine.onclick=()=>{grade(c,true);const s=cards[c.id];s.seen--;s.right--;wr(CKEY,cards);right++;missed.splice(missed.indexOf(c),1);mine.disabled=true;mine.textContent="Counted as right ✓"};
+          row.appendChild(mine);
+        }
+        if(t){const rd1=h("button",null,"Read the lesson");rd1.onclick=()=>go("topic/"+c.topic);row.appendChild(rd1)}
+        const nx=h("button",null,queue.length?"Next →":"Finish");nx.style.background="var(--accent)";nx.style.color="#fff";nx.onclick=next;row.appendChild(nx);
+        fb.appendChild(row);nx.focus();
+        if(!ok&&first){retried.add(c.id);queue.push(c);total++}  // ask a missed card once more at the end of the session
+      };
+      form.onsubmit=ev=>{ev.preventDefault();const x=inp.value.trim();if(!x)return;reveal(matchAns(c,x),x)};
+      idk.onclick=()=>reveal("",inp.value.trim());
+    };
+    next();
+  }
+  home();
+}
+
 // ---- router ----
 window.sdRoute=()=>{
   const parts=location.hash.slice(1).split("/");
   if(parts[0]!=="sysdesign")return;
   if(timer){clearInterval(timer);timer=null}
   const [,tab="start",id]=parts;
-  curTab=TABS.some(t=>t[0]===tab)?tab:(tab==="topic"?"topics":tab==="problem"?"problems":"start");
+  curTab=TABS.some(t=>t[0]===tab)?tab:(tab==="topic"?"topics":tab==="problem"||tab==="cheat"?"problems":"start");
   paintNav();
   const v=view();v.textContent="";
   if(tab==="topics")viewTopics(v);
   else if(tab==="topic")viewTopic(v,id);
+  else if(tab==="quiz")viewQuiz(v);
   else if(tab==="problems")viewProblems(v);
   else if(tab==="problem")viewProblem(v,id);
+  else if(tab==="cheat")viewCheat(v,id);
   else if(tab==="mock")viewMock(v,id);
   else viewStart(v);
 };
-window.sdExport=()=>({progress:prog,mocks,boards:wb.exportAll()});
+window.sdExport=()=>({progress:prog,mocks,boards:wb.exportAll(),cards});
 sdRoute();
 })();
