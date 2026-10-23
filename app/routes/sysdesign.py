@@ -37,7 +37,7 @@ def grade(h, body):
 @post("/api/sd/chat")
 def chat(h, body):
     pid = validate.sd_id(body.get("id"))
-    messages, mode, evaluate = chat_messages(body), body.get("mode"), body.get("evaluate") is True
+    messages, mode, evaluate = chat_messages(body, limit=60), body.get("mode"), body.get("evaluate") is True
     p = SD_PROBLEMS[pid]
     if mode not in ("tutor", "interviewer"):
         raise ApiError(400, "Bad mode.")

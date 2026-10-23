@@ -83,7 +83,7 @@ window.voiceInput=voiceInput; // shared with every AI text box in the app: aipai
 function chatBox(id,mode,msgs,placeholder,onChange){
   const voice=mode==="interviewer",root=h("div","chat"),log=h("div"),form=h("form"),inp=h(voice?"textarea":"input");
   if(voice)inp.rows=3;else inp.type="text";
-  inp.placeholder=placeholder;inp.autocomplete="off";
+  inp.placeholder=placeholder;inp.maxLength=4000;inp.autocomplete="off";
   const btn=h("button",null,"Send");btn.type="submit";
   add(form,inp,btn);add(root,log,form);
   let evalBtn=null,vi=null;
@@ -121,7 +121,7 @@ function chatBox(id,mode,msgs,placeholder,onChange){
     const out=h("div","m busy","Thinking…");log.appendChild(out);follow(true);
     let answer="";
     try{
-      const res=await apiFetch("/api/sd/chat",{method:"POST",body:JSON.stringify({id,mode,messages:msgs,evaluate})});
+      const res=await apiFetch("/api/sd/chat",{method:"POST",body:JSON.stringify({id,mode,messages:msgs.length>20?msgs.slice(-19):msgs,evaluate})});
       if(!res.ok){const d=await res.json();throw new Error(d.error||"Request failed")}
       const r=res.body.getReader(),dec=new TextDecoder();let buf="";
       for(;;){
@@ -135,7 +135,7 @@ function chatBox(id,mode,msgs,placeholder,onChange){
           if(ev.t){answer+=ev.t;out.classList.remove("busy");if(window.renderMd)renderMd(out,answer);else out.textContent=answer;follow(false)}
         }
       }
-      msgs.push({role:"assistant",content:answer||"(no answer)"});
+      msgs.push({role:"assistant",content:answer.slice(0,4000)||"(no answer)"});
       if(onChange)onChange();
     }catch(err){
       msgs.pop();

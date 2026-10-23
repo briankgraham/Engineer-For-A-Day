@@ -2,9 +2,9 @@
 from .errors import ApiError
 
 
-def chat_messages(body, cap=4000):
+def chat_messages(body, cap=4000, limit=30):
     msgs = body.get("messages")
-    if not isinstance(msgs, list) or not 1 <= len(msgs) <= 30:
+    if not isinstance(msgs, list) or not 1 <= len(msgs) <= limit:
         raise ApiError(400, "Bad messages.")
     out = []
     for i, m in enumerate(msgs):
