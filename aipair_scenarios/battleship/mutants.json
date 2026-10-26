@@ -1,0 +1,65 @@
+{
+  "sunk-global-count": [
+    {
+      "file": "board.js",
+      "from": "const hitCount = cells.filter(([r, c]) => this._hits.has(`${r},${c}`)).length;",
+      "to": "const hitCount = this._hits.size;"
+    }
+  ],
+  "empty-all-sunk": [
+    {
+      "file": "board.js",
+      "from": "this._ships.size > 0 && this._sunk.size",
+      "to": "this._sunk.size"
+    }
+  ],
+  "offboard-miss": [
+    {
+      "file": "board.js",
+      "from": "        if (row < 0 || row >= this._gridSize || col < 0 || col >= this._gridSize) {\n            throw new RangeError(`(${row}, ${col}) is off the board`);\n        }\n\n",
+      "to": ""
+    }
+  ],
+  "repeat-throws": [
+    {
+      "file": "board.js",
+      "from": "            return ShotResult.ALREADY_SHOT;",
+      "to": "            throw new Error(`already shot at ${key}`);"
+    }
+  ],
+  "ghost-cells": [
+    {
+      "file": "board.js",
+      "from": "            cells.push([r, c]);",
+      "to": "            cells.push([r, c]);\n            this._occupied.add(key);"
+    }
+  ],
+  "solver-peek": [
+    {
+      "file": "solver.js",
+      "from": "while (!this.board.allSunk()) {",
+      "to": "while (this.board._ships.size >= 0 && !this.board.allSunk()) {"
+    }
+  ],
+  "solver-no-parity": [
+    {
+      "file": "solver.js",
+      "from": "                    if ((row + col) % 2 !== parity) {\n                        continue;\n                    }\n",
+      "to": ""
+    }
+  ],
+  "solver-off-board": [
+    {
+      "file": "solver.js",
+      "from": "            if (r < 0 || r >= size || c < 0 || c >= size) {\n                continue;\n            }\n",
+      "to": ""
+    }
+  ],
+  "solver-repeat": [
+    {
+      "file": "solver.js",
+      "from": "            const [row, col] = this._targets.pop();\n            if (!this._tried.has(`${row},${col}`)) {\n                return [row, col];\n            }",
+      "to": "            const [row, col] = this._targets.pop();\n            return [row, col];"
+    }
+  ]
+}

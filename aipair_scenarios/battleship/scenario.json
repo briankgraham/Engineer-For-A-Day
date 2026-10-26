@@ -1,0 +1,36 @@
+{
+  "order": 28,
+  "kind": "levels",
+  "title": "Build a Battleship solver",
+  "blurb": "Debug a Battleship board that has been reported broken, then write the solver that hunts for the hidden fleet and sinks it in as few shots as it can. Level 2 unlocks when level 1 passes.",
+  "difficulty": "Medium",
+  "minutes": 50,
+  "levelTitle": "Find the bugs in the board",
+  "brief": "You inherit a small Battleship codebase. board.js holds a Board, with ships placed on a grid and shots fired at it, and fleet.js has ship definitions. People have reported bugs in the Board (the visible tests show some of them), and there are more you will only find by reading the code, so fix the Board first. Cells are (row, col), counted from 0 at the top left. When every visible test passes, level 2 unlocks and asks you to write the Solver that plays against a Board. Hidden tests for each level you reach run when you finish.",
+  "requirements": [
+    "new Board(gridSize = 10) in board.js has a gridSize getter. Ships are { name, size } objects (see fleet.js), and ShotResult has HIT, MISS, SUNK and ALREADY_SHOT.",
+    "board.placeShip(ship, row, col, horizontal) puts the ship's first cell at (row, col). A horizontal ship goes right (the column grows) and a vertical one goes down (the row grows). The whole ship must be on the board and must not overlap another ship; otherwise it throws RangeError and places nothing, not even part of the ship.",
+    "board.checkShot(row, col) returns ShotResult.MISS, HIT or SUNK. A ship is sunk when its last unhit cell is hit, in whatever order the cells were hit, and hits on other ships do not count toward it.",
+    "A shot at a cell that was already shot at (hit or miss) returns ShotResult.ALREADY_SHOT, changes nothing and is not counted again.",
+    "A shot off the board throws RangeError and is not counted.",
+    "board.allSunk() is true only when the board has at least one ship and every ship is sunk. board.remainingShips() is the number of ships not sunk yet, and board.totalShots() the number of different cells shot at so far."
+  ],
+  "levels": [
+    {
+      "title": "The solver",
+      "brief": "Now play against the board. Write Solver in solver.js: it is given a Board and does not know where the ships are, only what checkShot tells it. It should find the fleet and sink it in as few shots as it sensibly can. The tests place fleets at random (seeded) positions and measure the average number of shots.",
+      "requirements": [
+        "new Solver(board) in solver.js. solve() fires at the board with board.checkShot(row, col) until board.allSunk(), and getShots() returns every shot it fired, in order, as [row, col].",
+        "The solver plays only through the board's public methods (gridSize, checkShot, allSunk): it never reads a board's private fields (the ones that start with an underscore).",
+        "It never fires at the same cell twice and never off the board. solve() always ends: it stops when every ship is sunk, or when every cell has been shot (on a board with no ships, that is every cell once).",
+        "After a hit that does not sink the ship, the next shot is next to that hit (up, right, down or left) when it has a free neighbour, before the solver goes back to searching. A ship in a corner or on an edge must not send it off the board.",
+        "It is efficient: the 2-ship test fleet on a 6 x 6 board takes fewer shots than the board has cells, and over seeded random layouts on a 10 x 10 board the average is under 60 shots for the test fleet and under 70 for the standard five-ship fleet. Shooting cells in order, or at random, is not good enough."
+      ]
+    }
+  ],
+  "files": [
+    "board.js",
+    "solver.js",
+    "fleet.js"
+  ]
+}

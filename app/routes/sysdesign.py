@@ -29,7 +29,7 @@ def evaluate(h, body):
     h.send(200, evaluate_sd(pid, board, body.get("notes")))
 
 
-@post("/api/sd/grade", max_body=262144)
+@post("/api/sd/grade", max_body=1048576)
 def grade(h, body):
     h.send(200, grade_sd(validate.sd_id(body.get("id")), body))
 

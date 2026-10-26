@@ -17,6 +17,13 @@ SCHEMA = _obj({
 })
 
 
+# Drawn client-side (web/sysdesign_diagram.js). kind and flow are checked in clean_graph, not by the schema.
+SD_KINDS = ("client", "edge", "service", "cache", "database", "queue", "worker", "storage", "external")
+SD_FLOWS = ("write", "read", "async", "control")
+SD_GRAPH = _obj({
+    "nodes": {"type": "array", "items": _obj({"id": _STR, "label": _STR, "tech": _STR, "kind": _STR})},
+    "edges": {"type": "array", "items": _obj({"from": _STR, "to": _STR, "label": _STR, "flow": _STR})},
+})
 SCHEMA_SD = _obj({
     "summary": _STR,
     "functional": _STRS,
@@ -24,7 +31,7 @@ SCHEMA_SD = _obj({
     "estimation": _STRS,
     "api": _STRS,
     "data_model": _STRS,
-    "architecture": _obj({"overview": _STR, "components": {"type": "array", "items": _obj({"name": _STR, "role": _STR})}, "diagram": _STR}),
+    "architecture": _obj({"overview": _STR, "components": {"type": "array", "items": _obj({"name": _STR, "role": _STR})}, "graph": SD_GRAPH}),
     "deep_dives": {"type": "array", "items": _obj({"title": _STR, "challenge": _STR, "options": _STRS, "choice": _STR})},
     "tradeoffs": _STRS,
     "failure_modes": _STRS,

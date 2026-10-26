@@ -1,0 +1,33 @@
+{
+ "L1": {
+  "level 1: a horizontal ship is hit, then sunk": [
+   3
+  ],
+  "level 1: a shot at open water is a miss": [
+   3
+  ],
+  "level 1: remainingShips drops when a ship is sunk": [
+   6
+  ],
+  "level 1: a vertical ship runs down the rows": [
+   2
+  ],
+  "level 1: shooting the same cell again says ALREADY_SHOT and does not count": [
+   4,
+   6
+  ]
+ },
+ "level2": {
+  "level 2: solve sinks every ship of the test fleet in fewer shots than the board has cells": [
+   1,
+   5
+  ],
+  "level 2: getShots lists every shot in order, on the board and never twice at a cell": [
+   1,
+   3
+  ],
+  "level 2: after a hit that does not sink the ship, the next shot is next to it": [
+   4
+  ]
+ }
+}

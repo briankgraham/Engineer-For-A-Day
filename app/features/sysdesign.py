@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from .. import prompts
 from ..errors import ApiError
 from ..llm import BACKEND, take_budget, translate
-from ..schemas import SCHEMA_SD, SCHEMA_SD_EVAL, SCHEMA_SD_GRADE, valid
+from ..schemas import SCHEMA_SD, SCHEMA_SD_EVAL, SCHEMA_SD_GRADE, SD_FLOWS, SD_KINDS, valid
 from ..config import SD_DIR, current_model
 from ..data import SD_FRAMEWORK, SD_PROBLEMS, SD_TOPICS
 from ..util import key_lock
@@ -21,6 +21,18 @@ def read_sd(pid):
             return json.load(f)
     except (OSError, ValueError):
         return None
+
+
+def clean_graph(g):
+    """Normalize the model's architecture graph: unique ids, known kinds and flows, no edges to missing nodes."""
+    nodes, seen = [], set()
+    for n in g["nodes"]:
+        if n["id"] and n["id"] not in seen and n["label"].strip():
+            seen.add(n["id"])
+            nodes.append({**n, "kind": n["kind"] if n["kind"] in SD_KINDS else "service"})
+    edges = [{**e, "flow": e["flow"] if e["flow"] in SD_FLOWS else "write"}
+             for e in g["edges"] if e["from"] in seen and e["to"] in seen and e["from"] != e["to"]]
+    return {"nodes": nodes, "edges": edges}
 
 
 def generate_sd(pid, force=False):
@@ -39,6 +51,9 @@ def generate_sd(pid, force=False):
             raise translate(e)
         if not valid(walk, SCHEMA_SD) or not walk["architecture"]["components"]:
             raise ApiError(502, "The model returned an unusable walkthrough. Try Regenerate.")
+        walk["architecture"]["graph"] = clean_graph(walk["architecture"]["graph"])
+        if len(walk["architecture"]["graph"]["nodes"]) < 2:
+            raise ApiError(502, "The model returned an unusable architecture diagram. Try Regenerate.")
         doc = {"id": pid, "model": current_model(), "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "walkthrough": walk}
         os.makedirs(SD_DIR, exist_ok=True)
         tmp = sd_path(pid) + ".tmp"
@@ -47,6 +62,9 @@ def generate_sd(pid, force=False):
         os.replace(tmp, sd_path(pid))
         return doc
 
+
+TRANSCRIPT_CAP = 60000
+SCRATCH_CAP = 20000
 
 NODE_TYPES = {"rect": "box", "db": "database", "ell": "ellipse", "text": "text label"}
 
@@ -96,10 +114,10 @@ def evaluate_sd(pid, board, notes):
 def grade_sd(pid, body):
     """Pass/fail grade for a finished mock interview, from its transcript, scratchpad and whiteboard."""
     msgs, scratch, board, secs, mins = (body.get(k) for k in ("messages", "scratch", "board", "secs", "mins"))
-    ok = (isinstance(msgs, list) and len(msgs) <= 60
+    ok = (isinstance(msgs, list) and len(msgs) <= 400
           and all(isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
                   and len(m["content"]) <= 4000 for m in msgs)
-          and isinstance(scratch, str) and len(scratch) <= 20000
+          and isinstance(scratch, str) and len(scratch) <= 100000
           and (board is None or isinstance(board, dict))
           and all(isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 100000 for v in (secs, mins)))
     if not ok:
@@ -108,6 +126,9 @@ def grade_sd(pid, body):
         raise ApiError(400, "Nothing to grade yet: talk to the interviewer, write in the scratchpad or draw on the whiteboard first.")
     board_text = _board_text(board) if board else "(not used)"
     transcript = "\n\n".join(f"{'Candidate' if m['role'] == 'user' else 'Interviewer'}: {m['content']}" for m in msgs) or "(no chat)"
+    if len(transcript) > TRANSCRIPT_CAP:  # keep the opening (requirements) and the latest (deep dives)
+        transcript = transcript[:TRANSCRIPT_CAP // 4] + "\n\n... (middle of the interview omitted for length) ...\n\n" + transcript[-TRANSCRIPT_CAP * 3 // 4:]
+    scratch = scratch if len(scratch) <= SCRATCH_CAP else scratch[:SCRATCH_CAP] + "\n... (truncated)"
     p = SD_PROBLEMS[pid]
     steps = "\n".join(f"- {s['id']}: {s['name']} (~{s['mins']} min). {s['desc']}" for s in SD_FRAMEWORK)
     user = (f"Problem: {p['name']} ({p['diff']}). {p['blurb']}\nRubric (key requirements): {'; '.join(p['reqs'])}\n\n"

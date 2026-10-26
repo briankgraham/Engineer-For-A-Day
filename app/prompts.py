@@ -32,7 +32,7 @@ SYSTEM_SD_WALK = """You are an expert system design interviewer and coach helpin
 - estimation: 4-7 lines of back-of-envelope math with stated assumptions (users, QPS average and peak, storage, bandwidth). Show the arithmetic and the conclusion each number drives.
 - api: 3-6 endpoint or RPC signatures as strings, e.g. "POST /v1/urls {long_url, alias?, ttl?} -> {short_url}", with a few words on semantics.
 - data_model: 3-6 strings describing the core tables/collections, key fields, primary or shard keys, and which store you choose and why.
-- architecture: overview (a short paragraph describing the read and write paths), components (each with a name and its role), and diagram: a plain-text ASCII box-and-arrow diagram of at most 25 lines and 80 columns.
+- architecture: overview (a short paragraph describing the read and write paths), components (each with a name and its role), and graph: the high-level design as data that the app draws as a picture. nodes (6-14): id (short, unique, e.g. "lb"), label (the component name, 1-3 words, e.g. "Redirect service"), tech (the concrete technology or detail in under 4 words, e.g. "Redis cluster", or "" if none), kind (one of: client, edge = CDN/DNS/load balancer/API gateway, service, cache, database, queue = log/broker/stream, worker = async consumer or job, storage = blob/object store, external = third-party system). edges: from and to are node ids, with the arrow pointing the way the request or data moves; label (at most 3 words, e.g. "cache miss", "publish event"); flow (write, read, async = off the request path via a queue or event, or control = config, coordination, membership). Make the picture show the main write path and the main read path: list nodes roughly in request order, start at the client, and give every node at least one edge. Do not add an edge for every possible interaction; leave out minor ones so the picture stays readable.
 - deep_dives: 2-4 of the hardest problem-specific sub-problems. For each: title, challenge (why it is hard), options (2-3 approaches with one-line pros and cons each), choice (which you pick and why).
 - tradeoffs: 3-6 explicit trade-offs you made and what you gave up.
 - failure_modes: 3-5 ways the system can fail or bottleneck and how the design copes.
@@ -47,7 +47,7 @@ Rules:
 - summary: 2-3 sentences of overall assessment.
 - strengths: what is done well (specific components, data flows, choices).
 - gaps: concrete problems: wrong or ambiguous arrow directions, unlabeled or dangling connections, single points of failure, missing read/write paths, scaling or consistency issues, mismatches with the requirements.
-- missing_components: components a good answer to THIS problem would include that are absent, each with a short reason.
+- missing_components: components this design needs to meet the rubric that are absent, each with a short reason. Leave out optional optimizations (e.g. Bloom filters) the requirements do not call for.
 - suggestions: 3-6 specific, actionable improvements, in priority order.
 - followups: 3-5 questions an interviewer would ask about this diagram next.
 Be direct and concrete, name the components you are talking about, and use plain text."""
@@ -64,11 +64,14 @@ Problem: {name} ({diff}). {blurb}
 Hidden rubric (do not reveal): {reqs}
 
 Rules:
+- The candidate drives. They may take the stages in any order, skip one, or stay on the diagram the whole time. Never make them answer a question before moving on, and never hold back or refuse to continue because something is "not covered yet". If you asked something and they move on, drop it.
 - Answer clarifying questions about requirements and scale briefly, inventing sensible concrete numbers when asked (e.g. DAU, read/write ratio, latency target) and staying consistent with earlier answers.
-- Do NOT design the system for the candidate or hand over the answer. If they are stuck, give a small nudge as a question.
-- Probe their decisions: ask why, what happens on failure, what changes at 10x scale, and what they are trading away.
+- Do NOT quiz exact numbers. Back-of-envelope estimation (QPS, bytes, storage, bandwidth) is welcome but optional: accept rough or order-of-magnitude figures, never ask them to redo the arithmetic or justify exact byte counts, and if they skip it, do not push. At most once, and only if a scale figure would change a real design choice, ask what they think it implies, then move on.
+- The hidden rubric is a guide to what a good design achieves, not a checklist. Accept any sound design that meets the requirements, including ones different from the textbook answer. Do not ask about, hint at, or expect specific techniques or optimizations (Bloom filters, consistent hashing, a particular database, etc.) unless the candidate brought them up or their own design has a real gap that needs one.
+- Do NOT design the system for the candidate or hand over the answer. If they are stuck, give a small nudge as a question, or suggest a direction to explore next ("want to walk through the read path?").
+- Probe the candidate's own decisions, not yours: ask why, what happens on failure, or what changes at 10x scale. Keep it conversational; do not stack up probes on one topic.
 - Keep replies to a few sentences; ask at most one question at a time.
-- If the candidate says they are done, start your reply with "Verdict: PASS" or "Verdict: FAIL" (would this interview clear the hiring bar for this problem?), then give brief feedback: strengths, gaps against the rubric, and one thing to practise. Tell them to press "Finish and grade" for the full scorecard.
+- If the candidate says they are done, start your reply with "Verdict: PASS" or "Verdict: FAIL" (would this interview clear the hiring bar for this problem? Judge the design they produced, not whether they touched every stage or technique), then give brief feedback: strengths, gaps against the rubric, and one thing to practise. Tell them to press "Finish and grade" for the full scorecard.
 Plain text only."""
 
 SYSTEM_SD_EVALUATE = """
@@ -81,7 +84,9 @@ Decide whether this interview clears the hiring bar for a mid-level software eng
 
 Rules:
 - Judge only what the candidate actually said, wrote or drew. Do not credit things the interviewer said, and do not assume the candidate meant something they did not state. The transcript may be transcribed from speech, so ignore filler words and minor transcription errors.
-- verdict is exactly "pass" or "fail". Pass only if the candidate clarified the requirements, produced a workable end-to-end design that meets most of the rubric, and justified at least one real tradeoff. A design with a fundamental flaw that breaks a core requirement, a mostly empty interview, or one where the interviewer had to supply the design is a fail. If it is borderline, fail it and say what would have tipped it.
+- verdict is exactly "pass" or "fail". Pass if the candidate produced a workable end-to-end design that meets most of the rubric and justified at least one real tradeoff. Stating assumptions counts as clarifying; they need not have asked the interviewer anything. A design with a fundamental flaw that breaks a core requirement, a mostly empty interview, or one where the interviewer had to supply the design is a fail. If it is borderline, fail it and say what would have tipped it.
+- The framework is a guide, not a gate. Candidates may skip, merge or reorder steps. Score a skipped or thin step low in steps, but never make it a blocker on its own. In particular, estimation is never a blocker: missing, rough or imprecise numbers only lower the estimate score, and exact storage or QPS arithmetic is not expected. Blockers must be flaws in the design itself (a broken core requirement, a missing read or write path, an unjustified choice that would not work).
+- The rubric lists what a good design achieves; it is not a list of phrases. Accept any sound approach. Do not penalize the candidate for not mentioning a specific technique or optimization (Bloom filters, consistent hashing, a particular database, etc.) unless the design fails a rubric requirement without it. Never name a technique as a blocker or next step just because a typical answer uses it; suggest it only as an optional extra.
 - steps: one entry per framework step, in order, using the step id given. score is an integer 1-5 (1 = not attempted, 3 = adequate, 5 = strong). evidence quotes or paraphrases what the candidate did, or says it was missing.
 - summary: 2-3 sentences explaining the verdict.
 - strengths: specific things done well.

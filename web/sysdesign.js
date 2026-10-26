@@ -123,7 +123,7 @@ function chatBox(id,mode,msgs,placeholder,onChange){
     const out=h("div","m busy","Thinking…");log.appendChild(out);follow(true);
     let answer="";
     try{
-      const res=await apiFetch("/api/sd/chat",{method:"POST",body:JSON.stringify({id,mode,messages:msgs.length>20?msgs.slice(-19):msgs,evaluate})});
+      const res=await apiFetch("/api/sd/chat",{method:"POST",body:JSON.stringify({id,mode,messages:msgs.length>40?msgs.slice(-39):msgs,evaluate})});
       if(!res.ok){const d=await res.json();throw new Error(d.error||"Request failed")}
       const r=res.body.getReader(),dec=new TextDecoder();let buf="";
       for(;;){
@@ -161,7 +161,12 @@ function renderWalk(doc){
   sect(b,"Data model",w.data_model);
   b.appendChild(h("h3",null,"High-level design"));
   add(b,h("p",null,w.architecture.overview));
-  if(w.architecture.diagram)add(b,h("pre",null,w.architecture.diagram));
+  const dg=window.sdDiagram(w.architecture.graph);
+  if(dg)b.appendChild(dg);
+  else if(w.architecture.diagram){
+    // Walkthroughs cached before the illustrated diagram only have the ASCII sketch.
+    add(b,h("pre",null,w.architecture.diagram),h("p","meta","Press Regenerate for an illustrated diagram."));
+  }
   w.architecture.components.forEach(k=>{const d=h("div","card");add(d,h("h4",null,k.name),h("p",null,k.role));b.appendChild(d)});
   b.appendChild(h("h3",null,"Deep dives"));
   w.deep_dives.forEach(d=>{const cd=h("div","card");add(cd,h("h4",null,d.title),h("p",null,d.challenge),ul(d.options),h("p",null,"Choice: "+d.choice));b.appendChild(cd)});
@@ -536,7 +541,8 @@ function viewCheat(v,id){
   sec("api","3. API",d=>list(d,c.api));
   sec("data","4. Data model and storage",d=>list(d,c.data));
   sec("hld","5. High-level design",d=>{
-    if(c.flow)d.appendChild(h("pre",null,c.flow));
+    const dg=window.SD_GRAPHS&&SD_GRAPHS[id]&&window.sdDiagram(SD_GRAPHS[id]);
+    if(dg)d.appendChild(dg);else if(c.flow)d.appendChild(h("pre",null,c.flow));
     sub(d,"Walk one write through it");const ow=h("ol");c.write.forEach(x=>ow.appendChild(h("li",null,x)));d.appendChild(ow);
     sub(d,"Walk one read through it");const or=h("ol");c.read.forEach(x=>or.appendChild(h("li",null,x)));d.appendChild(or);
   });

@@ -58,7 +58,7 @@ Five days to choose from:
 
 More and more interviews hand you an AI assistant and watch how you use it. Here you build small JavaScript projects with an assistant that is helpful most of the time, but some of its replies contain flaws planted on purpose. At the end you're graded on the code and on how well you worked with it: whether you caught its mistakes, checked its claims, and ran the tests.
 
-27 scenarios from Easy to Hard: URL slugs for a blog, an LRU cache with TTL, a token-bucket rate limiter, a key-value store with nested transactions, offline sync, an Express-style middleware router, a **PR review** round, a **debug-from-an-incident-ticket** round, an **elevator object-design** round where the requirements change partway through, and more.
+28 scenarios from Easy to Hard: URL slugs for a blog, an LRU cache with TTL, a token-bucket rate limiter, a key-value store with nested transactions, offline sync, an Express-style middleware router, a **PR review** round, a **debug-from-an-incident-ticket** round, an **elevator object-design** round where the requirements change partway through, a **Battleship** round (debug a broken board, then write the solver that sinks the fleet), and more.
 
 ![AI Pairing: the editor next to an AI assistant that has just answered a question](docs/media/ai-pairing.jpg)
 
