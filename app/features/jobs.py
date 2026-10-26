@@ -637,6 +637,8 @@ def query(q):
     """q: parsed query-string dict. Returns one page of filtered jobs from the cache; never contacts the job boards."""
     text = _one(q, "q").strip().lower()[:80]
     company = _one(q, "company")
+    v = q.get("exclude")
+    exclude = {c for c in (v if isinstance(v, list) else [v] if v else []) if isinstance(c, str)}  # companies to hide; repeated param
     area = _one(q, "area")
     if area not in dict(AREAS):
         area = ""
@@ -658,6 +660,8 @@ def query(q):
             continue
         counts[j["company"]] = counts.get(j["company"], 0) + 1
         if company and j["company"] != company:
+            continue
+        if j["company"] in exclude:  # after counts, so the company list still offers hidden companies
             continue
         lv = level_of(j["title"])
         area_ok, level_ok = not area or area in ja, not level or lv == level

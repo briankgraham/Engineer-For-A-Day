@@ -50,24 +50,108 @@ function edge(s,tx,ty){
   const t=s.t==="ell"?1/Math.hypot(dx/hw,dy/hh):Math.min(dx?hw/Math.abs(dx):Infinity,dy?hh/Math.abs(dy):Infinity);
   return t>=1?[cx,cy]:[cx+dx*t,cy+dy*t];
 }
-// The arrow's polyline: two points when straight, up to four when elbow-routed between box sides.
+// ---------- obstacle avoidance ----------
+const PAD=16; // clearance kept between a detouring arrow and the shapes it passes
+// Does segment p→q cross the open interior of rect r=[x0,y0,x1,y1]? Touching the border doesn't count.
+function crosses(p,q,r){
+  let t0=0,t1=1;const dx=q[0]-p[0],dy=q[1]-p[1];
+  for(const [pp,qq] of [[-dx,p[0]-r[0]],[dx,r[2]-p[0]],[-dy,p[1]-r[1]],[dy,r[3]-p[1]]]){
+    if(pp===0){if(qq<=1e-6)return false}
+    else{const t=qq/pp;if(pp<0){if(t>t1)return false;if(t>t0)t0=t}else{if(t<t0)return false;if(t<t1)t1=t}}
+  }
+  return t1-t0>1e-6;
+}
+const clear=(p,q,obs)=>!obs.some(r=>crosses(p,q,r));
+// Drop repeated and collinear points.
+function simplify(pts){
+  const r=[];
+  for(const p of pts){
+    if(r.length&&Math.abs(r[r.length-1][0]-p[0])<.01&&Math.abs(r[r.length-1][1]-p[1])<.01)continue;
+    while(r.length>1){const a=r[r.length-2],b=r[r.length-1],cr=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);if(Math.abs(cr)<.01)r.pop();else break}
+    r.push(p);
+  }
+  return r;
+}
+// Shortest path from p to q that stays out of the obstacles, bending only at their padded corners.
+function detour(p,q,obs){
+  if(clear(p,q,obs))return [p,q];
+  const pts=[p,q];
+  obs.forEach(r=>[[r[0],r[1]],[r[2],r[1]],[r[2],r[3]],[r[0],r[3]]].forEach(c=>{
+    if(!obs.some(o=>c[0]>o[0]+1e-6&&c[0]<o[2]-1e-6&&c[1]>o[1]+1e-6&&c[1]<o[3]-1e-6))pts.push(c);
+  }));
+  const n=pts.length,dist=Array(n).fill(Infinity),prev=Array(n).fill(-1),done=Array(n).fill(false);
+  dist[0]=0;
+  for(;;){
+    let u=-1;for(let i=0;i<n;i++)if(!done[i]&&dist[i]<Infinity&&(u<0||dist[i]<dist[u]))u=i;
+    if(u<0||u===1)break;
+    done[u]=true;
+    for(let v=0;v<n;v++){
+      if(done[v])continue;
+      const d=dist[u]+Math.hypot(pts[v][0]-pts[u][0],pts[v][1]-pts[u][1]);
+      if(d<dist[v]&&clear(pts[u],pts[v],obs)){dist[v]=d;prev[v]=u}
+    }
+  }
+  if(prev[1]<0)return [p,q];
+  const out=[];for(let i=1;i>=0;i=prev[i]){out.push(pts[i]);if(i===0)break}
+  return out.reverse();
+}
+// Same idea with right-angle moves only: Dijkstra over the grid formed by the obstacle edges, penalising bends.
+function detourOrtho(p,q,obs){
+  if(!obs.length)return null;
+  const xs=[...new Set([p[0],q[0],...obs.flatMap(r=>[r[0],r[2]])])].sort((a,b)=>a-b);
+  const ys=[...new Set([p[1],q[1],...obs.flatMap(r=>[r[1],r[3]])])].sort((a,b)=>a-b);
+  const W=xs.length,H=ys.length,key=(i,j,d)=>(j*W+i)*4+d,DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+  const si=xs.indexOf(p[0]),sj=ys.indexOf(p[1]),ti=xs.indexOf(q[0]),tj=ys.indexOf(q[1]);
+  const dist=new Map(),prev=new Map(),heap=[];
+  const push=(c,k)=>{heap.push([c,k]);let i=heap.length-1;while(i>0){const u=(i-1)>>1;if(heap[u][0]<=heap[i][0])break;[heap[u],heap[i]]=[heap[i],heap[u]];i=u}};
+  const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){let m=i;const l=2*i+1,r=l+1;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m}}return top};
+  for(let d=0;d<4;d++){dist.set(key(si,sj,d),0);push(0,key(si,sj,d))}
+  let end=-1;
+  while(heap.length){
+    const [c,k]=pop();
+    if(c>dist.get(k))continue;
+    const d=k%4,cell=(k-d)/4,i=cell%W,j=(cell-i)/W;
+    if(i===ti&&j===tj){end=k;break}
+    for(let nd=0;nd<4;nd++){
+      const ni=i+DIRS[nd][0],nj=j+DIRS[nd][1];
+      if(ni<0||nj<0||ni>=W||nj>=H||!clear([xs[i],ys[j]],[xs[ni],ys[nj]],obs))continue;
+      const nc=c+Math.abs(xs[ni]-xs[i])+Math.abs(ys[nj]-ys[j])+(nd!==d?40:0),nk=key(ni,nj,nd);
+      if(nc<(dist.get(nk)??Infinity)){dist.set(nk,nc);prev.set(nk,k);push(nc,nk)}
+    }
+  }
+  if(end<0)return null;
+  const out=[];for(let k=end;k!==undefined;k=prev.get(k)){const cell=(k-k%4)/4,i=cell%W;out.push([xs[i],ys[(cell-i)/W]])}
+  return out.reverse();
+}
+const padded=s=>[s.x-PAD,s.y-PAD,s.x+s.w+PAD,s.y+s.h+PAD];
+// Padded boxes of every shape the arrow isn't attached to.
+const obstacles=(m,skip)=>m.els.filter(e=>!isArrow(e)&&e.t!=="text"&&!skip.includes(e.id)).map(padded);
+// The arrow's polyline: two points when straight, more when elbow-routed or detouring around other shapes.
 function route(m,a){
-  const sa=a.a.s&&byId(m,a.a.s),sb=a.b.s&&byId(m,a.b.s);
+  const sa=a.a.s&&byId(m,a.a.s),sb=a.b.s&&byId(m,a.b.s),obs=obstacles(m,[a.a.s,a.b.s]);
   if(a.r!=="elbow"){
     const pa=sa?center(sa):[a.a.x,a.a.y],pb=sb?center(sb):[a.b.x,a.b.y];
-    return [sa?edge(sa,pb[0],pb[1]):pa,sb?edge(sb,pa[0],pa[1]):pb];
+    const path=detour(pa,pb,obs.filter(r=>!(pa[0]>r[0]&&pa[0]<r[2]&&pa[1]>r[1]&&pa[1]<r[3])&&!(pb[0]>r[0]&&pb[0]<r[2]&&pb[1]>r[1]&&pb[1]<r[3]))),n=path.length;
+    if(sa)path[0]=edge(sa,path[1][0],path[1][1]);
+    if(sb)path[n-1]=edge(sb,path[n-2][0],path[n-2][1]);
+    return path;
   }
   const A=sa||{x:a.a.x,y:a.a.y,w:0,h:0},B=sb||{x:a.b.x,y:a.b.y,w:0,h:0};
   const [ax,ay]=center(A),[bx,by]=center(B);
   const gx=Math.max(B.x-(A.x+A.w),A.x-(B.x+B.w)),gy=Math.max(B.y-(A.y+A.h),A.y-(B.y+B.h));
+  let r,out=null;
   if(gx>=gy){
-    const r=bx>=ax,p=[r?A.x+A.w:A.x,ay],q=[r?B.x:B.x+B.w,by];
-    if(Math.abs(p[1]-q[1])<1)return [p,[q[0],p[1]]];
-    const mx=(p[0]+q[0])/2;return [p,[mx,p[1]],[mx,q[1]],q];
+    const right=bx>=ax,p=[right?A.x+A.w:A.x,ay],q=[right?B.x:B.x+B.w,by],mx=(p[0]+q[0])/2;
+    r=Math.abs(p[1]-q[1])<1?[p,[q[0],p[1]]]:[p,[mx,p[1]],[mx,q[1]],q];
+    out=[[p[0]+(right?PAD:-PAD),p[1]],[q[0]+(right?-PAD:PAD),q[1]]];
+  }else{
+    const down=by>=ay,p=[ax,down?A.y+A.h:A.y],q=[bx,down?B.y:B.y+B.h],my=(p[1]+q[1])/2;
+    r=Math.abs(p[0]-q[0])<1?[p,[p[0],q[1]]]:[p,[p[0],my],[q[0],my],q];
+    out=[[p[0],p[1]+(down?PAD:-PAD)],[q[0],q[1]+(down?-PAD:PAD)]];
   }
-  const d=by>=ay,p=[ax,d?A.y+A.h:A.y],q=[bx,d?B.y:B.y+B.h];
-  if(Math.abs(p[0]-q[0])<1)return [p,[p[0],q[1]]];
-  const my=(p[1]+q[1])/2;return [p,[p[0],my],[q[0],my],q];
+  if(r.every((pt,i)=>i===0||clear(r[i-1],pt,obs)))return r;
+  const mid=detourOrtho(out[0],out[1],obs.concat(sa?[padded(sa)]:[],sb?[padded(sb)]:[]));
+  return mid?simplify([r[0],...mid,r[r.length-1]]):r;
 }
 function ends(m,a){const r=route(m,a);return [r[0],r[r.length-1]]}
 // Point halfway along a polyline, where the label sits.

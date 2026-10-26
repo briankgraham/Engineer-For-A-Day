@@ -13,6 +13,10 @@ const ce = (tag, cls, text) => { const n = document.createElement(tag); if (cls)
 const LEVELS = [["intern", "Internship"], ["entry", "New grad / entry"], ["mid", "Mid-level"], ["senior", "Senior"], ["staff", "Staff / principal"], ["manager", "Management"]];
 const AREAS = { remote: "Remote", sf: "SF Bay Area", austin: "Austin" };
 const f = { q: "", company: "", area: "", level: "", eng: true, days: "" };
+const XKEY = "jobs.excluded";
+let excluded = [];
+try { const x = JSON.parse(localStorage.getItem(XKEY)); if (Array.isArray(x)) excluded = x.filter(c => typeof c === "string"); } catch (e) {}
+const saveExcluded = () => { try { if (excluded.length) localStorage.setItem(XKEY, JSON.stringify(excluded)); else localStorage.removeItem(XKEY); } catch (e) {} };
 let built = false, page = 0, gen = 0, companyNames = {}, view = "open", last = null;
 const ui = {};
 const AKEY = "jobs.applied";
@@ -53,13 +57,18 @@ function build() {
     c.onchange = () => { f[key] = c.checked; apply(); };
     return l;
   };
-  bar.append(ui.q, ui.company, ui.colist, ui.area, ui.level, ui.days,
+  ui.hide = ce("input"); ui.hide.type = "search"; ui.hide.placeholder = "Hide company…"; ui.hide.autocomplete = "off";
+  ui.hide.title = "Pick a company to leave out of the results. Saved in this browser.";
+  ui.hide.setAttribute("list", "jobs-colist"); ui.hide.style.cssText = "flex:0 1 150px;min-width:110px";
+  bar.append(ui.q, ui.company, ui.colist, ui.hide, ui.area, ui.level, ui.days,
     check("Engineering roles", "eng", "Only software, data, ML, security and infrastructure titles"));
   ui.refresh = ce("button", null, "Refresh");
   ui.refresh.title = "Reload from the server. The server itself re-checks the company job boards once a day.";
   ui.refresh.onclick = () => load("reloaded");
   bar.appendChild(ui.refresh);
   header.appendChild(bar);
+  ui.chips = ce("div"); ui.chips.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0";
+  header.appendChild(ui.chips);
 
   const table = ce("table");
   table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th><th></th></tr></thead>";
@@ -95,8 +104,35 @@ function build() {
     if (!typing || !ui.company.value.trim()) applyCompany();
   };
   ui.company.onchange = applyCompany;
+  const addHidden = () => {
+    const c = companyNames[ui.hide.value.trim().toLowerCase()];
+    if (!c) return;
+    ui.hide.value = "";
+    if (excluded.includes(c)) return;
+    excluded.push(c); saveExcluded(); drawChips();
+    if (f.company === c) { f.company = ""; ui.company.value = ""; }
+    apply();
+  };
+  ui.hide.oninput = e => { if (e && e.inputType === "insertReplacementText") addHidden(); };  // datalist pick
+  ui.hide.onchange = addHidden;
+  drawChips();
   ui.prev.onclick = () => { page = Math.max(0, page - 1); load(); };
   ui.next.onclick = () => { page++; load(); };
+}
+
+function drawChips() {
+  ui.chips.replaceChildren();
+  if (!excluded.length) return;
+  ui.chips.appendChild(ce("span", null, "Hidden:")).style.cssText = "color:var(--muted);font-size:12px";
+  excluded.forEach(c => {
+    const b = ce("button", null, c + " ×"); b.title = "Show " + c + " again";
+    b.style.cssText = "padding:2px 8px;font-size:12px";
+    b.onclick = () => { excluded = excluded.filter(x => x !== c); saveExcluded(); drawChips(); apply(); };
+    ui.chips.appendChild(b);
+  });
+  const all = ce("button", null, "Clear"); all.onclick = () => { excluded = []; saveExcluded(); drawChips(); apply(); };
+  all.style.cssText = "padding:2px 8px;font-size:12px";
+  ui.chips.appendChild(all);
 }
 
 const apply = () => { page = 0; load(); };
@@ -182,7 +218,7 @@ function render(d) {
   const age = upd === null ? "" : upd < 1 ? "just now" : upd < 60 ? upd + " min ago" : upd < 1440 ? Math.round(upd / 60) + " h ago" : Math.round(upd / 1440) + " d ago";
   ui.stats.className = "stats";
   ui.stats.textContent = b.loaded
-    ? `${d.companies.length} companies hiring · updated ${age}` + (b.failed ? ` · ${b.failed} boards unavailable` : "")
+    ? `${d.companies.filter(([n]) => !excluded.includes(n)).length} companies hiring · updated ${age}` + (b.failed ? ` · ${b.failed} boards unavailable` : "")
     : d.refresh && d.refresh.running ? "Server is fetching the job boards…" : "Nothing loaded yet";
   if (d.refresh && d.refresh.running && b.loaded) ui.stats.textContent += " · refreshing in the background";
   markTracked();
@@ -213,6 +249,7 @@ async function load(flash) {
   if (f.area) p.set("area", f.area);
   if (f.level) p.set("level", f.level);
   if (f.days) p.set("days", f.days);
+  excluded.forEach(c => p.append("exclude", c));
   if (!flash) showLoading("Loading…");
   try {
     const res = await fetch("/api/jobs?" + p, { headers: { "X-Requested-With": "walkthrough" } });
