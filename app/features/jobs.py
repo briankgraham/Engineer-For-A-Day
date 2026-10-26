@@ -72,6 +72,14 @@ ENG = re.compile(
 NOT_ENG = re.compile(r"\b(sales|solutions?|support|customer|field|recruit\w*|technician|mechanical|civil|manufacturing|marketing|legal|account)\b", re.I)
 
 
+_QA = re.compile(r"\b(qa|quality assurance|(?<!data )quality engineer\w*|sdets?|(development )?engineers? in test|test engineers?|test automation|testers?)\b", re.I)
+
+
+@functools.lru_cache(maxsize=20000)
+def is_qa(title):
+    return bool(_QA.search(title or ""))
+
+
 LEVELS = (("intern", "Internship"), ("entry", "New grad / entry"), ("mid", "Mid-level"), ("senior", "Senior"), ("staff", "Staff / principal"), ("manager", "Management"))
 _L_INTERN = re.compile(r"\b(interns?|internships?|co-?ops?|apprentices?|apprenticeships?)\b", re.I)
 _L_MANAGER = re.compile(r"\b(managers?|directors?|head of|vp|vice president|chief)\b", re.I)
@@ -572,8 +580,8 @@ def _int(q, key, default, lo, hi):
         return default
 
 
-def _pool(eng):
-    """Every cached US posting (engineering titles only when eng), deduped, plus how many boards loaded / failed and which have more."""
+def _pool(eng, hide_qa=False):
+    """Every cached US posting (engineering titles only when eng, QA titles dropped when hide_qa), deduped, plus how many boards loaded / failed and which have more."""
     all_us, ok, failed, more = [], 0, 0, {}
     for c in boards():
         e = _entry(c)
@@ -585,7 +593,7 @@ def _pool(eng):
             ok += 1
         if e.get("more"):
             more[c] = True
-        all_us.extend(j for j in e["jobs"] if j["us"] and (j["eng"] or not eng))
+        all_us.extend(j for j in e["jobs"] if j["us"] and (j["eng"] or not eng) and not (hide_qa and is_qa(j["title"])))
     return _dedupe(all_us), ok, failed, more  # same role listed on two boards
 
 
@@ -595,7 +603,7 @@ def stats(q):
     days = _int(q, "days", 0, 0, 365)
     now = datetime.now(timezone.utc)
     cutoff = (now - timedelta(days=days)).strftime("%Y-%m-%d") if days else ""
-    pool, ok, failed, _ = _pool(eng)
+    pool, ok, failed, _ = _pool(eng, _one(q, "noqa") == "1")
     roles, levels, areas, companies, weeks = {}, {}, {}, {}, {}
     total = remote = new7 = 0
     week7 = (now - timedelta(days=7)).strftime("%Y-%m-%d")
@@ -642,12 +650,13 @@ def query(q):
     area = _one(q, "area")
     if area not in dict(AREAS):
         area = ""
-    level = _one(q, "level")
+    v = q.get("level")  # repeated param; empty means every level
+    want = {lv for lv in (v if isinstance(v, list) else [v] if v else []) if lv in dict(LEVELS)}
     eng = _one(q, "eng", "1") == "1"
     days = _int(q, "days", 0, 0, 365)
     limit, offset = _int(q, "limit", 50, 1, 100), _int(q, "offset", 0, 0, 10 ** 6)
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d") if days else ""
-    all_us, ok, failed, more = _pool(eng)
+    all_us, ok, failed, more = _pool(eng, _one(q, "noqa") == "1")
     rows = []
     counts, areas, levels = {}, {}, {}
     for j in all_us:
@@ -664,7 +673,7 @@ def query(q):
         if j["company"] in exclude:  # after counts, so the company list still offers hidden companies
             continue
         lv = level_of(j["title"])
-        area_ok, level_ok = not area or area in ja, not level or lv == level
+        area_ok, level_ok = not area or area in ja, not want or lv in want
         if level_ok:
             for a in ja:
                 areas[a] = areas.get(a, 0) + 1

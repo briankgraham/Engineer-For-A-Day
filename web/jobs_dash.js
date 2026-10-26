@@ -206,6 +206,7 @@ function render(d) {
 async function load() {
   const my = ++gen, p = new URLSearchParams({ eng: f.eng ? 1 : 0 });
   if (f.days) p.set("days", f.days);
+  try { if (localStorage.getItem("jobs.noqa") !== "0") p.set("noqa", 1); } catch (e) { p.set("noqa", 1); }  // same QA setting as the openings list
   el.classList.add("stale");
   try {
     const res = await fetch("/api/jobs/stats?" + p, { headers: { "X-Requested-With": "walkthrough" } });

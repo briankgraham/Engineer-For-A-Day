@@ -12,7 +12,11 @@ const NOT_COVERED = [
 const ce = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const LEVELS = [["intern", "Internship"], ["entry", "New grad / entry"], ["mid", "Mid-level"], ["senior", "Senior"], ["staff", "Staff / principal"], ["manager", "Management"]];
 const AREAS = { remote: "Remote", sf: "SF Bay Area", austin: "Austin" };
-const f = { q: "", company: "", area: "", level: "", eng: true, days: "" };
+const LKEY = "jobs.levels", QKEY = "jobs.noqa";
+const f = { q: "", company: "", area: "", levels: LEVELS.map(l => l[0]).filter(v => v !== "intern"), noqa: true, eng: true, days: "" };  // default: everything but internships
+try { const x = JSON.parse(localStorage.getItem(LKEY)); if (Array.isArray(x)) f.levels = x.filter(v => LEVELS.some(l => l[0] === v)); } catch (e) {}
+try { if (localStorage.getItem(QKEY) === "0") f.noqa = false; } catch (e) {}
+const saveFilters = () => { try { localStorage.setItem(LKEY, JSON.stringify(f.levels)); localStorage.setItem(QKEY, f.noqa ? "1" : "0"); } catch (e) {} };
 const XKEY = "jobs.excluded";
 let excluded = [];
 try { const x = JSON.parse(localStorage.getItem(XKEY)); if (Array.isArray(x)) excluded = x.filter(c => typeof c === "string"); } catch (e) {}
@@ -45,23 +49,34 @@ function build() {
   ui.colist = ce("datalist"); ui.colist.id = "jobs-colist";
   ui.area = ce("select"); ui.area.title = "Remote, the SF Bay Area (SF through Santa Clara / San Jose, Oakland and nearby) or Austin";
   ui.area.appendChild(new Option("Remote, SF Bay Area & Austin", ""));
-  ui.level = ce("select"); ui.level.title = "Seniority, read from the job title";
-  ui.level.appendChild(new Option("All levels", ""));
-  LEVELS.forEach(([v, l]) => ui.level.appendChild(new Option(l, v)));
+  ui.level = ce("details"); ui.level.className = "lv"; ui.level.title = "Seniority, read from the job title. Tick as many as you like.";
+  ui.levelSum = ce("summary"); ui.level.appendChild(ui.levelSum);
+  const pop = ce("div");
+  ui.levelBox = {};
+  LEVELS.forEach(([v, name]) => {
+    const l = ce("label"), c = ce("input"); c.type = "checkbox"; c.checked = f.levels.includes(v);
+    ui.levelBox[v] = [c, l];
+    l.append(c, document.createTextNode(name));
+    c.onchange = () => { f.levels = LEVELS.map(x => x[0]).filter(x => ui.levelBox[x][0].checked); saveFilters(); drawLevelSummary(); apply(); };
+    pop.appendChild(l);
+  });
+  ui.level.appendChild(pop);
+  document.addEventListener("click", e => { if (!ui.level.contains(e.target)) ui.level.open = false; });
   ui.days = ce("select");
   [["", "Posted any time"], ["1", "Last 24 hours"], ["7", "Last 7 days"], ["30", "Last 30 days"]].forEach(([v, l]) => ui.days.appendChild(new Option(l, v)));
   const check = (label, key, tip) => {
     const l = ce("label"), c = ce("input"); c.type = "checkbox"; c.checked = f[key];
     l.style.cssText = "display:flex;align-items:center;gap:6px;white-space:nowrap"; l.title = tip;
     l.append(c, document.createTextNode(label));
-    c.onchange = () => { f[key] = c.checked; apply(); };
+    c.onchange = () => { f[key] = c.checked; saveFilters(); apply(); };
     return l;
   };
   ui.hide = ce("input"); ui.hide.type = "search"; ui.hide.placeholder = "Hide company…"; ui.hide.autocomplete = "off";
   ui.hide.title = "Pick a company to leave out of the results. Saved in this browser.";
   ui.hide.setAttribute("list", "jobs-colist"); ui.hide.style.cssText = "flex:0 1 150px;min-width:110px";
   bar.append(ui.q, ui.company, ui.colist, ui.hide, ui.area, ui.level, ui.days,
-    check("Engineering roles", "eng", "Only software, data, ML, security and infrastructure titles"));
+    check("Engineering roles", "eng", "Only software, data, ML, security and infrastructure titles"),
+    check("Hide QA", "noqa", "Leave out QA, SDET and test-engineer titles"));
   ui.refresh = ce("button", null, "Refresh");
   ui.refresh.title = "Reload from the server. The server itself re-checks the company job boards once a day.";
   ui.refresh.onclick = () => load("reloaded");
@@ -73,7 +88,12 @@ function build() {
   const table = ce("table");
   table.innerHTML = "<thead><tr><th>Company</th><th>Title</th><th>Location</th><th class=\"num\">Posted</th><th></th></tr></thead>";
   ui.rows = ce("tbody"); table.appendChild(ui.rows);
-  const st = ce("style", null, "#tab-jobs tr.applied td:not(:last-child){opacity:.55}");
+  const st = ce("style", null, "#tab-jobs tr.applied td:not(:last-child){opacity:.55}" +
+    "#tab-jobs .lv{position:relative}#tab-jobs .lv summary{display:flex;align-items:center;gap:8px;min-height:34px;padding:6px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;list-style:none;white-space:nowrap;user-select:none}" +
+    "#tab-jobs .lv summary::-webkit-details-marker{display:none}#tab-jobs .lv summary::after{content:\"\";width:6px;height:6px;margin:-3px 0 0 2px;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(45deg)}" +
+    "#tab-jobs .lv[open] summary{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}" +
+    "#tab-jobs .lv>div{position:absolute;z-index:5;top:100%;left:0;margin-top:6px;min-width:100%;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-md)}" +
+    "#tab-jobs .lv label{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}#tab-jobs .lv label:hover{background:var(--accent-soft)}");
   header.appendChild(st);
   const pager = ce("div", "pager");
   ui.prev = ce("button", null, "Prev"); ui.next = ce("button", null, "Next"); ui.page = ce("span");
@@ -91,7 +111,6 @@ function build() {
   let deb = null;
   ui.q.oninput = () => { clearTimeout(deb); deb = setTimeout(() => { f.q = ui.q.value.trim(); apply(); }, 250); };
   ui.area.onchange = () => { f.area = ui.area.value; apply(); };
-  ui.level.onchange = () => { f.level = ui.level.value; apply(); };
   ui.days.onchange = () => { f.days = ui.days.value; apply(); };
   // Same rule as the LeetCode company filter: commit on pick / Enter / blur, or when cleared, so typing "Snap" does not filter early.
   const applyCompany = () => {
@@ -115,9 +134,14 @@ function build() {
   };
   ui.hide.oninput = e => { if (e && e.inputType === "insertReplacementText") addHidden(); };  // datalist pick
   ui.hide.onchange = addHidden;
-  drawChips();
+  drawChips(); drawLevelSummary();
   ui.prev.onclick = () => { page = Math.max(0, page - 1); load(); };
   ui.next.onclick = () => { page++; load(); };
+}
+
+function drawLevelSummary() {
+  const n = f.levels.length, names = LEVELS.filter(([v]) => f.levels.includes(v)).map(l => l[1]);
+  ui.levelSum.textContent = n === LEVELS.length || !n ? "All levels" : n <= 2 ? names.join(", ") : n + " levels";
 }
 
 function drawChips() {
@@ -213,7 +237,8 @@ function render(d) {
   ui.area.replaceChildren(new Option("Remote, SF Bay Area & Austin", ""));
   d.areas.forEach(([a, c]) => ui.area.appendChild(new Option(`${AREAS[a]} (${c})`, a)));
   ui.area.value = d.areas.some(([a]) => a === keep) ? keep : "";
-  LEVELS.forEach(([v, l], i) => { ui.level.options[i + 1].textContent = d.levels[v] ? `${l} (${d.levels[v]})` : l; });
+  LEVELS.forEach(([v, l]) => { ui.levelBox[v][1].lastChild.textContent = d.levels[v] ? `${l} (${d.levels[v]})` : l; });
+  drawLevelSummary();
   const b = d.boards, upd = d.updated_at ? Math.max(0, Math.round((Date.now() - Date.parse(d.updated_at)) / 60000)) : null;
   const age = upd === null ? "" : upd < 1 ? "just now" : upd < 60 ? upd + " min ago" : upd < 1440 ? Math.round(upd / 60) + " h ago" : Math.round(upd / 1440) + " d ago";
   ui.stats.className = "stats";
@@ -247,7 +272,8 @@ async function load(flash) {
   if (f.q) p.set("q", f.q);
   if (f.company) p.set("company", f.company);
   if (f.area) p.set("area", f.area);
-  if (f.level) p.set("level", f.level);
+  if (f.levels.length < LEVELS.length) f.levels.forEach(v => p.append("level", v));  // none ticked is treated as all, so also send nothing
+  if (f.noqa) p.set("noqa", 1);
   if (f.days) p.set("days", f.days);
   excluded.forEach(c => p.append("exclude", c));
   if (!flash) showLoading("Loading…");
