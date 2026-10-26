@@ -5,7 +5,7 @@ from .. import prompts
 from ..chat import chat_messages
 from ..data import SD_PROBLEMS
 from ..errors import ApiError
-from ..features.sysdesign import evaluate_sd, generate_sd, grade_sd, read_sd
+from ..features.sysdesign import evaluate_sd, generate_followup, generate_sd, grade_sd, read_sd
 from . import validate
 from .router import first, get, post
 
@@ -18,6 +18,14 @@ def walkthrough(h, q):
 @post("/api/sd/walkthrough/regenerate")
 def regenerate(h, body):
     h.send(200, generate_sd(validate.sd_id(body.get("id")), force=True))
+
+
+@post("/api/sd/followup")
+def followup(h, body):
+    q = body.get("question")
+    if not isinstance(q, str) or not 0 < len(q) <= 600:
+        raise ApiError(400, "Bad question.")
+    h.send(200, generate_followup(validate.sd_id(body.get("id")), q, force=body.get("force") is True))
 
 
 @post("/api/sd/evaluate")

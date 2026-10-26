@@ -38,6 +38,18 @@ SCHEMA_SD = _obj({
     "followups": _STRS,
 })
 
+# A walkthrough for one follow-up question: what changes in the base design, not a full redesign.
+SCHEMA_SD_FU = _obj({
+    "summary": _STR,
+    "changes": _STRS,
+    "estimation": _STRS,
+    "architecture": _obj({"overview": _STR, "components": {"type": "array", "items": _obj({"name": _STR, "role": _STR})}, "graph": SD_GRAPH}),
+    "deep_dives": {"type": "array", "items": _obj({"title": _STR, "challenge": _STR, "options": _STRS, "choice": _STR})},
+    "tradeoffs": _STRS,
+    "failure_modes": _STRS,
+    "followups": _STRS,
+})
+
 
 SCHEMA_SD_EVAL = _obj({
     "score": {"type": "integer"},

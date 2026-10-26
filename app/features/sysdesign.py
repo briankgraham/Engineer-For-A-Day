@@ -1,11 +1,11 @@
 """System design: walkthrough cache and generation, whiteboard evaluation, and mock interview grading."""
-import json, os
+import hashlib, json, os
 from datetime import datetime, timezone
 
 from .. import prompts
 from ..errors import ApiError
 from ..llm import BACKEND, take_budget, translate
-from ..schemas import SCHEMA_SD, SCHEMA_SD_EVAL, SCHEMA_SD_GRADE, SD_FLOWS, SD_KINDS, valid
+from ..schemas import SCHEMA_SD, SCHEMA_SD_EVAL, SCHEMA_SD_FU, SCHEMA_SD_GRADE, SD_FLOWS, SD_KINDS, valid
 from ..config import SD_DIR, current_model
 from ..data import SD_FRAMEWORK, SD_PROBLEMS, SD_TOPICS
 from ..util import key_lock
@@ -60,6 +60,43 @@ def generate_sd(pid, force=False):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(doc, f, indent=1, ensure_ascii=False)
         os.replace(tmp, sd_path(pid))
+        return doc
+
+
+def fu_path(pid, question):
+    return os.path.join(SD_DIR, f"{pid}.fu-{hashlib.sha1(question.encode('utf-8')).hexdigest()[:16]}.json")
+
+
+def generate_followup(pid, question, force=False):
+    """Walkthrough for one of the base walkthrough's follow-up questions. The question must be one the model listed there."""
+    base = read_sd(pid)
+    if not base or question not in base["walkthrough"]["followups"]:
+        raise ApiError(400, "Unknown follow-up. Reopen the walkthrough and try again.")
+    with key_lock(("sdfu", pid, question)):
+        if not force:
+            try:
+                with open(fu_path(pid, question), encoding="utf-8") as f:
+                    return json.load(f)
+            except (OSError, ValueError):
+                pass
+        take_budget()
+        p = SD_PROBLEMS[pid]
+        base_walk = json.dumps({k: v for k, v in base["walkthrough"].items() if k != "followups"}, separators=(",", ":"))
+        try:
+            walk = BACKEND.json(prompts.SYSTEM_SD_FOLLOWUP, f"Problem: {p['name']}\nDifficulty: {p['diff']}\nSummary: {p['blurb']}\n\nBase walkthrough (JSON):\n{base_walk}\n\nFollow-up question: {question}", SCHEMA_SD_FU)
+        except Exception as e:
+            raise translate(e)
+        if not valid(walk, SCHEMA_SD_FU) or not walk["changes"]:
+            raise ApiError(502, "The model returned an unusable walkthrough. Try Regenerate.")
+        walk["architecture"]["graph"] = clean_graph(walk["architecture"]["graph"])
+        if len(walk["architecture"]["graph"]["nodes"]) < 2:
+            walk["architecture"]["graph"] = {"nodes": [], "edges": []}
+        doc = {"id": pid, "question": question, "model": current_model(), "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "walkthrough": walk}
+        os.makedirs(SD_DIR, exist_ok=True)
+        tmp = fu_path(pid, question) + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(doc, f, indent=1, ensure_ascii=False)
+        os.replace(tmp, fu_path(pid, question))
         return doc
 
 
