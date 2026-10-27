@@ -32,7 +32,7 @@ That's all the setup. Pick a tab and start.
 | 🏗️ **System Design Prep** | Fundamentals, timed mock interviews, and a whiteboard |
 | 🎤 **Behavioral** | STAR stories, plus an AI interviewer that asks follow-ups until it gets specifics |
 | 🧩 **LeetCode** | Company-tagged problems with walkthroughs and an in-browser editor |
-| 📚 **Learning** | The fundamentals behind the problems and behind full-stack screens: algorithm tracks (graphs, trees, heaps) plus JavaScript/TypeScript, HTTP, auth and security, browser and frontend, SQL, and concurrency and async |
+| 📚 **Learning** | The fundamentals behind the problems and behind full-stack screens: algorithm tracks (graphs, trees, heaps, intervals, tries, dynamic programming) plus JavaScript/TypeScript, HTTP, auth and security, browser and frontend, SQL, and concurrency and async |
 | ⏱️ **Assessment** | Timed online-assessment (OA) style tests with hidden test cases |
 | 💼 **Jobs** | Live openings from the companies you're prepping for |
 
@@ -46,13 +46,16 @@ It's your first day on a fictional team. You get a small repo, Slack-style chann
 
 Your coworkers are AI, and each has their own agenda. Some of them will tell you things that sound right and aren't. When you click **End day**, every test suite runs and a manager-style review scores how you debugged, the quality of your code and tests, how you reviewed the PR, how you communicated, and the calls you made about what mattered.
 
-Five days to choose from:
+Eight days to choose from:
 
 - **ShipFast: orders & payments.** Ship discount codes, review a charge-retry PR, and work out why customers are being charged twice.
 - **Huddle: push notifications.** Build quiet hours, review an in-memory rate limiter, and track down duplicate pushes.
 - **Plotline: subscriptions & billing.** Handle mid-cycle upgrades, review a renewal batch job, and find out why people are charged after they cancel. (Hint: time zones are involved.)
 - **Flagship: feature flags.** Build percentage rollouts, review an evaluation-cache PR, and find out why a kill switch isn't killing anything on some servers.
 - **Scrapbook: the feed API.** Build muted words, review a page-numbers PR, and work out why people see the same photo twice while other posts go missing.
+- **Kestrel: the storefront web app.** Build a cart quantity stepper (optimistic updates, rollback, undo), review a search-highlighting PR (regex injection and XSS), and work out why shoppers searching for "shoes" get results for "sh". A frontend day: state, async races and escaping, without a DOM.
+- **Brightway: the quote service (inherited code).** Add multi-parcel quotes to a 2017 pricing function with almost no tests and a wiki that is wrong in places, review a "no behavior change" refactor, and find out why some customers' quotes keep getting cheaper through the morning. The day is about reading code you did not write and changing it safely.
+- **Tessera: the accounts service (zero-downtime migration).** Build the backfill and verification for a live expand/contract database migration, review a "finish the migration and drop the column" PR, and find out why people can't sign in, but only on one server.
 
 ## 🤝 AI Pairing
 
@@ -117,6 +120,12 @@ LeetCode assumes you already know the basics. If writing an adjacency list from 
 ![Learning tab: ten tracks, from graphs to concurrency](docs/media/learning.jpg)
 
 Each track is a path of short lessons. The first one, **Graphs**, goes from "what is a graph" through representations, DFS, BFS, grids, union-find, topological sort and Dijkstra, then teaches you to recognize which technique a problem wants, and finishes with graph databases in system design.
+
+The **Intervals** track covers overlap tests, merging, inserting, intersecting two schedules, greedy picking (sort by end) and the sweep line, with step-through visualizers for merge and the sweep, and a LeetCode checkpoint of Meeting Rooms I and II, Merge and Insert Interval, Car Pooling and more.
+
+The **Tries** track builds a prefix tree from scratch, then uses it for autocomplete, replace-words, prefix sums, wildcard search, Word Search II and maximum XOR, with step-through build and search visualizers.
+
+The **Dynamic programming** track teaches state, transition and base case, then 1D DP, grid DP, knapsack and subset sum, and two-string tables (LCS, edit distance), with a step-through table visualizer that fills one cell at a time and highlights the cells it reads.
 
 - **Learn.** Readable lessons with templates worth memorizing, and step-through visualizers for DFS, BFS, components, topological sort and Dijkstra that show the stack, queue or heap at every step.
 

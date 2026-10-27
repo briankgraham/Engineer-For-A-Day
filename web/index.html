@@ -525,7 +525,7 @@ dialog.app-dlg{width:min(640px,94vw)}
     lrLoading=true;
     const fail=()=>{lrLoading=false;document.getElementById("tab-learn").textContent="Learning needs the local server. In a terminal run: python3 server.py — then open http://localhost:8000"};
     const add=(src,next)=>{const sc=document.createElement("script");sc.src=src;sc.onload=next;sc.onerror=fail;document.head.appendChild(sc)};
-    add("learn_data.js",()=>add("learn_trees.js",()=>add("learn_heaps.js",()=>add("learn_fundamentals.js",()=>add("learn_concurrency.js",()=>add("learn.js",()=>learnInit()))))));
+    add("learn_data.js",()=>add("learn_trees.js",()=>add("learn_heaps.js",()=>add("learn_intervals.js",()=>add("learn_tries.js",()=>add("learn_dp.js",()=>add("learn_fundamentals.js",()=>add("learn_concurrency.js",()=>add("learn.js",()=>learnInit())))))))));
   };
   const ind=document.querySelector("nav.tabs .ind");
   const moveInd=(instant)=>{

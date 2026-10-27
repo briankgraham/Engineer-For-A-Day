@@ -11,7 +11,7 @@ const WEB = path.join(__dirname, "..", "web");
 const html = fs.readFileSync(path.join(WEB, "index.html"), "utf8");
 const harness = html.slice(html.indexOf("function harness(spec){"), html.indexOf("// Runs `code` against the exercise's tests"));
 // Track files after learn_data.js push onto LEARN_TRACKS (same load order as the page).
-const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_fundamentals.js", "learn_concurrency.js"];
+const LEARN_FILES = ["learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_intervals.js", "learn_tries.js", "learn_dp.js", "learn_fundamentals.js", "learn_concurrency.js"];
 const LEARN_TRACKS = vm.runInNewContext(LEARN_FILES.map(f => fs.readFileSync(path.join(WEB, f), "utf8")).join("\n") + ";LEARN_TRACKS");
 const slugs = new Set([...html.matchAll(/,"([a-z0-9-]+)","[^"]*"\]/g)].map(m => m[1]));
 
@@ -77,6 +77,37 @@ function checkArrayViz(b) {
   }
 }
 
+// Interval timelines: a few integer intervals on a short number line.
+function checkIntervalViz(b) {
+  const name = `viz "${b.title}"`;
+  if (!["show", "merge", "sweep"].includes(b.mode)) return bad(`${name}: mode must be show, merge or sweep`);
+  if (!b.intervals.length || b.intervals.length > 6) return bad(`${name}: needs 1 to 6 intervals`);
+  for (const [s, e] of b.intervals) if (!Number.isInteger(s) || !Number.isInteger(e) || s < 0 || e > 30 || s >= e) bad(`${name}: [${s}, ${e}] must be integers with 0 <= start < end <= 30`);
+}
+
+// Trie pictures: a few short lowercase words; search mode needs a query.
+function checkTrieViz(b) {
+  const name = `viz "${b.title}"`;
+  if (!["show", "build", "search"].includes(b.mode)) return bad(`${name}: mode must be show, build or search`);
+  if (!b.words.length || b.words.length > 8) return bad(`${name}: needs 1 to 8 words`);
+  for (const w of b.words) if (!/^[a-z]{1,7}$/.test(w)) bad(`${name}: "${w}" must be 1 to 7 lowercase letters`);
+  if (b.mode === "search" && !/^[a-z]{1,7}$/.test(b.query || "")) bad(`${name}: search needs a lowercase query`);
+}
+
+// DP tables: the model runs the recurrence, so only the inputs need checking (keep the table small enough to read).
+function checkDpViz(b) {
+  const name = `viz "${b.title}"`, ints = a => Array.isArray(a) && a.length && a.every(Number.isInteger);
+  const need = (ok, msg) => { if (!ok) bad(`${name}: ${msg}`); };
+  const kinds = ["stairs", "rob", "coins", "grid", "lcs", "edit", "knap"];
+  if (!kinds.includes(b.dp)) return bad(`${name}: dp must be one of ${kinds.join(", ")}`);
+  if (b.dp === "stairs") need(Number.isInteger(b.n) && b.n >= 2 && b.n <= 12, "n must be an integer from 2 to 12");
+  if (b.dp === "rob") need(ints(b.nums) && b.nums.length >= 3 && b.nums.length <= 10, "nums needs 3 to 10 integers");
+  if (b.dp === "coins") need(ints(b.coins) && b.coins.every(c => c > 0) && Number.isInteger(b.amount) && b.amount >= 1 && b.amount <= 14, "needs positive coins and an amount from 1 to 14");
+  if (b.dp === "grid") need(Array.isArray(b.costs) && b.costs.length >= 2 && b.costs.length <= 5 && b.costs.every(r => ints(r) && r.length === b.costs[0].length && r.length <= 6), "costs must be a rectangle of integers, at most 5 x 6");
+  if (b.dp === "lcs" || b.dp === "edit") need(/^[a-z]{1,8}$/.test(b.a) && /^[a-z]{1,8}$/.test(b.b), "a and b must be 1 to 8 lowercase letters");
+  if (b.dp === "knap") need(ints(b.weights) && ints(b.values) && b.weights.length === b.values.length && b.weights.length <= 4 && Number.isInteger(b.cap) && b.cap >= 1 && b.cap <= 9, "needs matching weights and values (at most 4 items) and a capacity from 1 to 9");
+}
+
 let problems = 0, codeParts = 0;
 const bad = msg => { problems++; console.log("  ✗ " + msg); };
 for (const track of LEARN_TRACKS) {
@@ -93,6 +124,9 @@ for (const track of LEARN_TRACKS) {
     for (const s of lesson.leetcode || []) if (!slugs.has(s)) bad(`unknown LeetCode slug ${s}`);
     for (const b of lesson.blocks) {
       if (!b.viz) continue;
+      if (b.dp) { checkDpViz(b); continue; }
+      if (b.intervals) { checkIntervalViz(b); continue; }
+      if (b.words) { checkTrieViz(b); continue; }
       if (b.tree || b.heap) { checkArrayViz(b); continue; }
       if (b.grid) {
         const flat = b.grid.flat(), src = b.viz === "rotting" ? 2 : 0;

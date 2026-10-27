@@ -1,0 +1,388 @@
+{
+  "order": 7,
+  "title": "Brightway: the quote service (inherited code)",
+  "company": "Brightway",
+  "blurb": "Your first full day on the pricing team at a freight forwarder, owning code nobody wrote and nobody wants to touch. Multi-parcel quotes to build in a 2017 function with almost no tests, a 'no behavior change' tidy-up PR to review, a rewrite RFC to read, and some customers' quotes keep getting cheaper through the morning.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": {
+    "start": "09:00",
+    "end": "17:30"
+  },
+  "service": "quotes",
+  "testFile": "quotes.test.js",
+  "incident": {
+    "name": "INC-0955",
+    "page": "t-page"
+  },
+  "newHire": "The candidate joined Brightway's pricing team (the quote service every Brightway integration uses to price shipments) as a senior engineer this week, and today is their first full day of real work. The service was written in 2017 by people who have left. It has a short test suite, a wiki page nobody has re-read in three years, and a lot of rules that exist only in the code. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Marisol.",
+  "personas": [
+    {
+      "id": "marisol",
+      "name": "Marisol Vega",
+      "role": "Senior Engineer · your onboarding buddy",
+      "color": "#7c5cff"
+    },
+    {
+      "id": "teo",
+      "name": "Teo Brandt",
+      "role": "Software Engineer",
+      "color": "#1f9d74"
+    },
+    {
+      "id": "nadia",
+      "name": "Nadia Farouk",
+      "role": "Product Manager",
+      "color": "#e0752d"
+    },
+    {
+      "id": "ruben",
+      "name": "Ruben Castillo",
+      "role": "SRE · Incident Commander",
+      "color": "#d6455d"
+    }
+  ],
+  "channels": [
+    {
+      "id": "team",
+      "name": "#pricing-team",
+      "members": [
+        "marisol",
+        "teo",
+        "nadia"
+      ],
+      "responder": "marisol"
+    },
+    {
+      "id": "incident",
+      "name": "#inc-0955-cheap-quotes",
+      "members": [
+        "ruben",
+        "marisol"
+      ],
+      "responder": "ruben",
+      "locked": true
+    },
+    {
+      "id": "dm-marisol",
+      "name": "Marisol Vega",
+      "dm": true,
+      "members": [
+        "marisol"
+      ],
+      "responder": "marisol"
+    },
+    {
+      "id": "dm-nadia",
+      "name": "Nadia Farouk",
+      "dm": true,
+      "members": [
+        "nadia"
+      ],
+      "responder": "nadia"
+    },
+    {
+      "id": "dm-teo",
+      "name": "Teo Brandt",
+      "dm": true,
+      "members": [
+        "teo"
+      ],
+      "responder": "teo"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "BRT-204",
+      "title": "Multi-parcel shipments",
+      "reporter": "nadia",
+      "status": "To do · assigned to you",
+      "body": "Customers who send several boxes together get one quote per box today, which overcharges them (the base rate is paid every time) and which they have to add up themselves. Sales needs a single quote for a whole shipment. The pricing rules are the ones quote() applies today; the only new things are in the list below.",
+      "requirements": [
+        "quoteShipment(req) prices several parcels that travel together. req is a quote request as quote() takes it (service, to, residential, pickupAt, customerId) with parcels: [{ weightKg or weight_lbs, dims }] in place of weightKg, weight_lbs and dims. It returns { amount, currency, zone, chargeableKg, parcels: [{ chargeableKg }] }, where chargeableKg is the total of the parcels.",
+        "A shipment has 1 to 20 parcels, otherwise RangeError. Every parcel's weight is validated as quote() validates it (RangeError). A missing destination throws TypeError and an unknown service throws BAD_SERVICE, as in quote().",
+        "Each parcel's chargeable weight is worked out exactly as quote() works it out today (pounds, volume, rounding).",
+        "The zone's base rate is charged once for the whole shipment. Each parcel then pays the per-kilo rate for its own chargeable kilos, and each parcel's charge is rounded to a whole cent on its own, as quote() does for its single parcel.",
+        "Contract discounts, the residential fee, the weekend uplift, fuel and the minimum charge work exactly as they do in quote(): applied once to the whole shipment, in the same order.",
+        "A shipment of 5 or more parcels gets 5% off the per-kilo part (the sum of the parcels' per-kilo charges, not the base), rounded to a whole cent, before any surcharge.",
+        "A shipment with one parcel must cost exactly what quote() charges for that parcel. quote() itself must keep pricing everything exactly as it does today: the web checkout, the partner API and the sales tool all call it."
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "263",
+      "title": "Tidy quote.js (no behavior change)",
+      "author": "teo",
+      "file": "prs/pr-263.md",
+      "locked": true,
+      "revisions": [
+        {
+          "rev": 2,
+          "file": "prs/pr-263-v2.md"
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "id": "quote-notes",
+      "title": "Quote service notes (wiki, 3 years old)",
+      "author": "marisol",
+      "file": "docs/quote-notes.md"
+    },
+    {
+      "id": "rfc-rewrite",
+      "title": "RFC: Rewrite the quote engine (Quote v2)",
+      "author": "marisol",
+      "file": "docs/rfc-rewrite.md",
+      "locked": true,
+      "comments": true
+    }
+  ],
+  "logs": {
+    "file": "logs/prod.log",
+    "locked": true,
+    "example": "w-3 or /customer=acme/"
+  },
+  "files": [
+    "app.js",
+    "util.js",
+    "config.js",
+    "rates.js",
+    "zones.js",
+    "customers.js",
+    "quote.js",
+    "shipment.js",
+    "admin.js"
+  ],
+  "tasks": [
+    {
+      "id": "feature",
+      "title": "Ship BRT-204: multi-parcel shipments",
+      "item": "ticket:BRT-204",
+      "unlock": "start"
+    },
+    {
+      "id": "review",
+      "title": "Review Teo's PR #263",
+      "item": "pr:263",
+      "unlock": "t-pr"
+    },
+    {
+      "id": "incident",
+      "title": "INC-0955: quotes getting cheaper",
+      "item": "channel:incident",
+      "unlock": "t-page"
+    },
+    {
+      "id": "scope",
+      "title": "Answer Nadia about Northwind's deal",
+      "item": "ticket:BRT-204",
+      "unlock": "t-scope"
+    },
+    {
+      "id": "rfc",
+      "title": "Comment on Marisol's rewrite RFC",
+      "item": "doc:rfc-rewrite",
+      "unlock": "t-rfc"
+    },
+    {
+      "id": "handoff",
+      "title": "Write your end-of-day handoff",
+      "item": "handoff",
+      "unlock": "t-eod"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t-welcome",
+      "at": "09:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "marisol",
+        "text": "Morning, and welcome! 👋 Your first ticket is **BRT-204** (multi-parcel shipments): it's under Tickets, and Nadia owns it. The repo is under Code; `quotes.test.js` is what CI runs, fair warning that it's short. There's a wiki page in Docs about how a price is built, but it's from before my time, so treat it as a lead and not as gospel. Ask me anything."
+      }
+    },
+    {
+      "id": "t-nadia-hello",
+      "at": "09:05",
+      "do": {
+        "type": "message",
+        "channel": "dm-nadia",
+        "from": "nadia",
+        "text": "Hey, welcome to the team! Multi-parcel is the thing Sales keeps promising, and Northwind wants it before they sign. I'd love it done for **Thursday's release**. Ping me with any questions on the ticket."
+      }
+    },
+    {
+      "id": "t-pr",
+      "at": "09:30",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "teo",
+        "text": "Could someone review **PR #263**? It tidies up `quote.js` (splits it into small functions, `var` → `const`) with no behavior change, so the multi-parcel work can build on it. The bot already approved. Would be great to merge before Thursday 🙂",
+        "unlock": [
+          "pr:263"
+        ]
+      }
+    },
+    {
+      "id": "t-page",
+      "at": "10:20",
+      "do": {
+        "type": "page",
+        "channel": "incident",
+        "from": "ruben",
+        "text": "🚨 **SEV-2 · INC-0955**: some **quotes are coming out too cheap**, and getting cheaper through the morning. Finance's `quotes_below_cost` alert fired with 137 quotes under cost since 06:00, and support has tickets saying the price changes between refreshes. You're secondary on-call, so please take point on investigating. Logs are under Logs. I'm IC: tell me what you find and what you want to do.",
+        "unlock": [
+          "channel:incident",
+          "logs"
+        ]
+      }
+    },
+    {
+      "id": "t-vendor",
+      "at": "10:24",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "ruben",
+        "text": "My read: Monday's **carrier rate import** loaded something wrong (margins dropped the same week). My plan: re-import last week's rate card, restart all six workers so they pick it up, and post on the status page that a carrier rate-card issue is affecting some quotes and we're correcting it. I'll go ahead in ~10 min unless you see something different."
+      }
+    },
+    {
+      "id": "t-vendor-go",
+      "at": "10:36",
+      "unless": "posted:incident",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "ruben",
+        "text": "No objections, so I've re-imported last week's rate card, restarted all six workers and posted: \"A carrier rate-card issue is affecting some quote prices. We are correcting it.\" Prices look right again."
+      }
+    },
+    {
+      "id": "t-vendor-done",
+      "at": "10:52",
+      "after": "t-vendor-go",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "ruben",
+        "text": "Bad news: 15 minutes after the restart, w-3 is quoting the 12 kg lane at $25.39 again and w-5 at $24.04, and the `rates.checksum` on those two differs from the others. We're on last week's card everywhere, so it isn't the import, and our status message is wrong. What else could it be? I need a hypothesis from you."
+      }
+    },
+    {
+      "id": "t-marisol-busy",
+      "at": "10:26",
+      "do": {
+        "type": "message",
+        "channel": "dm-marisol",
+        "from": "marisol",
+        "text": "Saw the page. I'm in planning until ~11:30 but I'll check Slack between sessions. I've never had to debug pricing, honestly. The wiki won't help much, so I'd start from the logs and read `quote.js` closely."
+      }
+    },
+    {
+      "id": "t-nudge",
+      "do": {
+        "type": "nudge",
+        "channel": "incident",
+        "from": "ruben",
+        "after": "t-page",
+        "until": "incident_resolved",
+        "quietMinutes": 6,
+        "texts": [
+          "Status update? Finance wants to know how many quotes are affected.",
+          "I need an update for the status page: what do we know, and what's next?",
+          "Still with us? Finance is asking whether we honor the cheap quotes. Even 'still investigating, next update in 15' helps."
+        ]
+      }
+    },
+    {
+      "id": "t-resolved",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "ruben",
+        "text": "Thanks. Marking INC-0955 resolved. Please post a short summary here for the postmortem: customer and money impact, root cause, what's fixed or mitigated, and follow-ups with owners."
+      }
+    },
+    {
+      "id": "t-teo-ping",
+      "at": "11:45",
+      "unless": "pr_reviewed:263",
+      "do": {
+        "type": "message",
+        "channel": "dm-teo",
+        "from": "teo",
+        "text": "Hey, any chance you could look at #263 today? Multi-parcel is blocked behind it 🙏"
+      }
+    },
+    {
+      "id": "t-scope",
+      "at": "13:30",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "dm-nadia",
+        "from": "nadia",
+        "text": "Thanks for handling the incident! Quick one: **Northwind** signs on **Friday** and wants two things for their first quotes on Monday: quotes in **EUR and GBP** (they are in Rotterdam and London), and a special deal, **no fuel surcharge on weekday pickups and a $9.00 minimum charge** instead of $12.00. I was thinking we add a Northwind special case in `quote()` and multiply by the exchange rate. Doable? Please answer on BRT-204 so it's on record."
+      }
+    },
+    {
+      "id": "t-rfc",
+      "at": "14:15",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "marisol",
+        "text": "I've written up an RFC for rewriting the quote engine (Docs → *RFC: Rewrite the quote engine*). Please leave a comment before Thursday's design review, especially after this morning.",
+        "unlock": [
+          "doc:rfc-rewrite"
+        ]
+      }
+    },
+    {
+      "id": "t-nadia-check",
+      "at": "15:40",
+      "do": {
+        "type": "message",
+        "channel": "dm-nadia",
+        "from": "nadia",
+        "text": "How's BRT-204 looking for Thursday? Anything I should warn Sales about?"
+      }
+    },
+    {
+      "id": "t-eod",
+      "at": "17:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "marisol",
+        "text": "Heading out soon. Before you go, could you write a short **handoff** (Handoff in the sidebar): what's done, what's open, and what someone needs to pick up tomorrow. Solid first day 🙌",
+        "unlock": [
+          "handoff"
+        ]
+      }
+    },
+    {
+      "id": "t-pr-v2",
+      "when": "pr_feedback:263",
+      "delay": 30,
+      "unless": "pr_approved:263",
+      "do": {
+        "type": "followup",
+        "thread": "pr:263",
+        "from": "teo",
+        "revise": {
+          "pr": "263",
+          "rev": 2
+        },
+        "text": "Pushed an update (commit 2, \"Address review\"): the `weight_lbs` branch and `Math.ceil` are back, I added tests for pounds, rounding up and a contract quote, and `applyContract` now works on a copy of the rate card so contract quotes can't change it for everyone. Could you take another look? Would love to merge before EOD 🙏"
+      }
+    }
+  ]
+}

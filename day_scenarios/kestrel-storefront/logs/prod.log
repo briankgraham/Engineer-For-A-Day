@@ -1,0 +1,37 @@
+2026-11-24T10:00:00.000Z INFO  release web.release version=2026.47.0 percent=100 summary="search box: search from the first character (was 3), results as you type"
+2026-11-25T09:30:00.000Z INFO  metrics metric.added name=search_stale_render_rate note="KES-277: dashboard only, no alert yet"
+2026-11-30T22:05:00.000Z INFO  search  index.rebuild version=v412 status=done replicas=6 note="full rebuild after the schema change; 1-2 character prefix queries now fan out to every shard"
+2026-12-01T08:55:00.000Z INFO  search  search.latency window=5m q_len=1-2 p50=610ms p95=1480ms q_len=3+ p50=95ms p95=180ms
+2026-12-01T09:00:00.000Z INFO  search  index.health version=v412 replicas_at_v412=6/6 max_replica_lag_ms=0
+2026-12-01T09:14:02.100Z INFO  rum     search.input session=s_71a3 user=u_5120 browser=chrome version=2026.47.0 input="s" seq=1
+2026-12-01T09:14:02.290Z INFO  rum     search.input session=s_71a3 user=u_5120 browser=chrome version=2026.47.0 input="sh" seq=2
+2026-12-01T09:14:02.480Z INFO  rum     search.input session=s_71a3 user=u_5120 browser=chrome version=2026.47.0 input="sho" seq=3
+2026-12-01T09:14:02.660Z INFO  rum     search.input session=s_71a3 user=u_5120 browser=chrome version=2026.47.0 input="shoe" seq=4
+2026-12-01T09:14:02.850Z INFO  rum     search.input session=s_71a3 user=u_5120 browser=chrome version=2026.47.0 input="shoes" seq=5
+2026-12-01T09:14:02.944Z INFO  api     search.api q="shoes" index=v412 count=84 took=94ms
+2026-12-01T09:14:02.950Z INFO  rum     search.render session=s_71a3 results_for="shoes" input="shoes" stale=false
+2026-12-01T09:14:03.130Z INFO  api     search.api q="sho" index=v412 count=402 took=651ms
+2026-12-01T09:14:03.140Z INFO  rum     search.render session=s_71a3 results_for="sho" input="shoes" stale=true
+2026-12-01T09:14:03.440Z INFO  api     search.api q="sh" index=v412 count=1311 took=1150ms
+2026-12-01T09:14:03.445Z INFO  rum     search.render session=s_71a3 results_for="sh" input="shoes" stale=true
+2026-12-01T09:14:03.520Z INFO  support support.ticket id=T-88121 user=u_5120 text="I search for shoes and get a page of shirts"
+2026-12-01T09:20:11.002Z INFO  rum     search.input session=s_93bc user=u_7733 browser=safari version=2026.47.0 input="b" seq=1
+2026-12-01T09:20:11.250Z INFO  rum     search.input session=s_93bc user=u_7733 browser=safari version=2026.47.0 input="ba" seq=2
+2026-12-01T09:20:11.470Z INFO  rum     search.input session=s_93bc user=u_7733 browser=safari version=2026.47.0 input="bag" seq=3
+2026-12-01T09:20:11.590Z INFO  api     search.api q="bag" index=v412 count=212 took=118ms
+2026-12-01T09:20:11.600Z INFO  rum     search.render session=s_93bc results_for="bag" input="bag" stale=false
+2026-12-01T09:20:12.280Z INFO  api     search.api q="ba" index=v412 count=2290 took=1030ms
+2026-12-01T09:20:12.290Z INFO  rum     search.render session=s_93bc results_for="ba" input="bag" stale=true
+2026-12-01T09:20:12.700Z INFO  api     search.api q="b" index=v412 count=5120 took=1690ms
+2026-12-01T09:20:12.705Z INFO  rum     search.render session=s_93bc results_for="b" input="bag" stale=true
+2026-12-01T09:31:40.100Z INFO  rum     search.input session=s_c410 user=u_2208 browser=firefox version=2026.47.0 input="tent" seq=4 note="pasted, typed 'tent' in one go"
+2026-12-01T09:31:40.230Z INFO  api     search.api q="tent" index=v412 count=57 took=121ms
+2026-12-01T09:31:40.240Z INFO  rum     search.render session=s_c410 results_for="tent" input="tent" stale=false
+2026-12-01T09:40:00.000Z INFO  rum     rum.sample window=5m sessions=21400 stale_render_rate=3.2% chrome=3.1% safari=3.4% firefox=3.2% edge=3.0%
+2026-12-01T09:40:00.010Z INFO  rum     rum.sample by_version 2026.47.0=3.4% 2026.46.2=0.1% note="2026.46.2 tabs still open search from 3 characters"
+2026-12-01T09:40:00.020Z INFO  rum     rum.sample by_input_length stale only where results_for is 1-2 characters shorter than input: 94% of stale renders
+2026-12-01T09:40:00.030Z INFO  search  search.consistency sampled=5000 mismatches=0 note="each response matches its own query on all 6 replicas"
+2026-12-01T09:45:00.000Z INFO  edge    edge.stats path=/api/search cache_status=BYPASS ratio=100%
+2026-12-01T10:00:00.000Z INFO  support support.tickets topic=search_wrong_results last_hour=186 sample="search for X shows Y" sample="results flicker then change"
+2026-12-01T10:05:00.000Z INFO  rum     rum.sample window=5m sessions=22150 stale_render_rate=3.5% chrome=3.4% safari=3.6% firefox=3.3% edge=3.4%
+2026-12-01T10:15:00.000Z INFO  rum     rum.sample window=5m sessions=23010 stale_render_rate=3.3% chrome=3.2% safari=3.5% firefox=3.3% edge=3.1%

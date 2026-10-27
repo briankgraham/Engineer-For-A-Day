@@ -468,7 +468,338 @@ for (let head = 0; head < q.length; head++) {
     return S.frames;
   }
 
+  // ---------- interval timelines ----------
+  // {viz:"intervals", mode:"show"|"merge"|"sweep", intervals:[[s, e], ...], title}. "merge" sorts by start and builds the merged row;
+  // "sweep" turns the intervals into +1/-1 events and tracks how many are active. Frames: {st[] per row, merged, k, t, say, ...}.
+  function intervalFrames(b,rows){
+    const F=[];
+    if(b.mode==="merge"){
+      const merged=[],snap=()=>merged.map(m=>[...m]);
+      F.push({st:rows.map(()=>"wait"),merged:[],hot:-1,say:"Sort by start. Then walk left to right, keeping the last merged interval."});
+      rows.forEach(([s,e],i)=>{
+        const last=merged[merged.length-1];let say;
+        if(!last){merged.push([s,e]);say=`[${s}, ${e}] is first, so it starts a merged interval.`}
+        else if(s>last[1]){merged.push([s,e]);say=`[${s}, ${e}] starts at ${s}, after the last merged end (${last[1]}). No overlap, so start a new merged interval.`}
+        else{
+          const ne=Math.max(last[1],e);
+          say=`[${s}, ${e}] starts at ${s} ≤ ${last[1]}, so it overlaps [${last[0]}, ${last[1]}]. The end becomes max(${last[1]}, ${e}) = ${ne}${e<=last[1]?" (it was fully inside, so nothing changes)":""}.`;
+          last[1]=ne;
+        }
+        F.push({st:rows.map((_,r)=>r===i?"cur":r<i?"done":"wait"),merged:snap(),hot:merged.length-1,say});
+      });
+      F.push({st:rows.map(()=>"done"),merged:snap(),hot:-1,say:`Done: ${merged.length} merged interval${merged.length===1?"":"s"}. The sort dominates, so the cost is O(n log n).`});
+      return F;
+    }
+    const ev=[];rows.forEach(([s,e],i)=>{ev.push([s,1,i]);ev.push([e,-1,i])});
+    ev.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);
+    const label=ev.map(([t,d])=>`${t}${d>0?"+":"−"}`),st=rows.map(()=>"wait");
+    let count=0,best=0;
+    F.push({st:[...st],ev:label,k:-1,t:null,count,best,say:"Turn each interval into two events: +1 where it starts, −1 where it ends. Sort the events by time, with ends before starts at the same time. Then sweep left to right keeping a running count."});
+    ev.forEach(([t,d,i],k)=>{
+      st[i]=d>0?"act":"done";count+=d;
+      const high=count>best;best=Math.max(best,count);
+      F.push({st:[...st],ev:label,k,t,count,best,say:`At ${t}, [${rows[i][0]}, ${rows[i][1]}] ${d>0?"starts: +1":"ends: −1"}. ${count} active${high?" (a new high)":""}.`});
+    });
+    F.push({st:[...st],ev:label,k:ev.length,t:null,count,best,say:`Done: at most ${best} intervals are active at once. That is the number of rooms (or lanes, or workers) you need.`});
+    return F;
+  }
+  function intervalViz(b){
+    const iv=b.intervals,box=el("div","lr-viz"),head=el("div","vt",b.title||""),body=el("div","vb");box.append(head,body);
+    const mode=b.mode||"show",merge=mode==="merge",rows=merge?[...iv].sort((x,y)=>x[0]-y[0]):iv;
+    const all=iv.flat(),lo=Math.min(...all),hi=Math.max(...all),X=t=>6+(t-lo)/((hi-lo)||1)*88;
+    const RH=7,n=rows.length,resY=6+n*RH+2,axY=resY+(merge?RH+1:0)+3,H=axY+5;
+    const svg=sv("svg",{viewBox:`0 0 100 ${H}`,role:"img"});body.appendChild(svg);
+    sv("line",{x1:X(lo),x2:X(hi),y1:axY,y2:axY,class:"iv-ax"},svg);
+    for(let t=lo;t<=hi;t++){
+      if(hi-lo>12&&t%5&&t!==lo&&t!==hi)continue;
+      sv("line",{x1:X(t),x2:X(t),y1:axY,y2:axY+1,class:"iv-ax"},svg);
+      sv("text",{x:X(t),y:axY+3.6,class:"iv-t"},svg).textContent=t;
+    }
+    const sw=mode==="sweep"?sv("line",{y1:2,y2:axY,class:"iv-sw"},svg):null;
+    if(merge)sv("line",{x1:6,x2:94,y1:resY-1.5,y2:resY-1.5,class:"iv-sep"},svg);
+    const bars=rows.map(([s,e],r)=>{
+      const g=sv("g",{class:"iv-b"},svg),y=3+r*RH;
+      sv("rect",{x:X(s),y,width:X(e)-X(s),height:4.6,rx:1.1},g);
+      sv("text",{x:X(s)+1.2,y:y+2.4},g).textContent=`${s}–${e}`;
+      return g;
+    });
+    const resG=sv("g",{},svg);
+    if(mode==="show"){body.style.gridTemplateColumns="1fr";return box}
+    const frames=intervalFrames(b,rows),side=el("div","side"),dsBox=el("div"),outBox=el("div");side.append(dsBox,outBox);body.appendChild(side);
+    const cap=el("div","cap"),ctl=el("div","ctl");box.append(cap,ctl);
+    const chips=(host,title,items,hot)=>{
+      host.replaceChildren(el("h6",null,title));const c=el("div","chips");host.appendChild(c);
+      if(!items.length)c.appendChild(el("em",null,"none yet"));
+      items.forEach((x,j)=>c.appendChild(el("span",j===hot?"hot":null,String(x))));
+    };
+    let k=0,timer=0;
+    const draw=()=>{
+      const f=frames[k];
+      bars.forEach((g,r)=>g.setAttribute("class","iv-b "+f.st[r]));
+      if(merge){
+        resG.replaceChildren();
+        f.merged.forEach(([s,e],j)=>{
+          const g=sv("g",{class:"iv-m"+(j===f.hot?" hot":"")},resG);
+          sv("rect",{x:X(s),y:resY,width:X(e)-X(s),height:4.6,rx:1.1},g);
+          sv("text",{x:X(s)+1.2,y:resY+2.4},g).textContent=`${s}–${e}`;
+        });
+        chips(dsBox,"Merged so far",f.merged.map(([s,e])=>`[${s}, ${e}]`),f.hot);
+      }else{
+        if(f.t==null)sw.setAttribute("class","iv-sw off");else{sw.setAttribute("class","iv-sw");sw.setAttribute("x1",X(f.t));sw.setAttribute("x2",X(f.t))}
+        chips(dsBox,"Events (time, ±1)",f.ev,f.k);
+        chips(outBox,"Active now / most at once",[f.count,f.best],0);
+      }
+      cap.textContent=f.say;head.lastChild.textContent=`Step ${k+1} / ${frames.length}`;
+      range.value=k;play.textContent=timer?"❚❚ Pause":k===frames.length-1?"↺ Replay":"▶ Play";
+    };
+    head.appendChild(el("span"));
+    const stop=()=>{clearInterval(timer);timer=0};
+    const prev=btn("◀",()=>{stop();if(k>0){k--;draw()}}),next=btn("▶",()=>{stop();if(k<frames.length-1){k++;draw()}});
+    prev.title="Previous step";next.title="Next step";
+    const play=btn("▶ Play",()=>{
+      if(timer){stop();draw();return}
+      if(k===frames.length-1)k=0;
+      timer=setInterval(()=>{if(!box.isConnected){stop();return}if(k<frames.length-1){k++;draw()}else{stop();draw()}},1100);draw();
+    },"play");
+    const range=el("input");range.type="range";range.min=0;range.max=frames.length-1;range.oninput=()=>{stop();k=+range.value;draw()};
+    const reset=btn("⟲",()=>{stop();k=0;draw()});reset.title="Back to the start";
+    ctl.append(play,prev,next,range,reset);
+    box.tabIndex=0;box.onkeydown=e=>{if(e.target!==box)return;if(e.key==="ArrowRight"){next.click();e.preventDefault()}else if(e.key==="ArrowLeft"){prev.click();e.preventDefault()}};
+    draw();
+    return box;
+  }
+
+  // ---------- trie pictures ----------
+  // {viz:"trie", mode:"show"|"build"|"search", words:[...], query, prefix, title}. The layout is of the finished trie, so nodes never move:
+  // "build" inserts the words one at a time (nodes appear as they are created); "search" walks `query` through the full trie
+  // (prefix:true asks "does any word start with this?", otherwise "is this exact word stored?").
+  function trieModel(words){
+    const nodes=[{ch:"",kids:{},end:false,d:0,par:-1}];
+    const walk=w=>{let u=0;for(const c of w){if(nodes[u].kids[c]==null){nodes.push({ch:c,kids:{},end:false,d:nodes[u].d+1,par:u});nodes[u].kids[c]=nodes.length-1}u=nodes[u].kids[c]}return u};
+    const ends=words.map(w=>{const u=walk(w);nodes[u].end=true;return u});
+    let leaf=0;const place=u=>{const ks=Object.keys(nodes[u].kids).sort();if(!ks.length){nodes[u].x=leaf++;return}ks.forEach(c=>place(nodes[u].kids[c]));nodes[u].x=(nodes[nodes[u].kids[ks[0]]].x+nodes[nodes[u].kids[ks[ks.length-1]]].x)/2};
+    place(0);
+    return {nodes,ends,leaves:leaf,depth:Math.max(...nodes.map(n=>n.d))};
+  }
+  function trieFrames(b,M){
+    const F=[],N=M.nodes,have=new Set([0]),ends=new Set();
+    if(b.mode==="build"){
+      const done=[];
+      F.push({have:new Set(have),ends:new Set(ends),cur:0,path:[0],side:[],say:"An empty trie is just a root. It holds no letter itself."});
+      b.words.forEach((w,wi)=>{
+        let u=0;const path=[0];
+        F.push({have:new Set(have),ends:new Set(ends),cur:0,path:[0],side:[...done],say:`Insert "${w}". Start at the root.`});
+        for(const c of w){
+          const v=N[u].kids[c],had=have.has(v);have.add(v);u=v;path.push(u);
+          F.push({have:new Set(have),ends:new Set(ends),cur:u,path:[...path],side:[...done],say:had?`"${c}" is already a child here (shared with an earlier word), so just follow it.`:`No "${c}" child yet, so create one and step into it.`});
+        }
+        ends.add(u);done.push(w);
+        F.push({have:new Set(have),ends:new Set(ends),cur:u,path:[...path],side:[...done],say:`Mark this node as the end of a word. The path root → ${[...w].join(" → ")} now spells "${w}".`});
+      });
+      F.push({have:new Set(have),ends:new Set(ends),cur:-1,path:[],side:[...done],say:`${b.words.length} words stored in ${N.length-1} letter nodes. Words with a common start share the nodes for it.`});
+      return F;
+    }
+    N.forEach((_,i)=>have.add(i));M.ends.forEach(i=>ends.add(i));
+    const q=b.query,pre=!!b.prefix;let u=0;const path=[0];
+    const snap=(cur,say,side)=>F.push({have,ends,cur,path:[...path],side,say});
+    snap(0,`${pre?"Does any word start with":"Is the word"} "${q}"${pre?"":" stored"}? Start at the root and follow one letter at a time.`,[]);
+    for(let i=0;i<q.length;i++){
+      const c=q[i],v=N[u].kids[c];
+      if(v==null){snap(u,`There is no "${c}" child here, so nothing stored continues "${q.slice(0,i+1)}". Answer: false.`,[...q.slice(0,i)]);return F}
+      u=v;path.push(u);snap(u,`Follow "${c}". ${i===q.length-1?"That was the last letter.":"Next letter."}`,[...q.slice(0,i+1)]);
+    }
+    const side=[...q];
+    if(pre)snap(u,`Every letter matched, and for a prefix that is enough. Answer: true.`,side);
+    else if(N[u].end)snap(u,`Every letter matched and this node is marked as the end of a word. Answer: true.`,side);
+    else snap(u,`Every letter matched, but this node is not marked as the end of a word: "${q}" is only a prefix of something longer. Answer: false.`,side);
+    return F;
+  }
+  function trieViz(b){
+    const M=trieModel(b.words),N=M.nodes,box=el("div","lr-viz"),head=el("div","vt",b.title||""),body=el("div","vb");box.append(head,body);
+    const W=84,X=n=>8+(M.leaves>1?n.x*W/(M.leaves-1):W/2),Y=n=>7+n.d*12,H=Y({d:M.depth})+7;
+    const svg=sv("svg",{viewBox:`0 0 100 ${H}`,role:"img"});body.appendChild(svg);
+    const edges=N.map((n,i)=>i?sv("line",{x1:X(N[n.par]),y1:Y(N[n.par]),x2:X(n),y2:Y(n),class:"tr-e"},svg):null);
+    const gs=N.map((n,i)=>{
+      const g=sv("g",{class:"tr-n"},svg);
+      sv("circle",{cx:X(n),cy:Y(n),r:4.1,class:"tr-ring"},g);
+      sv("circle",{cx:X(n),cy:Y(n),r:3.1,class:"tr-c"},g);
+      sv("text",{x:X(n),y:Y(n)+.2},g).textContent=i?n.ch:"•";
+      return g;
+    });
+    const show=b.mode==="show"||!b.mode;
+    const paint=f=>gs.forEach((g,i)=>{
+      const on=f.have.has(i),cls=["tr-n"];
+      if(!on)cls.push("off");if(f.ends.has(i))cls.push("end");if(f.path.includes(i))cls.push("path");if(f.cur===i)cls.push("cur");
+      g.setAttribute("class",cls.join(" "));
+      if(edges[i])edges[i].setAttribute("class","tr-e"+(on?"":" off")+(f.path.includes(i)?" path":""));
+    });
+    if(show){
+      body.style.gridTemplateColumns="1fr";
+      paint({have:new Set(N.map((_,i)=>i)),ends:new Set(M.ends),path:[],cur:-1});
+      return box;
+    }
+    const frames=trieFrames(b,M),side=el("div","side"),sb=el("div");side.appendChild(sb);body.appendChild(side);
+    const cap=el("div","cap"),ctl=el("div","ctl");box.append(cap,ctl);
+    let k=0,timer=0;
+    const draw=()=>{
+      const f=frames[k];paint(f);
+      sb.replaceChildren(el("h6",null,b.mode==="build"?"Words inserted":"Letters matched"));
+      const c=el("div","chips");sb.appendChild(c);
+      if(!f.side.length)c.appendChild(el("em",null,"none yet"));
+      f.side.forEach((x,j)=>c.appendChild(el("span",j===f.side.length-1?"hot":null,x)));
+      cap.textContent=f.say;head.lastChild.textContent=`Step ${k+1} / ${frames.length}`;
+      range.value=k;play.textContent=timer?"❚❚ Pause":k===frames.length-1?"↺ Replay":"▶ Play";
+    };
+    head.appendChild(el("span"));
+    const stop=()=>{clearInterval(timer);timer=0};
+    const prev=btn("◀",()=>{stop();if(k>0){k--;draw()}}),next=btn("▶",()=>{stop();if(k<frames.length-1){k++;draw()}});
+    prev.title="Previous step";next.title="Next step";
+    const play=btn("▶ Play",()=>{
+      if(timer){stop();draw();return}
+      if(k===frames.length-1)k=0;
+      timer=setInterval(()=>{if(!box.isConnected){stop();return}if(k<frames.length-1){k++;draw()}else{stop();draw()}},1000);draw();
+    },"play");
+    const range=el("input");range.type="range";range.min=0;range.max=frames.length-1;range.oninput=()=>{stop();k=+range.value;draw()};
+    const reset=btn("⟲",()=>{stop();k=0;draw()});reset.title="Back to the start";
+    ctl.append(play,prev,next,range,reset);
+    box.tabIndex=0;box.onkeydown=e=>{if(e.target!==box)return;if(e.key==="ArrowRight"){next.click();e.preventDefault()}else if(e.key==="ArrowLeft"){prev.click();e.preventDefault()}};
+    draw();
+    return box;
+  }
+
+  // ---------- dynamic programming tables ----------
+  // {viz:"dp", dp:"stairs"|"rob"|"coins"|"grid"|"lcs"|"edit"|"knap", title, ...inputs}: a table filled one cell per step by running the real
+  // recurrence. Inputs: stairs {n}; rob {nums}; coins {coins, amount}; grid {costs}; lcs/edit {a, b}; knap {weights, values, cap}.
+  // dpModel returns {rows, cols, top, left, corner, sub, init:[[r,c,v]], steps:[{r, c, v, deps:[[r,c]], say}], ans:[r,c]}; r < 0 is a caption-only step.
+  function dpModel(b){
+    const INF=Infinity,S=[],M={steps:S,init:[],corner:"",sub:null};
+    const put=(r,c,v,deps,say)=>S.push({r,c,v,deps:deps||[],say}),note=say=>put(-1,-1,null,[],say);
+    const seq=n=>[...Array(n).keys()];
+    if(b.dp==="stairs"){
+      const n=b.n,d=[];M.rows=1;M.cols=n+1;M.top=seq(n+1).map(i=>`n=${i}`);M.left=["ways"];
+      note("ways(n) is the number of ways to climb n steps taking 1 or 2 at a time. Fill left to right.");
+      for(let i=0;i<=n;i++){
+        if(i<2){d[i]=1;put(0,i,1,[],i?"Base case: 1 way to reach step 1 (one single step).":"Base case: 1 way to climb 0 steps (do nothing).")}
+        else{d[i]=d[i-1]+d[i-2];put(0,i,d[i],[[0,i-1],[0,i-2]],`ways(${i}) = ways(${i-1}) + ways(${i-2}) = ${d[i-1]} + ${d[i-2]} = ${d[i]}. The last move was a 1-step from ${i-1} or a 2-step from ${i-2}.`)}
+      }
+      note(`Done: ${d[n]} ways to climb ${n} steps.`);M.ans=[0,n];
+    }else if(b.dp==="rob"){
+      const a=b.nums,n=a.length,d=[];M.rows=1;M.cols=n;M.top=a.map((x,i)=>`#${i} $${x}`);M.left=["best"];
+      note("best(i) is the most money from houses 0..i when no two neighbors are robbed. For each house: skip it, or rob it and jump back two.");
+      for(let i=0;i<n;i++){
+        if(i===0){d[0]=a[0];put(0,0,d[0],[],`Base case: with one house, take it: ${a[0]}.`)}
+        else if(i===1){d[1]=Math.max(a[0],a[1]);put(0,1,d[1],[],`Base case: with two houses they are neighbors, so take the bigger: max(${a[0]}, ${a[1]}) = ${d[1]}.`)}
+        else{d[i]=Math.max(d[i-1],d[i-2]+a[i]);put(0,i,d[i],[[0,i-1],[0,i-2]],`Skip house ${i}: keep best(${i-1}) = ${d[i-1]}. Rob it: best(${i-2}) + ${a[i]} = ${d[i-2]+a[i]}. Take the larger: ${d[i]}.`)}
+      }
+      note(`Done: the most you can rob is ${d[n-1]}.`);M.ans=[0,n-1];
+    }else if(b.dp==="coins"){
+      const cs=b.coins,A=b.amount,d=[];M.rows=1;M.cols=A+1;M.top=seq(A+1).map(i=>`${i}`);M.left=["fewest coins"];M.corner="amount";
+      note(`fewest(a) is the minimum number of coins from [${cs.join(", ")}] that add up to a. ∞ means no way. Try each coin as the last one used.`);
+      for(let a=0;a<=A;a++){
+        if(a===0){d[0]=0;put(0,0,0,[],"Base case: amount 0 needs 0 coins.");continue}
+        let best=INF;const deps=[],parts=[];
+        for(const c of cs){
+          if(c>a)continue;
+          if(d[a-c]===INF){parts.push(`coin ${c} → fewest(${a-c}) is ∞, skip`);continue}
+          deps.push([0,a-c]);parts.push(`coin ${c} → fewest(${a-c}) + 1 = ${d[a-c]+1}`);best=Math.min(best,d[a-c]+1);
+        }
+        d[a]=best;put(0,a,best,deps,`Amount ${a}: ${parts.join("; ")||"no coin fits"}. ${best===INF?"Nothing works: ∞.":"Smallest: "+best+"."}`);
+      }
+      note(d[A]===INF?`Done: ${A} cannot be made, so return -1.`:`Done: ${A} takes ${d[A]} coin${d[A]===1?"":"s"}.`);M.ans=[0,A];
+    }else if(b.dp==="grid"){
+      const g=b.costs,R=g.length,C=g[0].length,d=g.map(r=>r.map(()=>0));M.rows=R;M.cols=C;M.sub=g;M.top=seq(C).map(j=>`col ${j}`);M.left=seq(R).map(i=>`row ${i}`);
+      note("cost(r, c) is the cheapest path sum from the top-left to this cell, moving only right or down. The small number in a cell is its own cost.");
+      for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+        if(!r&&!c){d[0][0]=g[0][0];put(0,0,g[0][0],[],`Base case: the start costs its own ${g[0][0]}.`)}
+        else if(!r){d[r][c]=d[r][c-1]+g[r][c];put(r,c,d[r][c],[[r,c-1]],`Top row: only reachable from the left. ${d[r][c-1]} + ${g[r][c]} = ${d[r][c]}.`)}
+        else if(!c){d[r][c]=d[r-1][c]+g[r][c];put(r,c,d[r][c],[[r-1,c]],`Left column: only reachable from above. ${d[r-1][c]} + ${g[r][c]} = ${d[r][c]}.`)}
+        else{d[r][c]=Math.min(d[r-1][c],d[r][c-1])+g[r][c];put(r,c,d[r][c],[[r-1,c],[r,c-1]],`From above costs ${d[r-1][c]}, from the left ${d[r][c-1]}. Take the cheaper, then add this cell: min(${d[r-1][c]}, ${d[r][c-1]}) + ${g[r][c]} = ${d[r][c]}.`)}
+      }
+      note(`Done: the cheapest path costs ${d[R-1][C-1]}.`);M.ans=[R-1,C-1];
+    }else if(b.dp==="lcs"||b.dp==="edit"){
+      const A=b.a,B=b.b,m=A.length,n=B.length,ed=b.dp==="edit",d=[...Array(m+1)].map(()=>Array(n+1).fill(0));
+      M.rows=m+1;M.cols=n+1;M.top=["",...B];M.left=["",...A];M.corner=ed?"edits":"length";
+      for(let i=0;i<=m;i++){d[i][0]=ed?i:0;M.init.push([i,0,d[i][0]])}
+      for(let j=1;j<=n;j++){d[0][j]=ed?j:0;M.init.push([0,j,d[0][j]])}
+      note(ed?`edit(i, j) is the fewest insert, delete or replace operations to turn the first i letters of "${A}" into the first j letters of "${B}". Row 0 and column 0 are base cases: changing to or from an empty string costs one operation per letter.`
+        :`lcs(i, j) is the length of the longest common subsequence of the first i letters of "${A}" and the first j letters of "${B}". Row 0 and column 0 are base cases: an empty string shares nothing, so 0.`);
+      for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){
+        const x=A[i-1],y=B[j-1];
+        if(x===y){
+          d[i][j]=ed?d[i-1][j-1]:d[i-1][j-1]+1;
+          put(i,j,d[i][j],[[i-1,j-1]],ed?`"${x}" = "${y}": the letters match, so no operation is needed. Copy the diagonal: ${d[i][j]}.`:`"${x}" = "${y}": the letters match, so extend the diagonal. ${d[i-1][j-1]} + 1 = ${d[i][j]}.`);
+        }else if(ed){
+          const u=d[i-1][j],l=d[i][j-1],g=d[i-1][j-1];d[i][j]=1+Math.min(u,l,g);
+          put(i,j,d[i][j],[[i-1,j],[i,j-1],[i-1,j-1]],`"${x}" ≠ "${y}": one operation plus the cheapest way in. Delete "${x}" (above ${u}), insert "${y}" (left ${l}) or replace (diagonal ${g}): 1 + min(${u}, ${l}, ${g}) = ${d[i][j]}.`);
+        }else{
+          const u=d[i-1][j],l=d[i][j-1];d[i][j]=Math.max(u,l);
+          put(i,j,d[i][j],[[i-1,j],[i,j-1]],`"${x}" ≠ "${y}": at most one of them is in the subsequence, so drop one and keep the better: max(above ${u}, left ${l}) = ${d[i][j]}.`);
+        }
+      }
+      note(ed?`Done: "${A}" becomes "${B}" in ${d[m][n]} operation${d[m][n]===1?"":"s"}.`:`Done: the longest common subsequence has length ${d[m][n]}.`);M.ans=[m,n];
+    }else{
+      const W=b.weights,V=b.values,cap=b.cap,n=W.length,d=[...Array(n+1)].map(()=>Array(cap+1).fill(0));
+      M.rows=n+1;M.cols=cap+1;M.top=seq(cap+1).map(w=>`${w}`);M.left=["no items",...W.map((w,i)=>`item ${i+1} (w${w}, $${V[i]})`)];M.corner="capacity";
+      for(let w=0;w<=cap;w++)M.init.push([0,w,0]);
+      note("best(i, w) is the most value using only the first i items with capacity w. Row 0 (no items) is 0. Each item is either skipped or taken once.");
+      for(let i=1;i<=n;i++)for(let w=0;w<=cap;w++){
+        const wt=W[i-1],val=V[i-1],skip=d[i-1][w];
+        if(wt>w){d[i][w]=skip;put(i,w,skip,[[i-1,w]],`Item ${i} weighs ${wt}, more than capacity ${w}, so it can't be taken. Copy from above: ${skip}.`)}
+        else{
+          const take=d[i-1][w-wt]+val;d[i][w]=Math.max(skip,take);
+          put(i,w,d[i][w],[[i-1,w],[i-1,w-wt]],`Skip item ${i}: ${skip}. Take it: best with the first ${i-1} items at capacity ${w-wt}, which is ${d[i-1][w-wt]}, plus ${val} = ${take}. Larger: ${d[i][w]}.`);
+        }
+      }
+      note(`Done: the most value that fits is ${d[n][cap]}.`);M.ans=[n,cap];
+    }
+    return M;
+  }
+  function dpViz(b){
+    const M=dpModel(b),F=M.steps,box=el("div","lr-viz"),head=el("div","vt",b.title||""),body=el("div","vb"),cap=el("div","cap"),ctl=el("div","ctl");
+    body.style.gridTemplateColumns="1fr";box.append(head,body,cap,ctl);
+    const wrap=el("div","dp-w"),tbl=el("table","dp");wrap.appendChild(tbl);body.appendChild(wrap);
+    const tds=[],tr0=el("tr");tr0.appendChild(el("th",null,M.corner));
+    M.top.forEach(t=>tr0.appendChild(el("th",null,t)));tbl.appendChild(tr0);
+    for(let r=0;r<M.rows;r++){
+      const tr=el("tr");tr.appendChild(el("th",null,M.left[r]));tds.push([]);
+      for(let c=0;c<M.cols;c++){const td=el("td");if(M.sub)td.appendChild(el("small",null,String(M.sub[r][c])));td.appendChild(el("span"));tr.appendChild(td);tds[r].push(td)}
+      tbl.appendChild(tr);
+    }
+    const sh=v=>v===Infinity?"∞":String(v);
+    let k=0,timer=0;
+    const draw=()=>{
+      const f=F[k],val=new Map(M.init.map(([r,c,v])=>[r+","+c,v]));
+      for(let i=0;i<=k;i++)if(F[i].r>=0)val.set(F[i].r+","+F[i].c,F[i].v);
+      const dep=new Set(f.deps.map(([r,c])=>r+","+c)),last=k===F.length-1;
+      tds.forEach((row,r)=>row.forEach((td,c)=>{
+        const key=r+","+c,has=val.has(key);
+        td.lastChild.textContent=has?sh(val.get(key)):"";
+        td.className=(has?"fill ":"")+(f.r===r&&f.c===c?"cur ":"")+(dep.has(key)?"dep ":"")+(last&&M.ans[0]===r&&M.ans[1]===c?"ans":"");
+      }));
+      cap.textContent=f.say;head.lastChild.textContent=`Step ${k+1} / ${F.length}`;
+      range.value=k;play.textContent=timer?"❚❚ Pause":k===F.length-1?"↺ Replay":"▶ Play";
+    };
+    head.appendChild(el("span"));
+    const stop=()=>{clearInterval(timer);timer=0};
+    const prev=btn("◀",()=>{stop();if(k>0){k--;draw()}}),next=btn("▶",()=>{stop();if(k<F.length-1){k++;draw()}});
+    prev.title="Previous step";next.title="Next step";
+    const play=btn("▶ Play",()=>{
+      if(timer){stop();draw();return}
+      if(k===F.length-1)k=0;
+      timer=setInterval(()=>{if(!box.isConnected){stop();return}if(k<F.length-1){k++;draw()}else{stop();draw()}},1200);draw();
+    },"play");
+    const range=el("input");range.type="range";range.min=0;range.max=F.length-1;range.oninput=()=>{stop();k=+range.value;draw()};
+    const reset=btn("⟲",()=>{stop();k=0;draw()});reset.title="Back to the start";
+    ctl.append(play,prev,next,range,reset);
+    box.tabIndex=0;box.onkeydown=e=>{if(e.target!==box)return;if(e.key==="ArrowRight"){next.click();e.preventDefault()}else if(e.key==="ArrowLeft"){prev.click();e.preventDefault()}};
+    draw();
+    return box;
+  }
+
   function vizBlock(b){
+    if(b.dp)return dpViz(b);
+    if(b.intervals)return intervalViz(b);
+    if(b.words)return trieViz(b);
     const g=graphFor(b),box=el("div","lr-viz"),head=el("div","vt",b.title||"");box.appendChild(head);
     const body=el("div","vb");box.appendChild(body);
     const G=b.grid?drawGrid(g):drawGraph(g);body.appendChild(G.svg);

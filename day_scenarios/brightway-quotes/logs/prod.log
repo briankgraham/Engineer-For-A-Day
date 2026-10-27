@@ -1,0 +1,43 @@
+2026-12-04T16:20:00.000Z INFO  deploy  deploy.done version=3.14.2 workers=6 note="all workers restarted"
+2026-12-07T06:00:00.000Z INFO  rates   rates.import version=2026-12-07 carrier=ShipLine rows=412 checksum=3f9c1a status=ok
+2026-12-08T06:00:10.000Z INFO  w-1  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:00:10.000Z INFO  w-2  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:00:10.000Z INFO  w-3  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:00:10.000Z INFO  w-4  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:00:10.000Z INFO  w-5  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:00:10.000Z INFO  w-6  worker.start version=3.14.2 rates_version=2026-12-07 rates_checksum=3f9c1a
+2026-12-08T06:30:00.000Z INFO  config  config.fuel fuelPct=8.5
+2026-12-08T07:02:11.100Z INFO  w-1  quote.priced req=q_1001 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T07:05:40.300Z INFO  w-3  quote.priced req=q_1002 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T07:15:02.500Z INFO  w-3  quote.priced req=q_1003 customer=acme service=ground zone=1 kg=12 amount=2539
+2026-12-08T07:21:19.000Z INFO  w-5  quote.priced req=q_1004 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T07:40:50.000Z INFO  w-3  quote.priced req=q_1005 customer=- service=ground zone=1 kg=12 amount=2539
+2026-12-08T07:58:03.200Z INFO  w-2  quote.priced req=q_1006 customer=initech service=ground zone=1 kg=12 amount=2686
+2026-12-08T08:12:00.000Z INFO  w-3  quote.priced req=q_1007 customer=acme service=ground zone=1 kg=12 amount=2292
+2026-12-08T08:12:07.000Z INFO  w-3  quote.priced req=q_1008 customer=acme service=ground zone=1 kg=12 amount=2065
+2026-12-08T08:30:44.000Z INFO  w-5  quote.priced req=q_1009 customer=globex service=ground zone=1 kg=12 amount=2404
+2026-12-08T08:31:12.000Z INFO  w-4  quote.priced req=q_1010 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T08:45:01.000Z INFO  w-3  quote.priced req=q_1011 customer=- service=ground zone=1 kg=12 amount=2065
+2026-12-08T08:50:20.000Z INFO  w-5  quote.priced req=q_1012 customer=- service=ground zone=1 kg=12 amount=2404
+2026-12-08T09:00:30.000Z INFO  w-3  quote.priced req=q_1013 customer=acme service=ground zone=1 kg=12 amount=1859
+2026-12-08T09:01:02.000Z INFO  w-3  quote.priced req=q_1014 customer=acme service=ground zone=1 kg=12 amount=1672
+2026-12-08T09:20:10.000Z INFO  w-3  quote.priced req=q_1015 customer=- service=ground zone=1 kg=12 amount=1672
+2026-12-08T09:21:45.000Z INFO  w-6  quote.priced req=q_1016 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T09:30:00.000Z INFO  w-5  quote.priced req=q_1017 customer=globex service=ground zone=1 kg=12 amount=2046
+2026-12-08T09:35:00.000Z INFO  finance finance.report week=2026-W49 lane=ground-US margin_pct=17.9 prev_week=24.0 note="margin is down on the lane; Monday's carrier import raised cost 2.1%, which does not explain 6 points"
+2026-12-08T09:44:31.000Z INFO  w-5  quote.priced req=q_1018 customer=- service=ground zone=1 kg=12 amount=2046
+2026-12-08T09:50:00.000Z INFO  w-3  quote.priced req=q_1019 customer=acme service=ground zone=1 kg=12 amount=1504
+2026-12-08T09:55:12.000Z INFO  w-3  quote.priced req=q_1020 customer=- service=ground zone=1 kg=12 amount=1504
+2026-12-08T09:58:00.000Z INFO  support support.ticket id=T-55102 customer=globex text="my quote for the same parcel keeps getting cheaper as the morning goes on: $24.04 at 8:30, $20.46 at 9:30"
+2026-12-08T09:58:30.000Z INFO  support support.ticket id=T-55107 customer=- text="two tabs, two different prices for the same parcel"
+2026-12-08T10:00:00.000Z INFO  edge    edge.stats path=/v1/quote client=checkout-legacy share=11% note="the old web checkout still sends weight_lbs instead of weightKg"
+2026-12-08T10:05:00.000Z INFO  w-1  quote.priced req=q_1021 customer=- service=ground zone=1 kg=12 amount=2821
+2026-12-08T10:09:00.000Z INFO  w-2  quote.priced req=q_1022 customer=- service=ground zone=1 kg=12 amount=2686
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-1 checksum=3f9c1a version=2026-12-07
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-2 checksum=c07d52 version=2026-12-07
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-3 checksum=e4419b version=2026-12-07
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-4 checksum=3f9c1a version=2026-12-07
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-5 checksum=91ab06 version=2026-12-07
+2026-12-08T10:10:00.000Z INFO  rates   rates.checksum worker=w-6 checksum=3f9c1a version=2026-12-07
+2026-12-08T10:12:00.000Z INFO  edge    edge.stats path=/v1/quote sticky=customer_id note="API gateway pins a customer id to one worker"
+2026-12-08T10:15:00.000Z WARN  finance finance.alert name=quotes_below_cost count=137 since=2026-12-08T06:00:00Z note="quotes priced under cost; 6 customers; acme alone is 71"

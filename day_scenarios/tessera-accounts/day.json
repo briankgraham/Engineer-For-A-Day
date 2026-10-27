@@ -1,0 +1,385 @@
+{
+  "order": 8,
+  "title": "Tessera: the accounts service (zero-downtime migration)",
+  "company": "Tessera",
+  "blurb": "Your first full day on the accounts team at a SaaS platform, in the middle of a live database migration. A backfill and verification job to build, a 'finish the migration' PR to review, a database-move RFC to read, and some people can't sign in, but only on one server.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": {
+    "start": "09:00",
+    "end": "17:30"
+  },
+  "service": "accounts",
+  "testFile": "accounts.test.js",
+  "incident": {
+    "name": "INC-0987",
+    "page": "t-page"
+  },
+  "newHire": "The candidate joined Tessera's accounts team (the service every Tessera product uses for sign-in and account data) as a senior engineer this week, and today is their first full day of real work. The team is halfway through a live migration that gives accounts several emails (expand, backfill, read canary, contract); everything stays up the whole time. They have the repo, the team's Slack, the issue tracker and the production logs. They are secondary on-call today, shadowed by Anjali.",
+  "personas": [
+    {
+      "id": "anjali",
+      "name": "Anjali Rao",
+      "role": "Senior Backend Engineer · your onboarding buddy",
+      "color": "#7c5cff"
+    },
+    {
+      "id": "kofi",
+      "name": "Kofi Mensah",
+      "role": "Software Engineer",
+      "color": "#1f9d74"
+    },
+    {
+      "id": "lena",
+      "name": "Lena Hoffmann",
+      "role": "Product Manager",
+      "color": "#e0752d"
+    },
+    {
+      "id": "mateo",
+      "name": "Mateo Silva",
+      "role": "SRE · Incident Commander",
+      "color": "#d6455d"
+    }
+  ],
+  "channels": [
+    {
+      "id": "team",
+      "name": "#accounts-team",
+      "members": [
+        "anjali",
+        "kofi",
+        "lena"
+      ],
+      "responder": "anjali"
+    },
+    {
+      "id": "incident",
+      "name": "#inc-0987-login-failures",
+      "members": [
+        "mateo",
+        "anjali"
+      ],
+      "responder": "mateo",
+      "locked": true
+    },
+    {
+      "id": "dm-anjali",
+      "name": "Anjali Rao",
+      "dm": true,
+      "members": [
+        "anjali"
+      ],
+      "responder": "anjali"
+    },
+    {
+      "id": "dm-lena",
+      "name": "Lena Hoffmann",
+      "dm": true,
+      "members": [
+        "lena"
+      ],
+      "responder": "lena"
+    },
+    {
+      "id": "dm-kofi",
+      "name": "Kofi Mensah",
+      "dm": true,
+      "members": [
+        "kofi"
+      ],
+      "responder": "kofi"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "ACC-411",
+      "title": "Backfill job and verification report for user_emails",
+      "reporter": "anjali",
+      "status": "To do · assigned to you",
+      "body": "The backfill that filled user_emails ran once, as a SQL script nobody has kept. We need it as a job we can run, stop, resume and re-run safely, and a report that says how far user_emails is from users.email before we move more traffic onto it. The dual-write (emails_dual_write) and the read path (emails_read_new) already exist in users.js.",
+      "requirements": [
+        "backfillEmails({ batchSize = 100, restart = false }) processes ONE batch per call. batchSize must be an integer from 1 to 1000, otherwise RangeError. Users are taken in id order (plain string order) after db.meta.backfillCursor (null means from the start); at most batchSize users are examined per call. The cursor is stored in db.meta.backfillCursor (so another process can continue), and moves to the last user id of the batch. restart: true first sets the cursor to null and empties db.meta.conflicts.",
+        "It returns { processed, copied, skipped, conflicts, done }: processed is the number of users examined; copied the number of rows added; skipped the number of users left alone; conflicts a list of { userId, email, takenBy }; done is true when no users remain after this batch (a call with nothing left returns processed 0 and done true). It works whether or not the dual-write and read flags are on.",
+        "For each user with a valid email it adds a primary row to user_emails keyed by the normalized email (trimmed, lowercase): { email, userId, primary: true, createdAt: now() }. It never overwrites or removes a row. A user who already has a primary row (the dual-write wrote it, and it is newer than the legacy column) is skipped; so is a user with a null, empty or invalid email. Running it again changes nothing, and never duplicates.",
+        "If the normalized email is already held by another user's row (the legacy data has accounts whose emails differ only by letter case), the user is not copied: it is a conflict {userId, email (normalized), takenBy (the holder)}, returned and also appended to db.meta.conflicts. The batch carries on with the other users.",
+        "Each batch is applied in one db.transaction.",
+        "verifyEmails() is read-only and returns { users, withEmail, matched, missing, mismatched, orphaned, invalid, conflicts }: users is the number of accounts and withEmail the number with a non-empty users.email; matched counts the users whose primary row has the normalized users.email; the others are sorted lists: missing (user ids with a valid email and no primary row, and no other user holding that email), mismatched (ids whose primary row differs from their normalized users.email), orphaned (emails of rows whose user does not exist), invalid (ids whose users.email is not an email address) and conflicts (ids that have no primary row because another user holds their normalized email)."
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "318",
+      "title": "Finish the emails migration: read only user_emails and drop users.email",
+      "author": "kofi",
+      "file": "prs/pr-318.md",
+      "locked": true,
+      "revisions": [
+        {
+          "rev": 2,
+          "file": "prs/pr-318-v2.md"
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "id": "accounts-notes",
+      "title": "Accounts: the multiple-emails migration (ACC-388)",
+      "author": "anjali",
+      "file": "docs/accounts-notes.md"
+    },
+    {
+      "id": "rfc-newdb",
+      "title": "RFC: Move the accounts database to a new cluster",
+      "author": "anjali",
+      "file": "docs/rfc-newdb.md",
+      "locked": true,
+      "comments": true
+    }
+  ],
+  "logs": {
+    "file": "logs/prod.log",
+    "locked": true,
+    "example": "n-3 or /customer=initech/"
+  },
+  "files": [
+    "app.js",
+    "util.js",
+    "db.js",
+    "users.js",
+    "importer.js",
+    "auth.js",
+    "emails.js"
+  ],
+  "tasks": [
+    {
+      "id": "feature",
+      "title": "Ship ACC-411: backfill job and verification",
+      "item": "ticket:ACC-411",
+      "unlock": "start"
+    },
+    {
+      "id": "review",
+      "title": "Review Kofi's PR #318",
+      "item": "pr:318",
+      "unlock": "t-pr"
+    },
+    {
+      "id": "incident",
+      "title": "INC-0987: login failures on one node",
+      "item": "channel:incident",
+      "unlock": "t-page"
+    },
+    {
+      "id": "scope",
+      "title": "Answer Lena about second emails and dropping the column",
+      "item": "ticket:ACC-411",
+      "unlock": "t-scope"
+    },
+    {
+      "id": "rfc",
+      "title": "Comment on Anjali's database-move RFC",
+      "item": "doc:rfc-newdb",
+      "unlock": "t-rfc"
+    },
+    {
+      "id": "handoff",
+      "title": "Write your end-of-day handoff",
+      "item": "handoff",
+      "unlock": "t-eod"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t-welcome",
+      "at": "09:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "anjali",
+        "text": "Morning, and welcome! 👋 Your first ticket is **ACC-411** (the backfill job and a verification report): it's under Tickets, and I wrote it. The repo is under Code; `accounts.test.js` is what CI runs. The migration page in Docs explains where we are in the multiple-emails migration. Ask me anything."
+      }
+    },
+    {
+      "id": "t-lena-hello",
+      "at": "09:05",
+      "do": {
+        "type": "message",
+        "channel": "dm-lena",
+        "from": "lena",
+        "text": "Hey, welcome to the team! Multiple emails per account is the most requested thing from our enterprise customers, and the migration underneath it is the long pole. I'd love to see it finished for **the January release**. Ping me with any questions."
+      }
+    },
+    {
+      "id": "t-pr",
+      "at": "09:30",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "kofi",
+        "text": "Could someone review **PR #318**? It finishes the emails migration: reads only the new table, stops writing the old column and drops it. The canary has been clean since Monday and the DB team is waiting for the space. The bot already approved. Would be great to merge before Thursday's release 🙂",
+        "unlock": [
+          "pr:318"
+        ]
+      }
+    },
+    {
+      "id": "t-page",
+      "at": "10:20",
+      "do": {
+        "type": "page",
+        "channel": "incident",
+        "from": "mateo",
+        "text": "🚨 **SEV-2 · INC-0987**: customers report **\"No account with that email\"** when signing in, and it **works on a retry**. About 1% of sign-ins are failing (the page threshold is 5%, so this is a customer escalation, not an alert), and support has 60+ tickets in the last hour, mostly from one enterprise customer. You're secondary on-call, so please take point on investigating. Logs are under Logs. I'm IC: tell me what you find and what you want to do.",
+        "unlock": [
+          "channel:incident",
+          "logs"
+        ]
+      }
+    },
+    {
+      "id": "t-vendor",
+      "at": "10:24",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "mateo",
+        "text": "My read: it's the **SSO provider**. The customer is an enterprise account, the failures come and go, and Okta published a degraded-performance notice this morning. My plan: open a ticket with the provider, post on the status page that a third-party sign-in provider is degraded for some enterprise customers, and wait for them. I'll go ahead in ~10 min unless you see something different."
+      }
+    },
+    {
+      "id": "t-vendor-go",
+      "at": "10:36",
+      "unless": "posted:incident",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "mateo",
+        "text": "No objections, so I've opened a ticket with the provider and posted: \"Some enterprise customers may have trouble signing in due to a degraded third-party sign-in provider.\" Support is using that wording."
+      }
+    },
+    {
+      "id": "t-vendor-done",
+      "at": "10:52",
+      "after": "t-vendor-go",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "mateo",
+        "text": "The customer says their people sign in with **email and password, not SSO**, and the provider's status is green with p95 210 ms. So it isn't the provider, and our status message is wrong. What else could it be? I need a hypothesis from you."
+      }
+    },
+    {
+      "id": "t-anjali-busy",
+      "at": "10:26",
+      "do": {
+        "type": "message",
+        "channel": "dm-anjali",
+        "from": "anjali",
+        "text": "Saw the page. I'm in planning until ~11:30 but I'll check Slack between sessions. The migration page in Docs lists who reads and writes the emails, worth a re-read."
+      }
+    },
+    {
+      "id": "t-nudge",
+      "do": {
+        "type": "nudge",
+        "channel": "incident",
+        "from": "mateo",
+        "after": "t-page",
+        "until": "incident_resolved",
+        "quietMinutes": 6,
+        "texts": [
+          "Status update? Support wants to know what to tell the customer.",
+          "I need an update for the status page: what do we know, and what's next?",
+          "Still with us? The customer's CSM is asking for an ETA. Even 'still investigating, next update in 15' helps."
+        ]
+      }
+    },
+    {
+      "id": "t-resolved",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "mateo",
+        "text": "Thanks. Marking INC-0987 resolved. Please post a short summary here for the postmortem: customer impact, root cause, what's fixed or mitigated, and follow-ups with owners."
+      }
+    },
+    {
+      "id": "t-kofi-ping",
+      "at": "11:45",
+      "unless": "pr_reviewed:318",
+      "do": {
+        "type": "message",
+        "channel": "dm-kofi",
+        "from": "kofi",
+        "text": "Hey, any chance you could look at #318 today? The DB team is waiting on the space 🙏"
+      }
+    },
+    {
+      "id": "t-scope",
+      "at": "13:30",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "dm-lena",
+        "from": "lena",
+        "text": "Thanks for handling the incident! Quick one: enterprise wants two things in **Thursday's release**: **people can add a second email and sign in with either one** (the multiple-emails feature, now that the migration is basically done), and the DB team wants the **old email column dropped this sprint** to hit their storage target. The code freeze is **Wednesday 6 PM**. Doable? Please answer on ACC-411 so it's on record."
+      }
+    },
+    {
+      "id": "t-rfc",
+      "at": "14:15",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "anjali",
+        "text": "I've written up the database-move RFC (Docs → *RFC: Move the accounts database to a new cluster*). Please leave a comment before Thursday's design review, especially after this morning.",
+        "unlock": [
+          "doc:rfc-newdb"
+        ]
+      }
+    },
+    {
+      "id": "t-lena-check",
+      "at": "15:40",
+      "do": {
+        "type": "message",
+        "channel": "dm-lena",
+        "from": "lena",
+        "text": "How's ACC-411 looking? Anything I should warn the enterprise customers about?"
+      }
+    },
+    {
+      "id": "t-eod",
+      "at": "17:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "anjali",
+        "text": "Heading out soon. Before you go, could you write a short **handoff** (Handoff in the sidebar): what's done, what's open, and what someone needs to pick up tomorrow. Solid first day 🙌",
+        "unlock": [
+          "handoff"
+        ]
+      }
+    },
+    {
+      "id": "t-pr-v2",
+      "when": "pr_feedback:318",
+      "delay": 30,
+      "unless": "pr_approved:318",
+      "do": {
+        "type": "followup",
+        "thread": "pr:318",
+        "from": "kofi",
+        "revise": {
+          "pr": "318",
+          "rev": 2
+        },
+        "text": "Pushed an update (commit 2, \"Address review\"): we keep writing `users.email`, the flags stay, `findByEmail` falls back to the old column when there's no row (and logs it) so nobody gets locked out, and the `DROP COLUMN` is its own migration. Could you take another look? Would love to merge before EOD 🙏"
+      }
+    }
+  ]
+}

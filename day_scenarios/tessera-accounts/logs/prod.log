@@ -1,0 +1,23 @@
+2026-12-01T09:00:00.000Z INFO  flags    flag.set name=emails_dual_write value=on scope=all by=anjali ticket=ACC-388
+2026-12-04T18:00:00.000Z INFO  migrate  emails.backfill.sql rows_copied=1204331 duration=14m by=anjali note="one-off INSERT ... SELECT. 37 rows skipped on the unique index (case-duplicate emails), not reviewed yet"
+2026-12-14T16:00:00.000Z INFO  flags    flag.set name=emails_read_new value=on scope=node:n-3 by=anjali note="canary, 1 of 10 nodes"
+2026-12-14T17:40:12.000Z INFO  n-2      import.done created=412 skipped=3 customer=initech source=csv by=sales-eng
+2026-12-15T06:00:00.000Z INFO  db       db.report users=1236054 user_emails=1235605 note="nightly row counts"
+2026-12-15T08:41:02.100Z INFO  n-3      auth.lookup source=user_emails found=false email_hash=e_91c2
+2026-12-15T08:41:02.110Z WARN  n-3      login.no_account email_hash=e_91c2 customer=initech
+2026-12-15T08:41:09.500Z INFO  n-7      auth.lookup source=users found=true email_hash=e_91c2
+2026-12-15T08:41:09.540Z INFO  n-7      login.ok email_hash=e_91c2 customer=initech note="same person, retried a few seconds later"
+2026-12-15T08:52:30.200Z INFO  n-3      auth.lookup source=user_emails found=false email_hash=e_0b7d
+2026-12-15T08:52:30.210Z WARN  n-3      login.no_account email_hash=e_0b7d customer=initech
+2026-12-15T08:52:41.800Z INFO  n-1      auth.lookup source=users found=true email_hash=e_0b7d
+2026-12-15T08:55:10.000Z INFO  n-3      auth.lookup source=user_emails found=true email_hash=e_44aa customer=acme note="signed up in October"
+2026-12-15T08:55:12.000Z INFO  n-5      auth.lookup source=users found=true email_hash=e_a3f9 customer=initech
+2026-12-15T09:10:00.000Z INFO  auth     auth.stats window=15m login_no_account_rate=1.1% n-1=0.1% n-2=0.0% n-3=9.8% n-4=0.1% n-5=0.0% n-6=0.1% n-7=0.0% n-8=0.0% n-9=0.1% n-10=0.0%
+2026-12-15T09:10:00.010Z INFO  auth     auth.stats no_account_by_customer initech=88% other=12% note="12% of failures are other customers; the rest of the traffic is normal"
+2026-12-15T09:10:00.020Z INFO  alerts   alert.eval name=login_no_account_rate value=1.1% threshold=5% scope=all status=ok
+2026-12-15T09:15:00.000Z INFO  sso      sso.status provider=okta status=operational latency_p95=210ms
+2026-12-15T09:20:00.000Z INFO  support  support.ticket id=T-72011 customer=initech text="some of our people get 'No account with that email', works on the second or third try"
+2026-12-15T09:25:00.000Z INFO  support  support.tickets topic=login_no_account last_hour=61 customers=initech(54) other(7)
+2026-12-15T09:40:00.000Z INFO  auth     auth.stats window=15m login_no_account_rate=1.0% n-3=10.2% others=0.0-0.1%
+2026-12-15T09:55:00.000Z INFO  auth     auth.stats window=15m login_no_account_rate=1.2% n-3=11.6% others=0.0-0.1%
+2026-12-15T10:10:00.000Z INFO  auth     auth.stats window=15m login_no_account_rate=1.1% n-3=10.8% others=0.0-0.1%

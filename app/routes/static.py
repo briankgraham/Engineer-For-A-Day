@@ -18,7 +18,7 @@ _serve(("/", "/index.html"), os.path.join(WEB_DIR, "index.html"), "text/html; ch
 # Served with a CSP (a Blob worker would inherit the page's origin and network access): no fetch/XHR/WebSocket/importScripts.
 _serve(("/worker.js",), os.path.join(WEB_DIR, "worker.js"), JS,
        {"Content-Security-Policy": "default-src 'none'; script-src 'unsafe-eval'; connect-src 'none'"})
-for _name in ("sysdesign.js", "sysdesign_diagram.js", "whiteboard.js", "jobs.js", "jobs_dash.js", "applications.js", "workspace.js", "aipair.js", "day.js", "assess.js", "behavioral.js", "learn.js", "learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_fundamentals.js", "learn_concurrency.js", "learn_kit.js", "sysdesign_lessons.js", "sysdesign_cards.js", "sysdesign_cheats.js", "sysdesign_cheats2.js", "sysdesign_cheats3.js", "sysdesign_cheats4.js", "sysdesign_graphs.js"):
+for _name in ("sysdesign.js", "sysdesign_diagram.js", "whiteboard.js", "jobs.js", "jobs_dash.js", "applications.js", "workspace.js", "aipair.js", "day.js", "assess.js", "behavioral.js", "learn.js", "learn_data.js", "learn_trees.js", "learn_heaps.js", "learn_intervals.js", "learn_tries.js", "learn_dp.js", "learn_fundamentals.js", "learn_concurrency.js", "learn_kit.js", "sysdesign_lessons.js", "sysdesign_cards.js", "sysdesign_cheats.js", "sysdesign_cheats2.js", "sysdesign_cheats3.js", "sysdesign_cheats4.js", "sysdesign_graphs.js"):
     _serve(("/" + _name,), os.path.join(WEB_DIR, _name), JS)
 _serve(("/sysdesign_data.js",), SD_FILE, JS)
 

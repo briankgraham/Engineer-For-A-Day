@@ -1,0 +1,23 @@
+{
+  "rounds-nearest": [
+    {
+      "file": "quote.js",
+      "from": "return Math.ceil(w * 2) / 2;",
+      "to": "return Math.round(w * 2) / 2;"
+    }
+  ],
+  "min-before-fuel": [
+    {
+      "file": "quote.js",
+      "from": "  amount += Math.round(amount * config.fuelPct / 100);\n  if (amount < config.minCharge) amount = config.minCharge;",
+      "to": "  if (amount < config.minCharge) amount = config.minCharge;\n  amount += Math.round(amount * config.fuelPct / 100);"
+    }
+  ],
+  "base-per-parcel": [
+    {
+      "file": "shipment.js",
+      "from": "rate.base + perKgPart",
+      "to": "rate.base * kgs.length + perKgPart"
+    }
+  ]
+}

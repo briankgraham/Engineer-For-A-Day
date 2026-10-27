@@ -1,0 +1,23 @@
+{
+  "skip-normalize": [
+    {
+      "file": "emails.js",
+      "from": "const key = normalizeEmail(email);\n        const held",
+      "to": "const key = email.trim();\n        const held"
+    }
+  ],
+  "one-big-batch": [
+    {
+      "file": "emails.js",
+      "from": "const batch = ids.slice(0, batchSize);",
+      "to": "const batch = ids;"
+    }
+  ],
+  "newer-wins": [
+    {
+      "file": "emails.js",
+      "from": "        if (held) {\n          const conflict",
+      "to": "        if (held && false) {\n          const conflict"
+    }
+  ]
+}

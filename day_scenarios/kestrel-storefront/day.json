@@ -1,0 +1,387 @@
+{
+  "order": 6,
+  "title": "Kestrel: the storefront web app",
+  "company": "Kestrel",
+  "blurb": "Your first full day on the web team at an online marketplace, a week before the big sale. A cart quantity stepper to build, a search-highlighting PR to review, a browser-cache RFC to read, and shoppers are searching for shoes and getting shirts.",
+  "difficulty": "Senior",
+  "minutes": 75,
+  "clock": {
+    "start": "09:00",
+    "end": "17:30"
+  },
+  "service": "storefront",
+  "testFile": "storefront.test.js",
+  "incident": {
+    "name": "INC-0912",
+    "page": "t-page"
+  },
+  "newHire": "The candidate joined Kestrel's web team (the storefront single-page app of the Kestrel marketplace, where independent sellers list their products) as a senior engineer this week, and today is their first full day of real work. They have the repo (the state, API and view layers of the storefront, without the DOM), the team's Slack, the issue tracker and the production logs, which include real-user monitoring from shoppers' browsers. They are secondary on-call today, shadowed by Priya.",
+  "personas": [
+    {
+      "id": "priya",
+      "name": "Priya Raman",
+      "role": "Senior Frontend Engineer · your onboarding buddy",
+      "color": "#7c5cff"
+    },
+    {
+      "id": "dev",
+      "name": "Dev Okafor",
+      "role": "Software Engineer",
+      "color": "#1f9d74"
+    },
+    {
+      "id": "mara",
+      "name": "Mara Lindqvist",
+      "role": "Product Manager",
+      "color": "#e0752d"
+    },
+    {
+      "id": "sam",
+      "name": "Sam Keller",
+      "role": "SRE · Incident Commander",
+      "color": "#d6455d"
+    }
+  ],
+  "channels": [
+    {
+      "id": "team",
+      "name": "#storefront-team",
+      "members": [
+        "priya",
+        "dev",
+        "mara"
+      ],
+      "responder": "priya"
+    },
+    {
+      "id": "incident",
+      "name": "#inc-0912-stale-search",
+      "members": [
+        "sam",
+        "priya"
+      ],
+      "responder": "sam",
+      "locked": true
+    },
+    {
+      "id": "dm-priya",
+      "name": "Priya Raman",
+      "dm": true,
+      "members": [
+        "priya"
+      ],
+      "responder": "priya"
+    },
+    {
+      "id": "dm-mara",
+      "name": "Mara Lindqvist",
+      "dm": true,
+      "members": [
+        "mara"
+      ],
+      "responder": "mara"
+    },
+    {
+      "id": "dm-dev",
+      "name": "Dev Okafor",
+      "dm": true,
+      "members": [
+        "dev"
+      ],
+      "responder": "dev"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "KES-318",
+      "title": "Cart quantity stepper",
+      "reporter": "mara",
+      "status": "To do · assigned to you",
+      "body": "The cart's + and − buttons feel broken: they wait for the server before anything changes, tapping fast sends a pile of requests that answer out of order, and a failed request leaves the number wrong. We want the stepper to feel instant and to stay correct, and removing something by accident should be undoable.",
+      "requirements": [
+        "setQuantity(sku, qty) changes a line's quantity. qty must be an integer from 0 to 10, otherwise RangeError (this includes NaN, strings and null); a sku that is not in the cart throws an error with code ITEM_NOT_IN_CART. Both are thrown synchronously, before anything is sent. It returns a promise that resolves (it never rejects) with { sku, qty }, the quantity the server last confirmed, once the line has settled.",
+        "The change is optimistic: right after the call, getCart() shows the new quantity and the line has pending: true. The request is a PUT through api.updateCartItem(sku, qty). When it settles, pending is false.",
+        "At most one request is in flight per sku. If the shopper changes the quantity again before the answer arrives, the screen updates at once but nothing is sent until the answer is in; then, if the wanted quantity differs from what was sent, exactly one more request is sent with the latest wanted quantity (repeat until they match). The answer for an older quantity must never overwrite a newer wanted quantity on screen. Asking again for the quantity already in flight sends nothing. Different skus do not wait for each other. Every promise resolves when the line has settled.",
+        "If a request fails (a non-2xx answer or no answer at all), the line goes back to the last quantity the server confirmed (not the previous optimistic value), pending is false, error is \"UPDATE_FAILED\", and any newer wanted quantity is dropped, not retried. The next successful change clears the error. The announcement is \"Couldn't update <title>. Back to <n>.\" with the confirmed quantity.",
+        "The server may confirm a smaller quantity than was asked for (not enough stock). The line then shows the server's quantity and the announcement is \"Only <n> of <title> available\". After a normal success the announcement is \"<title>: quantity <n>\", and \"<title> removed\" when the confirmed quantity is 0.",
+        "Setting 0 removes the line from getCart().lines at once (the server is asked with quantity 0). undoRemove(sku) brings it back, in its old position, at the quantity it had when it was removed, if it was removed at most 8,000 ms ago (use the app's now()). If there is nothing to undo (the line was not removed, the window has passed, or the removal failed) it throws an error with code UNDO_EXPIRED. setQuantity can add a removed line back at any time.",
+        "getCart() returns { lines, count, subtotal, announcement }. lines are the lines with quantity above 0 in the order the server sent them, as { sku, title, qty, unitPrice, lineTotal, pending, error } (money in integer cents, error is null when there is none); count is the total quantity and subtotal the sum of lineTotal. It returns the same object, not an equal one, for as long as the cart has not changed: typing in the search box must not give the cart a new view.",
+        "renderCart() returns the cart as an HTML string. Titles are seller-written text and must be escaped. Each line has a decrease and an increase button labelled \"Decrease quantity of <title>\" and \"Increase quantity of <title>\"; the increase button is disabled at 10. Prices are shown as dollars (\"$5.00\"), the subtotal as \"Subtotal $125.00\", and there is always a polite live region (<p role=\"status\" aria-live=\"polite\">) containing the announcement."
+      ]
+    }
+  ],
+  "prs": [
+    {
+      "id": "412",
+      "title": "Highlight the matched text in search results",
+      "author": "dev",
+      "file": "prs/pr-412.md",
+      "locked": true,
+      "revisions": [
+        {
+          "rev": 2,
+          "file": "prs/pr-412-v2.md"
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "id": "storefront-notes",
+      "title": "The storefront web app: how it works",
+      "author": "priya",
+      "file": "docs/storefront-notes.md"
+    },
+    {
+      "id": "rfc-cache",
+      "title": "RFC: Cache search results in the browser",
+      "author": "priya",
+      "file": "docs/rfc-cache.md",
+      "locked": true,
+      "comments": true
+    }
+  ],
+  "logs": {
+    "file": "logs/prod.log",
+    "locked": true,
+    "example": "s_71a3 or /stale=true/"
+  },
+  "files": [
+    "app.js",
+    "h.js",
+    "store.js",
+    "api.js",
+    "session.js",
+    "search.js",
+    "cart.js"
+  ],
+  "tasks": [
+    {
+      "id": "feature",
+      "title": "Ship KES-318: cart quantity stepper",
+      "item": "ticket:KES-318",
+      "unlock": "start"
+    },
+    {
+      "id": "review",
+      "title": "Review Dev's PR #412",
+      "item": "pr:412",
+      "unlock": "t-pr"
+    },
+    {
+      "id": "incident",
+      "title": "INC-0912: search shows the wrong results",
+      "item": "channel:incident",
+      "unlock": "t-page"
+    },
+    {
+      "id": "scope",
+      "title": "Answer Mara about the vendor script and countdown",
+      "item": "ticket:KES-318",
+      "unlock": "t-scope"
+    },
+    {
+      "id": "rfc",
+      "title": "Comment on Priya's search-cache RFC",
+      "item": "doc:rfc-cache",
+      "unlock": "t-rfc"
+    },
+    {
+      "id": "handoff",
+      "title": "Write your end-of-day handoff",
+      "item": "handoff",
+      "unlock": "t-eod"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t-welcome",
+      "at": "09:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "priya",
+        "text": "Morning, and welcome! 👋 Your first ticket is **KES-318** (the cart quantity stepper): it's under Tickets, and Mara owns it. The repo is under Code; `storefront.test.js` is what CI runs. The storefront notes in Docs explain how the state layer works. Ask me anything."
+      }
+    },
+    {
+      "id": "t-mara-hello",
+      "at": "09:05",
+      "do": {
+        "type": "message",
+        "channel": "dm-mara",
+        "from": "mara",
+        "text": "Hey, welcome to the team! The cart stepper is the top item from the pre-sale checklist: right now it feels laggy and people are mashing the + button. Design already built the UI, so I'd love the logic done for **Thursday's release**. Ping me with any questions on the ticket."
+      }
+    },
+    {
+      "id": "t-pr",
+      "at": "09:30",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "dev",
+        "text": "Could someone review **PR #412**? It highlights the part of a result's title that matches what you typed, design has been asking for it for weeks. The bot already approved. Would be great to merge before Thursday's release 🙂",
+        "unlock": [
+          "pr:412"
+        ]
+      }
+    },
+    {
+      "id": "t-page",
+      "at": "10:20",
+      "do": {
+        "type": "page",
+        "channel": "incident",
+        "from": "sam",
+        "text": "🚨 **SEV-2 · INC-0912**: shoppers are seeing **the wrong search results**: they type \"shoes\" and end up looking at results for \"sh\". `search_stale_render_rate` is at about 3% of sessions (it was 0.2% a week ago), and support has 180+ tickets in the last hour with the sale a week away. You're secondary on-call, so please take point on investigating. Logs are under Logs. I'm IC: tell me what you find and what you want to do.",
+        "unlock": [
+          "channel:incident",
+          "logs"
+        ]
+      }
+    },
+    {
+      "id": "t-vendor",
+      "at": "10:24",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "My read: the search **index** is stale or inconsistent on some replicas since last night's rebuild, so some requests get old data. My plan: trigger a full reindex (about 2 hours, search is degraded while it runs), post on the status page that search results may be delayed while we rebuild the index, and wait. I'll go ahead in ~10 min unless you see something different."
+      }
+    },
+    {
+      "id": "t-vendor-go",
+      "at": "10:36",
+      "unless": "posted:incident",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "No objections, so I've started the full reindex and posted: \"Some search results may be out of date while we rebuild our search index. We expect it to be resolved in about two hours.\" The search team is watching it."
+      }
+    },
+    {
+      "id": "t-vendor-done",
+      "at": "10:52",
+      "after": "t-vendor-go",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "Search team says the index is fine: all 6 replicas are on the same version, and a sample of 5,000 responses all match **their own query**. The reindex hasn't changed the stale rate. So it isn't the index, and our status message is wrong. What else could it be? I need a hypothesis from you."
+      }
+    },
+    {
+      "id": "t-priya-busy",
+      "at": "10:26",
+      "do": {
+        "type": "message",
+        "channel": "dm-priya",
+        "from": "priya",
+        "text": "Saw the page. I'm in planning until ~11:30 but I'll check Slack between sessions. The storefront notes in Docs cover how search works since 2026.47, worth a read."
+      }
+    },
+    {
+      "id": "t-nudge",
+      "do": {
+        "type": "nudge",
+        "channel": "incident",
+        "from": "sam",
+        "after": "t-page",
+        "until": "incident_resolved",
+        "quietMinutes": 6,
+        "texts": [
+          "Status update? Support wants to know what to tell shoppers.",
+          "I need an update for the status page: what do we know, and what's next?",
+          "Still with us? Leadership is asking in #exec, the sale is a week away. Even 'still investigating, next update in 15' helps."
+        ]
+      }
+    },
+    {
+      "id": "t-resolved",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "incident",
+        "from": "sam",
+        "text": "Thanks. Marking INC-0912 resolved. Please post a short summary here for the postmortem: shopper impact, root cause, what's fixed or mitigated, and follow-ups with owners."
+      }
+    },
+    {
+      "id": "t-dev-ping",
+      "at": "11:45",
+      "unless": "pr_reviewed:412",
+      "do": {
+        "type": "message",
+        "channel": "dm-dev",
+        "from": "dev",
+        "text": "Hey, any chance you could look at #412 today? Design is waiting on it for the Thursday release 🙏"
+      }
+    },
+    {
+      "id": "t-scope",
+      "at": "13:30",
+      "when": "incident_resolved",
+      "do": {
+        "type": "message",
+        "channel": "dm-mara",
+        "from": "mara",
+        "text": "Thanks for handling the incident! Quick one: marketing wants two more things in **Thursday's release**: a **personalization script from a vendor** (Lumio) added to the cart and checkout pages, and a **\"your cart is reserved for 10:00\" countdown** on the cart to push people to buy. The code freeze is **Wednesday 6 PM**. Doable? Please answer on KES-318 so it's on record."
+      }
+    },
+    {
+      "id": "t-rfc",
+      "at": "14:15",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "priya",
+        "text": "I've written up the search-cache RFC (Docs → *RFC: Cache search results in the browser*). Please leave a comment before Thursday's design review, especially after this morning.",
+        "unlock": [
+          "doc:rfc-cache"
+        ]
+      }
+    },
+    {
+      "id": "t-mara-check",
+      "at": "15:40",
+      "do": {
+        "type": "message",
+        "channel": "dm-mara",
+        "from": "mara",
+        "text": "How's KES-318 looking for Thursday? Anything I should warn design about?"
+      }
+    },
+    {
+      "id": "t-eod",
+      "at": "17:00",
+      "do": {
+        "type": "message",
+        "channel": "team",
+        "from": "priya",
+        "text": "Heading out soon. Before you go, could you write a short **handoff** (Handoff in the sidebar): what's done, what's open, and what someone needs to pick up tomorrow. Solid first day 🙌",
+        "unlock": [
+          "handoff"
+        ]
+      }
+    },
+    {
+      "id": "t-pr-v2",
+      "when": "pr_feedback:412",
+      "delay": 30,
+      "unless": "pr_approved:412",
+      "do": {
+        "type": "followup",
+        "thread": "pr:412",
+        "from": "dev",
+        "revise": {
+          "pr": "412",
+          "rev": 2
+        },
+        "text": "Pushed an update (commit 2, \"Address review\"): the title is HTML-escaped before it is marked, the query's regex characters are escaped, and it highlights against `resultsFor` instead of whatever is in the box. Could you take another look? Would love to merge before EOD 🙏"
+      }
+    }
+  ]
+}

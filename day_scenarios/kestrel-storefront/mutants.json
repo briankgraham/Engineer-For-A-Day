@@ -1,0 +1,33 @@
+{
+  "revert-to-previous": [
+    {
+      "file": "cart.js",
+      "from": "patch(sku, l => ({ ...l, qty, pending: true, error: null, prevQty:",
+      "to": "patch(sku, l => ({ ...l, before: l.qty, qty, pending: true, error: null, prevQty:"
+    },
+    {
+      "file": "cart.js",
+      "from": "patch(sku, x => ({ ...x, qty: x.confirmed, pending: false, error: \"UPDATE_FAILED\", removedAt: null }));",
+      "to": "patch(sku, x => ({ ...x, qty: x.before, pending: false, error: \"UPDATE_FAILED\", removedAt: null }));"
+    }
+  ],
+  "raw-title": [
+    {
+      "file": "cart.js",
+      "from": "const { h, renderToString } = require(\"./h\");",
+      "to": "const { h, raw, renderToString } = require(\"./h\");"
+    },
+    {
+      "file": "cart.js",
+      "from": "h(\"span\", { class: \"title\" }, l.title),",
+      "to": "h(\"span\", { class: \"title\" }, raw(l.title)),"
+    }
+  ],
+  "keep-requested-qty": [
+    {
+      "file": "cart.js",
+      "from": "patch(sku, x => ({ ...x, qty: res.qty, pending: false }));",
+      "to": "patch(sku, x => ({ ...x, pending: false }));"
+    }
+  ]
+}
